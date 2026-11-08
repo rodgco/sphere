@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { HOST_ID, mountOverlay } from '../../src/overlay/entry.js'
+import { mountOverlay } from '../../src/overlay/entry.js'
+import { HOST_ID } from '../../src/overlay/host.js'
 
 describe('the overlay entry', () => {
   it('mounts one host with a shadow root, styles and the control', () => {

@@ -11,6 +11,7 @@
   import { groupDigits, writeClipboard } from './clipboard.js'
   import { lockCursor } from './cursor.js'
   import { dblpress, listen, press, shield } from './events.js'
+  import { commandFor, initialTarget, navigate, type PickKey } from './keyboard.js'
   import { measureMark, measureMarks, trackMarks, type Mark } from './marks.js'
   import { startPicking } from './picking.js'
   import {
@@ -47,13 +48,15 @@
   let picks = $state<PickEntry[]>([])
   let marks = $state<Mark[]>([])
   let hover = $state<Hover | null>(null)
+  /** Where the keyboard is, while picking with keys instead of the pointer. */
+  let keyboardTarget = $state<Element | null>(null)
   let status = $state<Status | null>(null)
 
   let options = $state<OverlayOptions>({ ...DEFAULT_OPTIONS })
   let instructions = $state('')
   let panelOpen = $state(false)
   let panelStyle = $state('')
-  let focusInstructions = $state(false)
+  let focusPanel = $state(false)
 
   const loadSource = createSourceLoader({ root: sphereConfig.root, base: sphereConfig.base })
 
@@ -131,22 +134,40 @@
       onPick: onPick,
       onLeave: () => {
         hover = null
+        keyboardTarget = null
       },
     })
   })
 
+  // One place decides what the keyboard does while picking. Capture phase, so the app never sees a
+  // key we handled; everything else passes through (`docs/specs/event-matrix.md`).
   $effect(() => {
     if (!picking) return
 
-    const onKeydown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      picking = false
-      if (panelOpen) closePanel()
-    }
-
-    window.addEventListener('keydown', onKeydown)
-    return () => window.removeEventListener('keydown', onKeydown)
+    window.addEventListener('keydown', onKeydown, true)
+    return () => window.removeEventListener('keydown', onKeydown, true)
   })
+
+  function onKeydown(event: KeyboardEvent) {
+    const command = commandFor(event)
+    if (command === null) return
+
+    const active = focusedElement()
+
+    // Typing in the panel (or in an app field) is typing — except Escape, which is how picking is
+    // left from anywhere. Note the shadow boundary: a listener on `window` sees the host as the
+    // target, so the real focus is read from the shadow root.
+    if (command !== 'leave' && (isTyping(event.target) || isTyping(active))) return
+
+    // Enter and Space on the pill are the button's own activation (`aria-pressed`), not a pick:
+    // docs/06 §1 and the a11y baseline outrank the shortcut.
+    if (command === 'pick' && isOnControl(active)) return
+
+    // Handled keys must not scroll the page (Space, arrows) or reach an app shortcut.
+    event.preventDefault()
+    event.stopPropagation()
+    runKey(command)
+  }
 
   $effect(() => {
     const targets = picks.map((pick, index) => ({ element: pick.element, index }))
@@ -162,11 +183,85 @@
 
   function overlayHost(): Element | null {
     if (root === undefined) return null
-    const rootNode = root.getRootNode()
-    return rootNode instanceof ShadowRoot ? rootNode.host : root
+    const node = root.getRootNode()
+    return node instanceof ShadowRoot ? node.host : root
+  }
+
+  function isTyping(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false
+    if (target.isContentEditable) return true
+    return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT'
+  }
+
+  function isOnControl(element: Element | null): boolean {
+    if (!(element instanceof Element)) return false
+    return element.closest('.control') !== null
+  }
+
+  /** The deepest focused element, across the overlay's shadow boundary. */
+  function focusedElement(): Element | null {
+    // Ask the wrapper's root, not the host's: the host lives in the page, its root is the document.
+    const node = root?.getRootNode()
+    if (node instanceof ShadowRoot) return node.activeElement
+    return document.activeElement
+  }
+
+  function runKey(command: PickKey) {
+    switch (command) {
+      case 'leave':
+        picking = false
+        if (panelOpen) closePanel()
+        return
+      case 'copy':
+        void copyPrompt()
+        return
+      case 'unpickLast': {
+        const last = picks.at(-1)
+        if (last !== undefined) removePick(last)
+        return
+      }
+      case 'pick': {
+        const target =
+          keyboardTarget ?? initialTarget(picks.map((pick) => pick.element))
+        if (target !== null) onPick(target)
+        return
+      }
+      default: {
+        const start = keyboardTarget ?? initialTarget(picks.map((pick) => pick.element))
+        if (start === null) return
+
+        const next = navigate(start, command)
+        if (next === null) return
+
+        keyboardTarget = next
+        showKeyboardHover(next)
+      }
+    }
+  }
+
+  /** The outline and tooltip for the keyboard selection, anchored under the element. */
+  function showKeyboardHover(element: Element) {
+    const mark = measureMark({ element, index: 0 })
+    if (mark === null) {
+      hover = null
+      return
+    }
+
+    hover = {
+      top: mark.top,
+      left: mark.left,
+      width: mark.width,
+      height: mark.height,
+      label: `${element.localName}  ${pickWhere(element, sphereConfig.root)}`.trim(),
+      x: mark.left,
+      y: mark.top + mark.height + 6,
+    }
   }
 
   function onHover(target: Element | null, clientX: number, clientY: number) {
+    // The pointer takes over from the keyboard, so the outline follows the mouse again.
+    keyboardTarget = null
+
     if (target === null || picks.some((pick) => pick.element === target)) {
       hover = null
       return
@@ -348,12 +443,12 @@
 
     panelStyle = `left: ${placement.left}px; top: ${placement.top}px; max-height: ${placement.maxHeight}px;`
     panelOpen = true
-    focusInstructions = fromPick
+    focusPanel = fromPick
   }
 
   function closePanel() {
     panelOpen = false
-    focusInstructions = false
+    focusPanel = false
     control?.focus({ preventScroll: true })
   }
 
@@ -425,7 +520,10 @@
 
   function toggle() {
     picking = !picking
-    if (!picking) hover = null
+    if (!picking) {
+      hover = null
+      keyboardTarget = null
+    }
   }
 
   /** Mouse clicks are handled on `pointerup`; `detail === 0` means the click came from the keyboard. */
@@ -495,7 +593,7 @@
       {options}
       {instructions}
       {status}
-      {focusInstructions}
+      {focusPanel}
       style={panelStyle}
       onCopy={copyPrompt}
       onRemove={removePick}

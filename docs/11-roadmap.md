@@ -45,8 +45,9 @@ runs in the M5 matrix.
 
 **Status:** done — the overlay (shadow root), the control with drag/persistence/keyboard, picking
 with the event matrix, marks with clipping and tracking, and the panel shell with picks, options,
-instructions and the status line. Covered by the runtime harness and by `e2e/picking.mjs` /
-`e2e/a11y.mjs` in a real Chromium.
+instructions and the status line. Keyboard selection was added after the milestone closed
+(`w`/`s`/`a`/`d`, arrows, `Enter`, `Backspace`, `c`). Covered by the runtime harness and by
+`e2e/picking.mjs`, `e2e/keyboard.mjs` and `e2e/a11y.mjs` in a real Chromium.
 
 **Done when**
 
@@ -107,8 +108,9 @@ fixture job (the transform is unit-tested) and the bundle-size budget.
   the same payload Sphere copies, and `copy_prompt` for parity with the UI. This is the natural
   upgrade path and the reason the payload is a typed schema, not just markdown.
 - `redact` option (attribute/prop denylist) for shared screens or sensitive apps.
-- Selecting by keyboard (`navKeys`-style parent/child/next/prev) for elements without hoverable
-  area.
+- ~~Selecting by keyboard (`navKeys`-style parent/child/next/prev) for elements without hoverable
+  area.~~ **Done in v1** — `w`/`s`/`a`/`d` and the arrows, with `Enter`, `Backspace`, `c` and
+  `Escape` (`docs/06-toolbar-ux.md` §2, `e2e/keyboard.mjs`).
 - Multi-frame support (iframe preview) — deliberately out of scope until asked.
 - Adapter seam for other frameworks — only if Svelte traction justifies it.
 

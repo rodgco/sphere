@@ -1,5 +1,6 @@
 import { mount } from 'svelte'
 import Overlay from './Overlay.svelte'
+import { HOST_ID } from './host.js'
 import { OVERLAY_CSS } from './styles.js'
 
 /**
@@ -9,8 +10,6 @@ import { OVERLAY_CSS } from './styles.js'
  * The mount is guarded twice: a host that already exists (HMR re-runs this module) and a throwing
  * mount (a Sphere bug must leave the page as it was).
  */
-export const HOST_ID = 'sphere-host'
-
 export function mountOverlay(): HTMLElement | null {
   if (typeof document === 'undefined') return null
   if (document.getElementById(HOST_ID)) return null

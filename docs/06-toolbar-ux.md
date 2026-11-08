@@ -24,6 +24,26 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   the location is approximate).
 - Clicking **picks** the element (primary button only) and keeps picking, so several elements
   can be collected without re-entering the mode.
+- **Keyboard selection**, for what the pointer cannot reach — a container that only wraps its
+  children (a fill layer, an overlay, a grid cell) can never be clicked, because the children are on
+  top. While picking, one key moves a keyboard cursor through the tree and outlines what it landed
+  on:
+
+  | Key | Action |
+  |---|---|
+  | `w`, `↑` | parent |
+  | `s`, `↓` | first child |
+  | `a`, `←` | previous sibling |
+  | `d`, `→` | next sibling |
+  | `Enter`, `Space` | pick / unpick the outlined element |
+  | `Backspace` | remove the most recent pick |
+  | `c` | copy the prompt (same as the button) |
+  | `Escape` | leave picking (existing) |
+
+  The cursor starts at the last pick (or the last hovered element), so "click the child, `w`, `Enter`"
+  reads as one gesture. Moving the pointer hands control back to the mouse. Keys with
+  `Alt`/`Ctrl`/`Cmd` are left to the app and the browser, and anything typed into the panel or an
+  app field is typing, not navigation — only `Escape` works from inside a text field.
 - Picking an already-picked element **unpicks** it.
 - The interaction never reaches the page: the full matrix is `docs/specs/event-matrix.md`.
 - Leaving: clicking the control again, pressing Escape (which also closes the panel), or
@@ -87,8 +107,10 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 ## 8. Accessibility baseline
 
 - Every button has an accessible name (`aria-label` when the visual is a glyph).
-- The panel is `role="dialog"` with `aria-label="Build a prompt"`; focus moves to the
-  instruction box when it opens from a pick, and returns to the control on Escape/close.
+- The panel is `role="dialog"` with `aria-label="Build a prompt"`, `tabindex="-1"`. Focus moves to
+  the dialog when it opens from a pick (so it is announced) and returns to the control on
+  Escape/close. It deliberately does **not** jump into the instruction box: single-key picking (
+  `w`, `a`, `s`, `d`) must keep working until the user chooses to type, and one Tab reaches the box.
 - Focus ring: 2 px outline in both themes, never removed without a replacement.
 - Everything reachable by keyboard: control (Enter/Space), panel (Tab), picks (remove buttons),
   options (checkboxes), actions (buttons), Escape to leave picking/close.

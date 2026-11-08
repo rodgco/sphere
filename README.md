@@ -44,6 +44,11 @@ Kit 2's template shape is covered by the transform's tests).
 `Escape` leaves picking, the count chip opens and closes the panel, and the pill remembers where
 you dragged it.
 
+While picking, keys work too — the answer to "the thing I want is behind this element":
+`w`/`↑` parent, `s`/`↓` first child, `a`/`←` previous sibling, `d`/`→` next sibling, `Enter` or
+`Space` to pick the outlined element, `Backspace` to remove the last pick, `c` to copy. Typing in the
+panel is typing; `Escape` works from anywhere.
+
 | Light | Dark |
 |---|---|
 | ![Sphere overlay in light mode: two picks outlined in green and the prompt panel open](docs/images/sphere-light.png) | ![Sphere overlay in dark mode, following prefers-color-scheme](docs/images/sphere-dark.png) |

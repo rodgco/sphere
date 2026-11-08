@@ -77,7 +77,8 @@ through a `file:` link. The fixture's dependencies are installed separately
 | `e2e/picking.mjs` | pick a link (no navigation), leave picking (navigation works), unpick, cap message, marks follow scroll/resize |
 | `e2e/location.mjs` | verified line (with column, no note), a corrupted `__svelte_meta.loc.line` forcing the matcher (note names the needle and the recorded ancestor, column dropped), an element stripped of identity so only the enclosing line is left, an `{@html}` element that inherits its host's location with the enclosing note, and `~` on the panel chip for approximate locations |
 | `e2e/base-path.mjs` | `--base /app/`: overlay loads through the base, pick works, and the source window proves `/app/@fs/…?raw` answered (the base prefix is mandatory) |
-| `e2e/a11y.mjs` | Enter/Space toggles, Escape leaves, focus returns, aria attributes present |
+| `e2e/keyboard.mjs` | `w` reaches a container the pointer cannot click, Enter picks it, Backspace undoes the last pick, `s`/`d` walk children and siblings, a handled key does not scroll, typing in the panel is typing, Escape leaves |
+| `e2e/a11y.mjs` | Enter/Space toggles, Escape leaves, focus returns, the dialog takes focus and one Tab reaches the instructions, aria attributes present |
 | `e2e/clipboard.mjs` | full flow with clipboard permissions; the pasted document has the header, both picks with the rule between them and the instructions; it contains no rendered text, no absolute path and no `node_modules`; the status line reports its size; Copy is disabled with nothing picked |
 
 Shared plumbing (free port, process-group kill, browser context with clipboard permissions) lives

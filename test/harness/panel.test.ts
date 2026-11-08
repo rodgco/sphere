@@ -87,7 +87,8 @@ describe('the panel', () => {
 
       const panel = view.panel()
       expect(panel?.getAttribute('aria-label')).toBe('Build a prompt')
-      expect(document.activeElement).toBe(panel?.querySelector('textarea'))
+      // The dialog takes focus (so it is announced); picking keys keep working from here.
+      expect(document.activeElement).toBe(panel)
     } finally {
       view.destroy()
     }
@@ -255,8 +256,12 @@ describe('the panel', () => {
       event(textarea, 'keydown', { key: 'k' })
       expect(seen).toEqual([])
 
-      event(textarea, 'keydown', { key: 'Escape' })
-      expect(seen).toEqual(['Escape'])
+      // Escape is handled by the overlay itself (it leaves picking), so it is swallowed before the
+      // app rather than passed on — and it still works from inside the box.
+      const escape = event(textarea, 'keydown', { key: 'Escape' })
+      expect(seen).toEqual([])
+      expect(escape.defaultPrevented).toBe(true)
+      expect(view.control.getAttribute('aria-pressed')).toBe('false')
 
       document.removeEventListener('keydown', watcher)
     } finally {

@@ -10,7 +10,8 @@
     instructions: string
     status: { text: string; error: boolean } | null
     style: string
-    focusInstructions: boolean
+    /** Focus the dialog when it opens (from a pick), so it is announced. */
+    focusPanel: boolean
     onCopy(): void
     onRemove(pick: PickEntry): void
     onClear(): void
@@ -25,7 +26,7 @@
     instructions,
     status,
     style,
-    focusInstructions,
+    focusPanel,
     onCopy,
     onRemove,
     onClear,
@@ -42,7 +43,6 @@
   ]
 
   let root: HTMLDivElement | undefined = $state()
-  let textarea: HTMLTextAreaElement | undefined = $state()
 
   // docs/specs/event-matrix.md: typing in the panel never triggers the app's shortcuts. Escape is
   // let through, because it is how picking and the panel are left.
@@ -53,9 +53,11 @@
     })
   })
 
-  // docs/06 §8: when the panel opens from a pick, the instruction box takes focus.
+  // docs/06 §8: the dialog takes focus when it opens from a pick, so a screen reader announces it.
+  // Focus deliberately does *not* jump into the instruction box: single-key picking (`w`, `a`…)
+  // must keep working until the user chooses to type, and one Tab reaches the box.
   $effect(() => {
-    if (focusInstructions && textarea !== undefined) textarea.focus({ preventScroll: true })
+    if (focusPanel && root !== undefined) root.focus({ preventScroll: true })
   })
 </script>
 
@@ -63,6 +65,7 @@
   class="panel"
   role="dialog"
   aria-label="Build a prompt"
+  tabindex="-1"
   {style}
   bind:this={root}
   use:shield
@@ -99,7 +102,6 @@
     {/if}
 
     <textarea
-      bind:this={textarea}
       class="instructions"
       rows="3"
       aria-label="Instructions"

@@ -102,10 +102,25 @@ async function main() {
 
       // 4. The panel is a labelled dialog and the instructions take focus when it opens from a pick.
       assert((await panel(page).getAttribute('aria-label')) === 'Build a prompt', 'dialog label')
-      const focusInInstructions = await page.evaluate(
-        () => document.getElementById('sphere-host')?.shadowRoot?.activeElement?.tagName,
+      const focusInPanel = await page.evaluate(() =>
+        document.getElementById('sphere-host')?.shadowRoot?.activeElement?.getAttribute('role'),
       )
-      assert(focusInInstructions === 'TEXTAREA', `focus was on ${focusInInstructions}, not the box`)
+      assert(focusInPanel === 'dialog', `focus was on ${focusInPanel}, not the dialog`)
+
+      // Tabbing moves into the panel and reaches the instruction box: close button, the pick's
+      // remove button, then the box. The dialog takes the focus, not the box, so that single-key
+      // picking keeps working until the user chooses to type.
+      let focusInInstructions = ''
+      for (let step = 0; step < 8 && focusInInstructions !== 'TEXTAREA'; step += 1) {
+        await page.keyboard.press('Tab')
+        focusInInstructions = await page.evaluate(
+          () => document.getElementById('sphere-host')?.shadowRoot?.activeElement?.tagName ?? '',
+        )
+      }
+      assert(
+        focusInInstructions === 'TEXTAREA',
+        `Tab did not reach the instruction box (${focusInInstructions})`,
+      )
 
       // 5. Tab reaches the options and Space toggles one; the choice is persisted.
       const reachedOptions = await tabTo(page, async () =>

@@ -53,7 +53,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:svelte",
     "check": "npm run lint && npm run format:check && npm run typecheck && npm run build && npm test",
     "typecheck:svelte": "svelte-check --threshold error",
-    "e2e": "node e2e/picking.mjs && node e2e/clipboard.mjs && node e2e/location.mjs && node e2e/base-path.mjs && node e2e/a11y.mjs",
+    "e2e": "node e2e/picking.mjs && node e2e/clipboard.mjs && node e2e/location.mjs && node e2e/keyboard.mjs && node e2e/base-path.mjs && node e2e/a11y.mjs",
     "e2e:a11y": "node e2e/a11y.mjs",
     "e2e:picking": "node e2e/picking.mjs",
     "golden": "node scripts/golden.mjs",
@@ -62,7 +62,8 @@
     "e2e:clipboard": "node e2e/clipboard.mjs",
     "e2e:location": "node e2e/location.mjs",
     "e2e:base-path": "node e2e/base-path.mjs",
-    "pkg:check": "npm run build && publint && attw --pack . --ignore-rules cjs-resolves-to-esm"
+    "pkg:check": "npm run build && publint && attw --pack . --ignore-rules cjs-resolves-to-esm",
+    "e2e:keyboard": "node e2e/keyboard.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

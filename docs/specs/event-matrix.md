@@ -14,8 +14,8 @@ behave normally. This table is the contract; `docs/07` and the e2e suite enforce
 | `auxclick` | swallowed | — | fires for middle/right clicks |
 | `dblclick` | swallowed | passed through | our marks must not trigger app handlers |
 | `contextmenu` | **passed through** | passed through | the app's menu must keep working; we only pick on the primary button |
-| `keydown` | only `Escape` is handled (leave picking / close panel) | — | other keys reach the page |
-| `keydown` inside the panel | never swallowed; the panel stops propagation of its own typing | — | typing in the instructions must not trigger app shortcuts |
+| `keydown` | the picking keys are handled and swallowed (`w`/`s`/`a`/`d`, arrows, `Enter`, `Space`, `Backspace`, `c`, `Escape`) | — | other keys reach the page; `Alt`/`Ctrl`/`Cmd` combinations are never ours |
+| `keydown` inside the panel or an app field | never treated as picking keys; the panel stops propagation of its own typing | — | typing in the instructions must not trigger app shortcuts or move the selection. `Escape` is the exception: it leaves picking from anywhere |
 | `touchstart` / `touchend` | passed through | — | not swallowed in v1: blocking them breaks scrolling during picking; picking on touch is a documented limitation |
 | `submit`, `input`, `change` | passed through (they cannot fire because `click` is blocked) | — | — |
 | `dragstart` / `dragover` / `drop` | passed through | — | address later if reports appear |
@@ -30,7 +30,10 @@ behave normally. This table is the contract; `docs/07` and the e2e suite enforce
    app that never enables Sphere keeps its normal event flow.
 4. **A pick is `pointerdown`, not `click`.** This makes picking instant and lets us prevent the
    whole chain; the `click` that follows must still be swallowed (rule 1 of the table).
-5. **The page must remain usable after a pick.** Because picking continues after a pick, the
+5. **Handled keys are swallowed, not merely observed.** A key that moves the selection must also
+   `preventDefault()` (Space scrolls, arrows scroll) and `stopPropagation()` (an app shortcut), or
+   picking breaks the page it is inspecting.
+6. **The page must remain usable after a pick.** Because picking continues after a pick, the
    user leaves picking explicitly (or by copying); the e2e test navigates right after leaving to
    prove the listeners are gone.
 
