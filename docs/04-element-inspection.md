@@ -51,8 +51,10 @@ walks the *existing* DOM, so a child component's markup can shift the mapping
 
 - The compiler's line is used **as-is only if it verifies**: the line opens the element's tag
   and contains its authored class list (or, for classless elements, its identifying attribute).
-  Until the source window exists (M4) there is nothing to verify against, so every recorded line
-  is reported as `enclosing` — the pessimistic default in the algorithm below.
+  `inspectElement` itself cannot verify anything — it is synchronous and reads no files — so every
+  recorded line leaves it marked `enclosing`. The overlay resolves it against the file
+  (`src/runtime/location.ts` via `src/runtime/source.ts`) before the chip or the prompt use it; the
+  hover tooltip keeps the raw, pessimistic answer on purpose.
 - Otherwise the element is searched in its file: tag on the line **and** an exact attribute —
   authored `class="a b"`, then `id`, then `href`/`type`/`name`/`aria-label`/`title`/
   `placeholder`/`value`/`src`. A bare attribute is only accepted when the element has no

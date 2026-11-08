@@ -5,7 +5,7 @@
 When a component passes markup to another as a snippet (`<Wrapper>{…}</Wrapper>` with
 `{@render children()}`), Svelte renders that DOM inside `Wrapper`'s tree but the markup is written in
 the caller's file. Svelte's own dev metadata attributes the DOM to the renderer; ownership
-(`dev_current_component_function`) belongs to the definer. The prototype tried rewriting the tree to
+(`dev_current_component_function`) belongs to the definer. An earlier version rewrote the tree to
 the definer (wrapping `wrap_snippet`), which changed component parentage globally — it broke the
 “slotted child belongs to the host” expectation that devtools panels rely on — and was reverted.
 

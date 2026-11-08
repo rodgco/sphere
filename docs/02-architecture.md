@@ -8,31 +8,43 @@ One npm package, three layers, no build step for the browser layer:
 sphere/
   src/
     plugin/                 Node side: the Vite plugin
-      index.ts              factory + option normalisation
-      virtual-modules.ts    ids, resolve/load, config transport
-      inject.ts             SvelteKit template injection + transformIndexHtml
+      index.ts              factory, the two plugin objects, option normalisation
+      inject.ts             ids served to the page, SvelteKit template injection,
+                            transformIndexHtml
       svelte-client.ts      the `svelte/internal/client` seam: ids, wrapper assembly
-    runtime/                Browser side, served as virtual modules
+      options.ts            option validation
+      virtual.ts            id → URL, and base handling
+    runtime/                browser side, served as shipped source
       instrumentation.ts    wraps svelte/internal/client, instance registry, element stamps
       inspect.ts            element → payload (the only place that reads __svelte_meta);
                             installs window.__SPHERE__
+      location.ts           the conservative matcher: verified / matched / enclosing
+      source.ts             `/@fs` reads, cached per page, silent on failure
       budgets.ts            shared bounds + bounded, always-valid JSON clone
       format.ts             payload → markdown (pure, unit-tested)
-      overlay/              the UI, written in Svelte, compiled by the host plugin
-        Overlay.svelte
-        Panel.svelte
-        marks.ts            outline bookkeeping (pure-ish)
-        picking.ts          pointer handling + event swallowing
-    shared/                 types shared by both sides
+    overlay/                Svelte, compiled by the host plugin, reached by `virtual:sphere/overlay`
+      entry.ts              mounts the shadow host (the only node added to the page)
+      Overlay.svelte        control, picking, marks, panel wiring
+      Panel.svelte          picks, instructions, options, status line
+      config.ts             reads `virtual:sphere/config`
+      cursor.ts             the one crosshair while picking
+      events.ts             native listeners, the shield action, `press`
+      marks.ts              mark geometry and tracking
+      picking.ts            the event matrix
+      picks.ts              cap, toggle, labels
+      position.ts           clamping, panel placement, clipping
+      storage.ts            the two `localStorage` keys, validated
+      styles.ts             the overlay stylesheet (shadow-root scoped)
+    shared/                 shared by both sides
       payload.ts            the __SPHERE__ contract, in types
-      version.ts            reported by the API until virtual:sphere/config carries it
+      paths.ts              project-relative paths, for the panel and the prompt
+      version.ts            reported by the API and by `virtual:sphere/config`
 ```
 
-Why sources instead of inlined strings: the prototype shipped its browser code as `?raw`
-strings and had to stream it through a custom middleware and a separate `dist` entry. Serving
-real `.ts`/`.svelte` sources as virtual modules lets Vite (and the host's Svelte plugin) do
-the transform, keeps everything typechecked, and makes the overlay maintainable. This mirrors
-how `vite-plugin-svelte` serves its own inspector.
+Why sources instead of inlined strings: shipping the browser code as `?raw` strings would mean a
+custom middleware and a separate `dist` entry. Serving real `.ts`/`.svelte` sources as virtual
+modules lets Vite (and the host's Svelte plugin) do the transform, keeps everything typechecked,
+and makes the overlay maintainable. This mirrors how `vite-plugin-svelte` serves its own inspector.
 
 ## Data flow
 
@@ -41,7 +53,7 @@ vite dev
   │
   ├─ resolveId/load  virtual:sphere/runtime      → instrumentation + inspect, mounted on import
   ├─ resolveId/load  virtual:sphere/overlay      → overlay component (Svelte), compiled by host
-  ├─ resolveId/load  virtual:sphere/config       → { root, base, options } for this server
+  ├─ resolveId/load  virtual:sphere/config       → { root, base, version } for this server
   └─ inject          <script type="module" src="/@id/__x00__virtual:sphere/runtime?...">
                                     │
 browser page ───────────────────────┘
@@ -60,7 +72,7 @@ instrumentation.
 | Boundary | Rule |
 |---|---|
 | Production build | The plugin is `apply: 'serve'`. Nothing may reference it from `src/`. |
-| SSR | The instrumentation is client-only (`applyToEnvironment` / `transform` skips `ssr`). |
+| SSR | The instrumentation is client-only (`applyToEnvironment`). The Kit plugin transforms one SSR module (the generated app template) and instruments nothing. |
 | App code | Sphere never imports from the app, and never patches globals other than `__SPHERE__`. |
 | Host config | Sphere reads only `config.root`, `config.base` and its own option. |
 | Filesystem | Reads via Vite's `/@fs` from the browser; no server-side file reading at all. |
@@ -83,8 +95,13 @@ export interface SphereOptions {
 }
 ```
 
-Options are validated once in `configResolved` and travel to the browser through
-`virtual:sphere/config` (never through the page URL, never in the app's HTML).
+Only `enabled` is implemented today. `maxSelections`, `include`, `startPosition` and
+`matchAttributes` are the specified v1 surface and are **not** accepted yet: passing one fails the
+option validation loudly (`sphere: unknown option "…"`), which is the honest state while the
+defaults are still hard-coded (`PICK_CAP`, the four panel toggles).
+
+Options are validated once in `configResolved`; the browser receives `virtual:sphere/config` —
+`{ root, base, version }` — never through the page URL and never in the app's HTML.
 
 ## Instrumentation is a separate concern from the overlay
 

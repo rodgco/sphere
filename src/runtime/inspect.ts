@@ -157,6 +157,20 @@ const VOID_ELEMENTS = new Set([
 /** Svelte's scoping class: `svelte-1a2b3c`. */
 const SVELTE_HASH = /^svelte-[a-z0-9]+$/i
 
+/**
+ * Attribute names that never reach the payload, whatever their value
+ * (`docs/09-security-and-privacy.md` §3). A token pasted into a data attribute is still a token.
+ */
+const SENSITIVE_ATTRIBUTE = /token|secret|password|api[-_]?key|authorization/i
+
+/** A password field's `value` attribute can carry the typed value after a submit. */
+function isSensitiveAttribute(element: Element, name: string): boolean {
+  if (SENSITIVE_ATTRIBUTE.test(name)) return true
+  return (
+    name === 'value' && element.localName === 'input' && element.getAttribute('type') === 'password'
+  )
+}
+
 function elementInfo(element: Element): ElementInfo {
   const classes = [...element.classList].filter((name) => !SVELTE_HASH.test(name))
 
@@ -183,6 +197,7 @@ function attributesOf(element: Element): Record<string, string> {
     if (kept >= LIMITS.attrs) break
     // Already visible in `markup`, and the two big ones.
     if (attribute.name === 'class' || attribute.name === 'style') continue
+    if (isSensitiveAttribute(element, attribute.name)) continue
     attrs[attribute.name] = clip(attribute.value, LIMITS.attrLength)
     kept += 1
   }
@@ -216,6 +231,7 @@ function serializeAttributes(element: Element): string {
 
   for (const attribute of element.attributes) {
     if (attribute.name === 'style') continue
+    if (isSensitiveAttribute(element, attribute.name)) continue
     let value = clip(attribute.value, LIMITS.attrLength)
     if (attribute.name === 'class') {
       const authored = value

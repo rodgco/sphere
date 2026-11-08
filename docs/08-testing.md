@@ -1,8 +1,7 @@
 # 08 — Testing strategy
 
-The prototype's test suite is the template: it is the reason the hard parts (hydration,
-attribution, base path) are known-good. Sphere keeps the same layers and adds the ones the
-prototype deferred.
+The layers below exist because the hard parts — hydration, attribution, base path, event
+swallowing — cannot be proven in jsdom. Each layer answers a question the one above it cannot.
 
 ## 1. Layers
 

@@ -2,9 +2,9 @@
 
 ## Context
 
-The instrumentation wraps `svelte/internal/client` for every module in the app. The prototype's
-first review round caught the important mistake: the element stamps ran even when the feature was
-disabled, adding a DOM walk per rendered fragment and retaining props for every instance. A runtime
+The instrumentation wraps `svelte/internal/client` for every module in the app. A review of an
+earlier implementation caught the important mistake: the element stamps ran even when the feature
+was disabled, adding a DOM walk per rendered fragment and retaining props for every instance. A runtime
 `if (enabled)` inside the wrapper would still pay for the branch, keep the code in the module, and
 leave the behaviour “almost” inert.
 

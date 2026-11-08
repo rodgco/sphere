@@ -2,8 +2,8 @@
 
 ## Context
 
-The prototype's first version toggled picking with `Alt+Shift+P`. Chrome binds that combination to
-“create a tab group” (via an extension in the author's profile), so the shortcut was captured by
+An earlier version toggled picking with `Alt+Shift+P`. Chrome binds that combination to “create a
+tab group”, so the shortcut was captured by
 the browser and the toolbar was effectively unreachable. Any global combination has this problem
 somewhere: OS, browser, extensions, IDE and the app itself all compete.
 

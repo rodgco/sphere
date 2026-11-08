@@ -1,8 +1,7 @@
 # Svelte 5 dev runtime — verified notes
 
-Everything here was verified against **Svelte 5.57** (dev compile) while building the prototype.
-Paths are relative to the `svelte` package. Anything marked *(unverified)* was inferred, not
-observed.
+Everything here was verified against **Svelte 5.57** (dev compile) while building Sphere. Paths
+are relative to the `svelte` package. Anything marked *(unverified)* was inferred, not observed.
 
 ## 1. Element metadata
 
@@ -88,8 +87,8 @@ Rules we derived:
   and never reaches `tag`). A mutable one is named: `let count = $.tag($.state(0), 'count')`
   (Svelte 5.57, client dev output). So “state” means “named signals Svelte told us about”, and a
   missing name is not a bug.
-- Proxy state mutates in place: reassignment bumps `.wv`, deep mutation does not — polling must
-  re-read objects periodically to notice (`_stateSnapshots` in the prototype).
+- Proxy state mutates in place: reassignment bumps `.wv`, deep mutation does not — a reader must
+  re-read objects to notice changes it did not make.
 - Functions and symbols are not state data; skip them rather than serialising.
 
 ## 6. Blocks, snippets and ownership
@@ -111,8 +110,8 @@ Rules we derived:
 - **The DOM is still attributed to the rendering component**: a `<a>` passed as `children` to
   `Wrapper` and rendered via `{@render children()}` lives inside `Wrapper`'s tree. Svelte reports the
   renderer. Rewriting the tree to the definer breaks the mental model of every devtools panel, so
-  the prototype keeps the tree and labels both entries (`renders the markup` / `defines the
-  markup`) — see `docs/decisions/0005-snippet-labelling.md`.
+  Sphere keeps the tree and labels both entries (`renders the markup` / `defines the markup`) — see
+  `docs/decisions/0005-snippet-labelling.md`.
 
 ## 7. Props
 
@@ -122,24 +121,14 @@ Rules we derived:
 
 ## 8. The export surface to wrap
 
-The prototype's wrapper overrides exactly (asserted by a test that diffs against
-`svelte/internal/client`):
+Sphere's wrapper overrides exactly (asserted by `test/svelte-client.test.ts`, which checks that
+every other export is untouched):
 
 ```
-pop, push,
-state, derived, proxy, tag, tag_proxy,
-user_effect, user_pre_effect,
-template_effect, deferred_template_effect,
-each, if, key, await, component, boundary
+push, pop, add_svelte_meta, add_locations, tag, tag_proxy, component, each, if, key
 ```
 
-and, only when element inspection is on, additionally:
-
-```
-add_locations, add_svelte_meta
-```
-
-`FILENAME`, `active_effect`, `UNINITIALIZED` are read from the same module but not replaced.
+`FILENAME` and `active_effect` are read from the same module but not replaced.
 
 ## 9. What is not exported (and must be mirrored)
 

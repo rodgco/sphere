@@ -1,6 +1,8 @@
 # Docs index
 
-Read in order on a first pass; the ADRs and learning notes are reference material.
+Read in order on a first pass; the ADRs and learning notes are reference material. These docs
+are normative. Package-level documents live at the repository root: `README.md` (install,
+quickstart, privacy summary), `SECURITY.md`, `CHANGELOG.md` and `THIRD_PARTY.md`.
 
 | # | Doc | Kind |
 |---|---|---|
@@ -43,7 +45,9 @@ Read in order on a first pass; the ADRs and learning notes are reference materia
 - [Dev overlay lessons](learning/ui-overlay-lessons.md) — shadow DOM inheritance, cursor, event chain, focus, marks, a11y.
 - [Vitest + Svelte harness](learning/vitest-svelte-harness.md) — client transforms in Vitest 5, the `browser` condition, `unmount`, `__svelte_meta`.
 
-## Reuse
+## Status of these documents
 
-- [Prototype inventory](reuse/inventory.md) — file-by-file: port / rewrite / drop, plus the working-behaviour checklist.
-- [Licensing and attribution](reuse/licensing.md) — what must carry an MIT notice, and the header format.
+The docs are normative. Specs state behaviour as rules (MUST/MUST NOT/SHOULD) with the test that
+proves them; ADRs record decisions and are superseded rather than rewritten; `learning/` notes cite
+the file and function they come from. When code and a spec disagree, fix one of them in the same
+change.

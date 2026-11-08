@@ -10,12 +10,11 @@ and a numbered source window — plus the instructions you typed.
 
 Nothing leaves the browser: the payload goes to your clipboard.
 
-> **Status: M4 done.** Instrumentation, `inspectElement`, the shadow-root overlay with picking,
-> marks and the panel, the prompt with verified source locations and the numbered source window,
-> and the browser tests all exist under `src/`, `fixtures/`, `test/` and `e2e/`. Remaining before
-> `0.1.0`: hardening and release (M5). The behaviour in `docs/` is derived from a working prototype
-> (a private fork of `vite-devtools-svelte` developed inside another project).
-> `docs/11-roadmap.md` turns the specs into milestones.
+> **Status: 0.1.0, not yet published.** Everything the docs describe exists and is tested:
+> instrumentation, `inspectElement`, the shadow-root overlay with picking, marks and the panel, the
+> prompt with verified source locations and the numbered source window, the browser tests, and the
+> release pipeline. The specs in `docs/` are normative — when behaviour and a spec disagree, one of
+> them is a bug.
 
 ## 60-second quickstart
 
@@ -73,16 +72,16 @@ Options today: `{ enabled?: boolean }`. The rest of the v1 surface (`maxSelectio
 `startPosition`, `matchAttributes`) is specified in `docs/02-architecture.md` and arrives with the
 milestones that need it.
 
-## Why a separate project
+## Why it is its own thing
 
-The feature started as a pull request to `vite-devtools-svelte`. The work is correct and
-tested, but it depends on that project's component-tracking runtime (a wrapped
-`svelte/internal/client`), its dev-server delivery, its test harness and its release
-train. Sphere owns that layer instead: one small package, one purpose, no gatekeeper,
-and free to evolve the instrumentation and the UI together.
+A prompt builder needs very little: the element under the pointer, the instance that rendered it,
+its props and state, the file behind it. That is a *small* runtime, and it has to be small — it
+ships into every page that enables it and it wraps code the app runs on every render.
 
-The trade-off is explicit (see `docs/10-risks.md`): Sphere carries the Svelte-internals
-coupling itself and must keep up with Svelte releases.
+So Sphere owns its own layer instead of borrowing a suite's: one package, one purpose, one option
+object, and the freedom to change the instrumentation and the UI together. The trade-off is
+explicit (`docs/10-risks.md`): it carries the Svelte-internals coupling itself and must keep up
+with Svelte releases.
 
 ## What it is not
 
@@ -98,13 +97,32 @@ coupling itself and must keep up with Svelte releases.
 npm install
 npm --prefix fixtures/kit install    # SvelteKit fixture (optional locally, installed in CI)
 
-npm run check     # lint, format check, typecheck, build, tests
 npm run dev       # fixtures/plain on http://localhost:5201
+npm run check     # lint, format, typecheck (tsc + svelte-check), unit + harness, build
+npm run e2e       # picking, clipboard, location, base path, a11y — needs Chromium once:
+                  #   npx playwright install chromium
 ```
+
+| What | Command |
+|---|---|
+| Golden prompt / doc examples | `npm run golden`, `npm run docs:example`; CI fails on a diff (`npm run check:generated`) |
+| README screenshots | `node scripts/screenshots/sphere.mjs` (privacy scan included) |
+| Package shape | `npm run pkg:check` (`publint` + `attw` on the packed tarball) |
 
 `fixtures/plain` is a plain Vite + Svelte app; `fixtures/kit` is a SvelteKit app that consumes the
 built package through a `file:` link, so the injection test runs against the artifact a user
 installs.
+
+## Releasing
+
+Versioning is [changesets](https://github.com/changesets/changesets): add a changeset with the
+change, and `CHANGELOG.md` plus the version follow. The prompt format is documented as **unstable
+until `1.0`**, so a minor release may change the clipboard document — `docs/05-prompt-format.md`
+and the golden test are what make that visible.
+
+Publishing runs from `master` (`.github/workflows/release.yml`) with `changesets/action` and
+`--provenance`. It needs `NPM_TOKEN` in the repository secrets; without it the job skips the publish
+step instead of failing on every push.
 
 ## Read this first
 
@@ -122,8 +140,8 @@ installs.
 | `docs/09-security-and-privacy.md` | What may leave the page, and what may not |
 | `docs/10-risks.md` | Internals coupling, version matrix, perf, maintenance |
 | `docs/11-roadmap.md` | Milestones and exit criteria |
-| `docs/learning/` | What we verified about Svelte, SvelteKit and Vite while building the prototype |
-| `docs/reuse/` | Inventory of the prototype, what to port, what to rewrite, licensing |
+| `docs/learning/` | What was verified about Svelte, SvelteKit and Vite while building Sphere |
+| [`SECURITY.md`](SECURITY.md) | What the project promises and how to report a problem |
 | `docs/decisions/` | ADRs: the decisions already made, and why |
 | `docs/specs/` | Payload schema, location algorithm, a real clipboard example |
 

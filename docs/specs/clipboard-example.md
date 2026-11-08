@@ -138,9 +138,9 @@ Notes:
 - This is the **enclosing** case: the compiler recorded the action group, not the link. The
   prompt says so, the column is dropped (it belongs to the ancestor), and the panel chip shows
   the same location prefixed with `~`.
-- The matched case (`line matched by `class="…"`, see `docs/05-prompt-format.md` §4) needs the
-  element to be searched in the file; that lands with the source verification in M4, and its
-  example will be generated here too.
+- The matched case (`line matched by `class="…"`, see `docs/05-prompt-format.md` §4) is exercised
+  by `test/location.test.ts` and by `e2e/location.mjs` (which corrupts a recorded line to force the
+  matcher); the three examples generated here are the verified, enclosing and no-location cases.
 - `href="/files"` alone would not identify the link: the other CTA shares the tag and shape.
 
 ## Case C — no location at all

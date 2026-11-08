@@ -107,4 +107,4 @@ in isolation).
 - a page with a `<dialog>`/modal open;
 - RTL layout (badge/panel alignment).
 
-Each of these broke the prototype once, and each has (or will have) an e2e case.
+Each of these has broken a dev overlay before; each has an e2e case.

@@ -2,7 +2,7 @@
 
 ## Context
 
-The prototype's overlay is 1 079 lines of hand-written DOM (no framework) because it was served as a
+A hand-written-DOM overlay (1 079 lines, no framework) was tried first, because it was served as a
 `?raw` string from a package that could not assume a Svelte compilation step. That works, but every
 UI change is DOM plumbing, and the code cannot use the ecosystem's ergonomics (reactivity, slots,
 transitions) that its target users already know.

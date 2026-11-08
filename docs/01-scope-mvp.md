@@ -16,8 +16,8 @@ Everything below is v1. "MUST" is a release blocker, "SHOULD" is expected, "MAY"
 
 - **MUST** be a small button, always reachable, in a corner by default.
 - **MUST** be draggable, with the position remembered across reloads; double-click resets it.
-- **MUST NOT** register a global keyboard shortcut (browser conflicts are unavoidable; the
-  prototype fought Chrome's tab-group binding).
+- **MUST NOT** register a global keyboard shortcut (browser conflicts are unavoidable — Chrome
+  already binds `Alt+Shift+P` to tab groups; see `docs/decisions/0003-no-global-shortcut.md`).
 - **MUST** expose its active state (`aria-pressed`) and be operable by keyboard
   (Enter/Space toggles picking).
 - **SHOULD** show the number of picks next to it, which opens the panel.

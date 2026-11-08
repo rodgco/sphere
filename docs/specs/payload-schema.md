@@ -94,6 +94,9 @@ export interface StateNode {
 }
 ```
 
+A sensitive attribute (`token`, `secret`, `password`, `api-key`, `authorization`, and `value` on a
+password input) is dropped from `attrs` **and** from `markup` (`docs/09` §3).
+
 Three deliberate limits, because a payload that lies is worse than a payload that is small:
 
 - **`renders` is `0`** until `template_effect` is wrapped (not in the M1 override set). It is a
@@ -101,9 +104,12 @@ Three deliberate limits, because a payload that lies is worse than a payload tha
 - **A lazy `$derived` value is the JSON string `"<not evaluated>"`**: the signal still holds
   `UNINITIALIZED` (a symbol) because nothing has read it, and a plausible-looking value would be
   an invention.
-- **`source.enclosing` is pessimistic**: a recorded line is marked enclosing until it can be
-  verified against the file text, which arrives with the source window (M4). Until then every
-  location is “Svelte said this line”; the `~` marker is accurate rather than decorative.
+- **`source.enclosing` is pessimistic in the raw payload.** `inspectElement` is synchronous and
+  reads no files, so a recorded line is marked enclosing until something verifies it. The overlay
+  does that with `src/runtime/location.ts` and the file text from `src/runtime/source.ts`, then
+  rewrites `source` with `matched`/`recorded`; the panel chip and the prompt use the resolved
+  location, the hover tooltip keeps the raw one. So `~` on hover means “Svelte said this line, not
+  verified”, and `~` in the panel means “verified as approximate” — both accurate.
 
 ## Invariants (tested)
 

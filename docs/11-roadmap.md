@@ -1,13 +1,13 @@
 # 11 — Roadmap
 
-Milestones are sized so each ends with something demonstrable. M0–M2 reproduce what the
-prototype already proved; M3–M5 make it a product.
+Milestones are sized so each ends with something demonstrable: M0–M2 build the runtime and the
+UI, M3–M5 make it a product.
 
 ## M0 — Repository and scaffold
 
-**Status:** done — the plugin lives in `src/plugin/`, the probe is proved by
-`test/delivery.test.ts` against `fixtures/plain/` (`npm run dev` boots it), and the name is
-`docs/decisions/0009-name-and-package.md`.
+**Status:** done — package skeleton, strict TypeScript, lint/format, CI and a delivery proof (a
+dummy module injected through `transformIndexHtml`, replaced by the real overlay in M2). The name
+is `docs/decisions/0009-name-and-package.md`.
 
 **Done when**
 

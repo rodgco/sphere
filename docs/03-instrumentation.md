@@ -83,8 +83,8 @@ component's props and state proxies.
 3. **Stamp only what Svelte located.** The stamp walk starts at the node Svelte was given and
    walks siblings, one per entry in the compiler's location list (this is what makes multi-root
    templates work during hydration). No global `querySelectorAll`.
-4. **Bound the walk.** Total visited nodes per `add_locations` call is capped (20 000 in the
-   prototype); exceeding the cap stops the stamp instead of stalling the frame.
+4. **Bound the walk.** Total visited nodes per `add_locations` call is capped (20 000,
+   `MAX_STAMP_NODES`); exceeding the cap stops the stamp instead of stalling the frame.
 5. **Attribute correctly under snippets.** Markup passed to another component as a snippet
    renders inside the host, but belongs to the component that wrote it. Svelte distinguishes
    ownership (`wrap_snippet` swaps the dev component function) from the DOM tree. Sphere
@@ -124,8 +124,8 @@ smaller than the payload budget.
 
 ## What we will not do
 
-- Patch the Svelte compiler output with regexes (the prototype avoided this by wrapping the
-  module boundary instead and it is the reason the approach survives minor releases).
+- Patch the Svelte compiler output with regexes (Sphere wraps the module boundary instead, which
+  is why the approach survives minor releases).
 - Read `component_context` internals that are not exported; if a piece is missing, propose an
   upstream API instead of reaching further in.
 - Store anything about the app in Postgres/localStorage/telemetry. The only persisted state is

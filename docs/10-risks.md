@@ -67,8 +67,9 @@ the e2e suite.
 
 **What**: custom hover/pick interactions are easy to make keyboard- and screen-reader-hostile.
 
-**Response**: the baseline in `docs/06-toolbar-ux.md` §8 is a release criterion; `axe` runs on
-the overlay in the e2e suite (the prototype's prompt UI passed a manual pass, not axe).
+**Response**: the baseline in `docs/06-toolbar-ux.md` §8 is a release criterion, and
+`e2e/a11y.mjs` checks the parts a browser can observe (labels, roles, focus order, the focus ring).
+A manual pass is not a substitute for axe; running it is still on the list.
 
 ## 8. Distribution and trust
 
