@@ -1,6 +1,6 @@
 {
   "name": "sphere-plugin",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Dev-only Vite plugin that turns a picked Svelte element into a precise markdown prompt for a coding agent.",
   "keywords": [
     "devtools",
@@ -56,20 +56,24 @@
     "e2e": "node e2e/picking.mjs && node e2e/clipboard.mjs && node e2e/location.mjs && node e2e/base-path.mjs && node e2e/a11y.mjs",
     "e2e:a11y": "node e2e/a11y.mjs",
     "e2e:picking": "node e2e/picking.mjs",
-    "golden": "node --experimental-strip-types scripts/golden.mjs",
-    "docs:example": "node --experimental-strip-types scripts/clipboard-example.mjs",
+    "golden": "node scripts/golden.mjs",
+    "docs:example": "node scripts/clipboard-example.mjs",
     "check:generated": "npm run golden && npm run docs:example && git diff --exit-code test/golden/prompt.md docs/specs/clipboard-example.md",
     "e2e:clipboard": "node e2e/clipboard.mjs",
     "e2e:location": "node e2e/location.mjs",
-    "e2e:base-path": "node e2e/base-path.mjs"
+    "e2e:base-path": "node e2e/base-path.mjs",
+    "pkg:check": "npm run build && publint && attw --pack . --ignore-rules cjs-resolves-to-esm"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@changesets/cli": "^3.0.3",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/node": "^26.6.6",
     "happy-dom": "^21.0.4",
     "oxfmt": "^0.77.0",
     "oxlint": "^1.92.0",
     "playwright": "^1.65.0",
+    "publint": "^0.3.25",
     "svelte": "^5.57.3",
     "svelte-check": "^4.7.8",
     "typescript": "^6.0.3",
