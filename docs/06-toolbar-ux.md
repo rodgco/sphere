@@ -36,9 +36,15 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   | `a`, `←` | previous sibling |
   | `d`, `→` | next sibling |
   | `Enter`, `Space` | pick / unpick the outlined element |
+  | `Shift+Enter` | pick it and leave picking |
+  | `p` | pin the outline, so a click confirms it wherever the pointer goes |
   | `Backspace` | remove the most recent pick |
   | `c` | copy the prompt (same as the button) |
-  | `Escape` | leave picking (existing) |
+  | `?` | show or hide the shortcut list |
+  | `Escape` | close the shortcut list, else the panel, else leave picking |
+
+  The list is not folklore: `?` opens it inside the shadow root, and the panel header has a `?`
+  button for the same dialog, so the keys are discoverable without reading the README.
 
   Keys work from the moment picking starts, before anything is picked: the cursor begins at the
   element the pointer last outlined (or, if it never entered the page, at the page's own content),
@@ -47,8 +53,10 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 
   A navigation key **locks** the selection: the pointer no longer moves the outline, so a click can
   confirm the outlined element even though the mouse had to travel to the click. The click picks
-  what is outlined, then hands the selection back to the pointer. `Enter` keeps the cursor where it
-  is, so a parent and then its grandparent can be collected without re-navigating.
+  what is outlined, then hands the selection back to the pointer. `p` locks the outline the pointer
+  is already on, which is what to use when hovering itself changes the page (a menu that opens, a
+  tooltip that appears): pin, move, click. `Enter` keeps the cursor where it is, so a parent and then
+  its grandparent can be collected without re-navigating.
 
   Keys with `Alt`/`Ctrl`/`Cmd` are left to the app and the browser, and anything typed into the panel
   or an app field is typing, not navigation — only `Escape` works from inside a text field.
@@ -117,7 +125,8 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 - Every button has an accessible name (`aria-label` when the visual is a glyph).
 - The panel is `role="dialog"` with `aria-label="Build a prompt"`, `tabindex="-1"`. Focus moves to
   the dialog when it opens from a pick (so it is announced) and returns to the control on
-  Escape/close. It deliberately does **not** jump into the instruction box: single-key picking (
+  Escape/close. The shortcut list is `role="dialog"` with `aria-label="Keyboard shortcuts"` and
+  closes on Escape before anything else does. It deliberately does **not** jump into the instruction box: single-key picking (
   `w`, `a`, `s`, `d`) must keep working until the user chooses to type, and one Tab reaches the box.
 - Focus ring: 2 px outline in both themes, never removed without a replacement.
 - Everything reachable by keyboard: control (Enter/Space), panel (Tab), picks (remove buttons),

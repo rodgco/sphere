@@ -36,6 +36,13 @@ describe('the key map', () => {
     expect(commandFor(key({ key: 'Escape' }))).toBe('leave')
   })
 
+  it('maps the help sheet, the pin and shift+enter', () => {
+    expect(commandFor(key({ key: '?' }))).toBe('help')
+    expect(commandFor(key({ key: 'p' }))).toBe('pin')
+    expect(commandFor(key({ key: 'Enter', shiftKey: true }))).toBe('pickAndLeave')
+    expect(commandFor(key({ key: 'p', shiftKey: true }))).toBeNull()
+  })
+
   it('leaves everything else to the page', () => {
     for (const init of [
       { key: 'x' },
@@ -44,6 +51,7 @@ describe('the key map', () => {
       { key: 'c', metaKey: true },
       { key: 'w', altKey: true },
       { key: 'C', shiftKey: true },
+      { key: 'P', shiftKey: true },
     ]) {
       expect(commandFor(key(init)), JSON.stringify(init)).toBeNull()
     }

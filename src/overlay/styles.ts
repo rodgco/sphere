@@ -219,6 +219,38 @@ button {
 .options input { accent-color: var(--sphere-accent); }
 
 .status { min-height: 18px; margin: 0; color: var(--sphere-muted); font-size: 12px; }
+
+.help {
+  position: fixed;
+  width: 300px;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--sphere-border);
+  background: var(--sphere-bg);
+  color: var(--sphere-fg);
+  box-shadow: var(--sphere-shadow);
+  pointer-events: auto;
+}
+.help-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.help-header h2 { margin: 0; font-size: 13px; font-weight: 600; }
+.help-header .panel-close { margin-left: auto; }
+.help-list { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; align-items: baseline; }
+.help-list dt { display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+.help-list dd { margin: 0; color: var(--sphere-muted); font-size: 12px; }
+.help-list kbd {
+  display: inline-block;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--sphere-border);
+  background: var(--sphere-raised);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  text-align: center;
+}
+.help-sep { color: var(--sphere-muted); font-size: 11px; }
 .status.error { color: var(--sphere-danger); }
 
 .mark {

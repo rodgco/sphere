@@ -6,6 +6,7 @@
   import { relativeTo } from '../shared/paths.js'
   import { createSourceLoader } from '../runtime/source.js'
   import type { Inspected } from '../shared/payload.js'
+  import Help from './Help.svelte'
   import Panel from './Panel.svelte'
   import { sphereConfig } from './config.js'
   import { groupDigits, writeClipboard } from './clipboard.js'
@@ -62,6 +63,7 @@
   let options = $state<OverlayOptions>({ ...DEFAULT_OPTIONS })
   let instructions = $state('')
   let panelOpen = $state(false)
+  let helpOpen = $state(false)
   let panelStyle = $state('')
   let focusPanel = $state(false)
 
@@ -150,7 +152,9 @@
   // One place decides what the keyboard does while picking. Capture phase, so the app never sees a
   // key we handled; everything else passes through (`docs/specs/event-matrix.md`).
   $effect(() => {
-    if (!picking) return
+    // Escape has to work whenever something of ours is open, not only while picking: after
+    // Shift+Enter (or a copy) picking is over and the panel is still there.
+    if (!picking && !panelOpen && !helpOpen) return
 
     window.addEventListener('keydown', onKeydown, true)
     return () => window.removeEventListener('keydown', onKeydown, true)
@@ -159,6 +163,9 @@
   function onKeydown(event: KeyboardEvent) {
     const command = commandFor(event)
     if (command === null) return
+
+    // Picking keys exist only while picking; Escape also closes what is left open afterwards.
+    if (!picking && command !== 'leave') return
 
     const active = focusedElement()
 
@@ -217,11 +224,36 @@
   function runKey(command: PickKey) {
     switch (command) {
       case 'leave':
+        // The cheat sheet closes before picking does: Escape means "out of the topmost thing".
+        if (helpOpen) {
+          helpOpen = false
+          return
+        }
         picking = false
         if (panelOpen) closePanel()
         selection = null
         locked = false
         return
+      case 'help':
+        helpOpen = !helpOpen
+        return
+      case 'pin': {
+        // Freeze the outline where it is: the pointer can travel and the click still confirms it.
+        if (selection === null) selection = pointerTarget
+        if (selection === null) return
+        locked = true
+        return
+      }
+      case 'pickAndLeave': {
+        const target = selection ?? pointerTarget
+        if (target !== null) pickElement(target)
+        picking = false
+        helpOpen = false
+        hover = null
+        selection = null
+        locked = false
+        return
+      }
       case 'copy':
         void copyPrompt()
         return
@@ -558,7 +590,12 @@
       hover = null
       selection = null
       locked = false
+      helpOpen = false
     }
+  }
+
+  function toggleHelp() {
+    helpOpen = !helpOpen
   }
 
   /** Mouse clicks are handled on `pointerup`; `detail === 0` means the click came from the keyboard. */
@@ -622,6 +659,10 @@
     </div>
   {/each}
 
+  {#if helpOpen}
+    <Help style="left: 18px; top: 18px;" onClose={toggleHelp} />
+  {/if}
+
   {#if panelOpen}
     <Panel
       {picks}
@@ -631,6 +672,7 @@
       {focusPanel}
       style={panelStyle}
       onCopy={copyPrompt}
+      onHelp={toggleHelp}
       onRemove={removePick}
       onClear={clearAll}
       onClose={closePanel}

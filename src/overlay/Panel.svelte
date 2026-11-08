@@ -13,6 +13,7 @@
     /** Focus the dialog when it opens (from a pick), so it is announced. */
     focusPanel: boolean
     onCopy(): void
+    onHelp(): void
     onRemove(pick: PickEntry): void
     onClear(): void
     onClose(): void
@@ -28,6 +29,7 @@
     style,
     focusPanel,
     onCopy,
+    onHelp,
     onRemove,
     onClear,
     onClose,
@@ -73,6 +75,15 @@
   <header class="panel-header">
     <h2>Prompt</h2>
     <p class="hint">{picks.length === 0 ? 'nothing picked' : `${picks.length} picked`}</p>
+    <button
+      class="panel-close panel-help"
+      type="button"
+      aria-label="Keyboard shortcuts"
+      title="Keyboard shortcuts (?)"
+      use:press={onHelp}
+    >
+      ?
+    </button>
     <button class="panel-close" type="button" aria-label="Close panel" use:press={onClose}>✕</button>
   </header>
 

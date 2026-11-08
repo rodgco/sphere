@@ -14,7 +14,7 @@ behave normally. This table is the contract; `docs/07` and the e2e suite enforce
 | `auxclick` | swallowed | — | fires for middle/right clicks |
 | `dblclick` | swallowed | passed through | our marks must not trigger app handlers |
 | `contextmenu` | **passed through** | passed through | the app's menu must keep working; we only pick on the primary button |
-| `keydown` | the picking keys are handled and swallowed (`w`/`s`/`a`/`d`, arrows, `Enter`, `Space`, `Backspace`, `c`, `Escape`) | — | other keys reach the page; `Alt`/`Ctrl`/`Cmd` combinations are never ours |
+| `keydown` | the picking keys are handled and swallowed (`w`/`s`/`a`/`d`, arrows, `Enter`, `Space`, `Shift+Enter`, `p`, `Backspace`, `c`, `?`, `Escape`) | — | other keys reach the page; `Alt`/`Ctrl`/`Cmd` combinations are never ours. `Escape` also works after picking, while the panel or the shortcut list is open |
 | `keydown` inside the panel or an app field | never treated as picking keys; the panel stops propagation of its own typing | — | typing in the instructions must not trigger app shortcuts or move the selection. `Escape` is the exception: it leaves picking from anywhere |
 | `touchstart` / `touchend` | passed through | — | not swallowed in v1: blocking them breaks scrolling during picking; picking on touch is a documented limitation |
 | `submit`, `input`, `change` | passed through (they cannot fire because `click` is blocked) | — | — |

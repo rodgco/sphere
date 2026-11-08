@@ -68,7 +68,43 @@ async function main() {
       await page.keyboard.press('Escape')
       await expectAttribute(page, control(page), 'aria-pressed', 'false')
 
-      // 3. The pointer picks the heading; the card around it is only reachable with `w`.
+      // 3. The cheat sheet: `?` opens it, Escape closes it and leaves picking alone.
+      await startPicking(page)
+      await page.keyboard.press('?')
+      const help = page.getByRole('dialog', { name: 'Keyboard shortcuts' })
+      await help.waitFor()
+      assert(
+        ((await help.textContent()) ?? '').includes('select the parent'),
+        'the sheet has no keys',
+      )
+
+      await page.keyboard.press('Escape')
+      await help.waitFor({ state: 'detached' })
+      await expectAttribute(page, control(page), 'aria-pressed', 'true')
+
+      // 4. Pin: the outline stays on the hovered element while the pointer travels, and the click
+      //    confirms it.
+      await page.hover('.card h2')
+      await page.keyboard.press('p')
+      await page.mouse.click(900, 700)
+      await waitForMarks(page, 1)
+      const pinned = (await panel(page).locator('.pick .name').first().textContent()) ?? ''
+      assert(pinned.startsWith('h2'), `p did not pin the heading: ${pinned}`)
+
+      // 5. Shift+Enter picks and leaves in one key. Picking is still on from the pin.
+      await panel(page).getByRole('button', { name: 'Close panel' }).click()
+      await page.hover('#app-button')
+      await page.keyboard.press('Shift+Enter')
+      await expectAttribute(page, control(page), 'aria-pressed', 'false')
+
+      // Clean slate for the walk below: clear the picks, close the panel (which covers the pill),
+      // and let the next step start picking.
+      await panel(page).getByRole('button', { name: 'Clear' }).click()
+      await page.keyboard.press('Escape')
+      await expectAttribute(page, control(page), 'aria-pressed', 'false')
+      await panel(page).waitFor({ state: 'detached' })
+
+      // 6. The pointer picks the heading; the card around it is only reachable with `w`.
       await startPicking(page)
       await page.locator('.card h2').first().click()
       assert((await marks(page).count()) === 1, 'the heading was not picked')

@@ -13,7 +13,30 @@ import { isOverlayElement } from './host.js'
 
 export type NavCommand = 'parent' | 'firstChild' | 'previousSibling' | 'nextSibling'
 
-export type PickKey = NavCommand | 'pick' | 'unpickLast' | 'copy' | 'leave'
+export type PickKey =
+  | NavCommand
+  | 'pick'
+  | 'pickAndLeave'
+  | 'unpickLast'
+  | 'copy'
+  | 'pin'
+  | 'help'
+  | 'leave'
+
+/** The cheat sheet, in one place: the overlay renders it and the tests read it. */
+export const SHORTCUTS: ReadonlyArray<{ keys: readonly string[]; action: string }> = [
+  { keys: ['w', '↑'], action: 'select the parent' },
+  { keys: ['s', '↓'], action: 'select the first child' },
+  { keys: ['a', '←'], action: 'select the previous sibling' },
+  { keys: ['d', '→'], action: 'select the next sibling' },
+  { keys: ['Enter', 'Space'], action: 'pick or unpick the outlined element' },
+  { keys: ['Shift', 'Enter'], action: 'pick it and leave picking' },
+  { keys: ['p'], action: 'pin the outline so a click confirms it' },
+  { keys: ['Backspace'], action: 'remove the most recent pick' },
+  { keys: ['c'], action: 'copy the prompt' },
+  { keys: ['?'], action: 'show or hide this list' },
+  { keys: ['Escape'], action: 'leave picking' },
+]
 
 /** Elements that are never a useful selection: document plumbing and non-rendered content. */
 const NOT_NAVIGABLE = new Set([
@@ -54,11 +77,15 @@ export function commandFor(event: KeyboardEvent): PickKey | null {
 
   if (key === 'escape') return 'leave'
   if (key === 'backspace') return 'unpickLast'
+  if (key === '?') return 'help'
 
   switch (key) {
     case 'enter':
+      return event.shiftKey ? 'pickAndLeave' : 'pick'
     case ' ':
       return 'pick'
+    case 'p':
+      return event.shiftKey ? null : 'pin'
     case 'c':
       return event.shiftKey ? null : 'copy'
     default:

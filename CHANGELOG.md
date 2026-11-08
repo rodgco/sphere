@@ -13,7 +13,10 @@
   siblings from the moment picking starts — before anything is picked — `Enter`/`Space` picks the
   outlined element, `Backspace` removes the last pick, `c` copies. A navigation key locks the
   outline, so a click confirms the outlined element instead of whatever is under the pointer. It is
-  the answer to a container that covers its children and can never be clicked.
+  the answer to a container that covers its children and can never be clicked. `?` shows the
+  shortcut list (also in the panel header), `p` pins the outline so a click can confirm it after the
+  pointer travels, and `Shift+Enter` picks and stops. `Escape` closes the list before the panel
+  before leaving picking.
 
   The prompt format is documented as unstable until 1.0 (`docs/05-prompt-format.md`), so a minor
   release may change the clipboard document.
