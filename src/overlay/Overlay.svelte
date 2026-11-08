@@ -1,9 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { formatPrompt } from '../runtime/format.js'
+  import { formatPrompt, type PromptSelection } from '../runtime/format.js'
   import { pageInfo } from '../runtime/inspect.js'
+  import { resolveElementSource } from '../runtime/location.js'
+  import { createSourceLoader } from '../runtime/source.js'
   import type { Inspected } from '../shared/payload.js'
   import Panel from './Panel.svelte'
+  import { sphereConfig } from './config.js'
   import { groupDigits, writeClipboard } from './clipboard.js'
   import { lockCursor } from './cursor.js'
   import { dblpress, listen, press, shield } from './events.js'
@@ -50,6 +53,8 @@
   let panelOpen = $state(false)
   let panelStyle = $state('')
   let focusInstructions = $state(false)
+
+  const loadSource = createSourceLoader({ root: sphereConfig.root, base: sphereConfig.base })
 
   let root: HTMLDivElement | undefined = $state()
   let shell: HTMLDivElement | undefined = $state()
@@ -163,24 +168,66 @@
       error: false,
     }
 
-    if (result.action === 'added' && !panelOpen) openPanel(true)
+    if (result.action === 'added') {
+      if (!panelOpen) openPanel(true)
+      void refreshPickLocation(entry)
+    }
+  }
+
+  /**
+   * The chip shows the location the prompt will report, so it is resolved against the file: that
+   * needs a read, which is cached per file and silence on failure (`options.source` controls only
+   * the prompt's source window, not the honesty of the line).
+   */
+  async function refreshPickLocation(entry: PickEntry) {
+    const api = typeof window === 'undefined' ? undefined : window.__SPHERE__
+    if (api === undefined) return
+
+    const inspected = api.inspectElement(entry.element)
+    const file = inspected.source?.file ?? inspected.components[0]?.file ?? null
+    const text = file === null ? null : await loadSource(file)
+    const source = resolveElementSource({
+      recorded: inspected.source,
+      chainFile: inspected.components[0]?.file ?? null,
+      element: toLocated(inspected),
+      fileText: text,
+    })
+
+    if (source?.line == null) return
+
+    const place = `${source.file ?? ''}:${source.line}`.replace(/^:/, '')
+    const where = source.matched !== null || source.enclosing === true ? `~${place}` : place
+    picks = picks.map((pick) => (pick === entry ? { ...pick, where } : pick))
   }
 
   async function copyPrompt() {
     const api = typeof window === 'undefined' ? undefined : window.__SPHERE__
     const fallbackPage = pageInfo()
 
-    const selections = picks.map((pick) => ({
-      inspected: api
-        ? api.inspectElement(pick.element)
-        : { page: fallbackPage, element: null, source: null, template: [], components: [] } satisfies Inspected,
-    }))
+    const selections: PromptSelection[] = await Promise.all(
+      picks.map(async (pick) => {
+        if (api === undefined) {
+          return {
+            inspected: {
+              page: fallbackPage,
+              element: null,
+              source: null,
+              template: [],
+              components: [],
+            } satisfies Inspected,
+          }
+        }
+
+        return resolveSelection(api.inspectElement(pick.element))
+      }),
+    )
 
     const prompt = formatPrompt({
       page: selections[0]?.inspected.page ?? fallbackPage,
       instructions,
       options,
       selections,
+      root: sphereConfig.root,
       ...(api === undefined ? {} : { version: api.version }),
     })
 
@@ -196,6 +243,31 @@
     // Copying ends the flow (docs/06 §2): the prompt is on the clipboard, the next step is the agent.
     picking = false
     hover = null
+  }
+
+  /** Reads the element's file once, so the prompt can verify the location and quote the source. */
+  async function resolveSelection(inspected: Inspected): Promise<PromptSelection> {
+    const file = inspected.source?.file ?? inspected.components[0]?.file ?? null
+    const text = file === null ? null : await loadSource(file)
+
+    const source = resolveElementSource({
+      recorded: inspected.source,
+      chainFile: inspected.components[0]?.file ?? null,
+      element: toLocated(inspected),
+      fileText: text,
+    })
+
+    return {
+      inspected: source === null ? inspected : { ...inspected, source },
+      ...(text !== null && file !== null ? { source: { path: file, text } } : {}),
+    }
+  }
+
+  function toLocated(inspected: Inspected) {
+    const element = inspected.element
+    if (element === null) return null
+
+    return { tag: element.tag, classes: element.classes, id: element.id, attrs: element.attrs }
   }
 
   function removePick(pick: PickEntry) {

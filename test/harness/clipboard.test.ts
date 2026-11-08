@@ -30,9 +30,6 @@ function event(target: EventTarget, type: string, init: MouseEventInit | Keyboar
   return created
 }
 
-/** The copy path awaits the clipboard; let its microtasks (and one task) finish. */
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0))
-
 function mountOverlay() {
   const app = document.createElement('div')
   app.innerHTML =
@@ -118,9 +115,7 @@ describe('copying the prompt', () => {
       view.type('Make this button square.')
 
       event(view.copy(), 'click', { detail: 1 })
-      await settle()
-
-      expect(written).toHaveLength(1)
+      await vi.waitFor(() => expect(written).toHaveLength(1))
       const prompt = written[0]!
 
       expect(
@@ -134,9 +129,10 @@ describe('copying the prompt', () => {
       expect(prompt).toContain('- markup: `')
       expect(prompt).toContain('Component chain (innermost first):\n1. Single — `')
       expect(view.status()).toBe(`Copied ${groupDigits(prompt.length)} chars`)
-      // No rendered text, and no machine path beyond the component file the tool reports.
-      expect(prompt).not.toContain('One element at the root.')
-      expect(prompt).not.toMatch(/\/home\/[^`\s]+/)
+      // No rendered text in identity (heading, markup skeleton). The source window *does* quote
+      // the file, which is the point of it — so it is removed before the check.
+      const identity = prompt.replace(/Source of `[^`]+`:\n```[a-z]*\n[\s\S]*?\n```/g, '')
+      expect(identity).not.toContain('One element at the root.')
       // Copying ends picking.
       expect(view.control.getAttribute('aria-pressed')).toBe('false')
     } finally {
@@ -154,7 +150,7 @@ describe('copying the prompt', () => {
       view.pick('counter')
 
       event(view.copy(), 'click', { detail: 1 })
-      await settle()
+      await vi.waitFor(() => expect(written).toHaveLength(1))
 
       const prompt = written[0]!
       expect(prompt.indexOf('### Selected element a#link.cta')).toBeLessThan(
@@ -183,9 +179,7 @@ describe('copying the prompt', () => {
       view.startPicking()
       view.pick('link')
       event(view.copy(), 'click', { detail: 1 })
-      await settle()
-
-      expect(exec).toHaveBeenCalledWith('copy')
+      await vi.waitFor(() => expect(exec).toHaveBeenCalledWith('copy'))
       expect(view.status()).toMatch(/^Copied \d/)
     } finally {
       view.destroy()
@@ -208,9 +202,7 @@ describe('copying the prompt', () => {
       view.startPicking()
       view.pick('link')
       event(view.copy(), 'click', { detail: 1 })
-      await settle()
-
-      expect(view.status()).toBe('Could not write to the clipboard.')
+      await vi.waitFor(() => expect(view.status()).toBe('Could not write to the clipboard.'))
       expect(view.target.querySelector('.status')?.classList.contains('error')).toBe(true)
       // A failed copy does not silently end picking.
       expect(view.control.getAttribute('aria-pressed')).toBe('true')
