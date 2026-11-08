@@ -3,6 +3,7 @@
   import { formatPrompt, type PromptSelection } from '../runtime/format.js'
   import { pageInfo } from '../runtime/inspect.js'
   import { resolveElementSource } from '../runtime/location.js'
+  import { relativeTo } from '../shared/paths.js'
   import { createSourceLoader } from '../runtime/source.js'
   import type { Inspected } from '../shared/payload.js'
   import Panel from './Panel.svelte'
@@ -146,14 +147,18 @@
       left: mark.left,
       width: mark.width,
       height: mark.height,
-      label: `${target.localName}  ${pickWhere(target)}`.trim(),
+      label: `${target.localName}  ${pickWhere(target, sphereConfig.root)}`.trim(),
       x: clientX,
       y: clientY,
     }
   }
 
   function onPick(target: Element) {
-    const entry: PickEntry = { element: target, label: pickLabel(target), where: pickWhere(target) }
+    const entry: PickEntry = {
+      element: target,
+      label: pickLabel(target),
+      where: pickWhere(target, sphereConfig.root),
+    }
     const result = togglePick(picks, entry, PICK_CAP)
 
     if (result.action === 'capped') {
@@ -195,9 +200,12 @@
 
     if (source?.line == null) return
 
-    const place = `${source.file ?? ''}:${source.line}`.replace(/^:/, '')
+    const relative = relativeTo(sphereConfig.root)(source.file) ?? ''
+    const place = `${relative}:${source.line}`.replace(/^:/, '')
     const where = source.matched !== null || source.enclosing === true ? `~${place}` : place
-    picks = picks.map((pick) => (pick === entry ? { ...pick, where } : pick))
+    // Compare by element: `$state` deep-proxies the array, so the stored object is not the one
+    // that was pushed.
+    picks = picks.map((pick) => (pick.element === entry.element ? { ...pick, where } : pick))
   }
 
   async function copyPrompt() {
@@ -271,7 +279,7 @@
   }
 
   function removePick(pick: PickEntry) {
-    picks = picks.filter((entry) => entry !== pick)
+    picks = picks.filter((entry) => entry.element !== pick.element)
     status = { text: `Removed ${pick.element.localName}`, error: false }
   }
 

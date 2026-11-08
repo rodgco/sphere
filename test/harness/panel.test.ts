@@ -1,6 +1,7 @@
 import { flushSync, mount, unmount } from 'svelte'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Overlay from '../../src/overlay/Overlay.svelte'
+import Single from '../../fixtures/harness/Single.svelte'
 import { OPTIONS_KEY } from '../../src/overlay/storage.js'
 
 function giveRect(
@@ -211,6 +212,32 @@ describe('the panel', () => {
       expect(JSON.parse(localStorage.getItem(OPTIONS_KEY) ?? '{}')).toMatchObject({ state: false })
     } finally {
       view.destroy()
+    }
+  })
+
+  it('replaces the raw location with the resolved one on the chip', async () => {
+    // A real Svelte element: the harness app is HTML, so it has no location at all.
+    const svelteHost = document.createElement('div')
+    document.body.append(svelteHost)
+    const app = mount(Single, { target: svelteHost })
+    flushSync()
+
+    view = mountOverlay()
+    try {
+      view.startPicking()
+      event(svelteHost.querySelector('[data-testid="single"]')!, 'pointerdown', { button: 0 })
+
+      // The harness can read its own files, so a verified location must lose the `~` the raw
+      // location starts with (`$state` proxies the pick array; the update must still land).
+      await vi.waitFor(() => {
+        const where = view.target.querySelector('.pick .where')?.textContent ?? ''
+        expect(where).not.toMatch(/^~/)
+        expect(where).toMatch(/:\d+$/)
+      })
+    } finally {
+      view.destroy()
+      unmount(app)
+      svelteHost.remove()
     }
   })
 

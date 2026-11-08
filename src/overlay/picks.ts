@@ -4,6 +4,8 @@
  * without a browser.
  */
 
+import { relativeTo } from '../shared/paths.js'
+
 export const PICK_CAP = 10
 
 export interface PickEntry {
@@ -50,12 +52,16 @@ export function pickLabel(element: Element): string {
   return `${element.localName}${id}${classes}`
 }
 
-/** `file:line`, prefixed with `~` when the location is only the enclosing element. */
-export function pickWhere(element: Element): string {
+/**
+ * `file:line`, prefixed with `~` when the location is only the enclosing element, and always
+ * project-relative: a machine path must not reach the panel either.
+ */
+export function pickWhere(element: Element, root = ''): string {
   const api = typeof window === 'undefined' ? undefined : window.__SPHERE__
   const source = api?.locateElement(element).source
   if (!source?.line) return ''
 
-  const where = `${source.file ?? ''}:${source.line}`.replace(/^:/, '')
+  const file = relativeTo(root)(source.file) ?? ''
+  const where = `${file}:${source.line}`.replace(/^:/, '')
   return source.enclosing ? `~${where}` : where
 }

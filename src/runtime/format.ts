@@ -1,3 +1,4 @@
+import { relativeTo, type RelativePath } from '../shared/paths.js'
 import type {
   ComponentInfo,
   ElementInfo,
@@ -64,7 +65,7 @@ export interface PromptInput {
   root?: string
 }
 
-type Path = (path: string | null) => string | null
+type Path = RelativePath
 
 export interface FormattedPrompt {
   text: string
@@ -347,13 +348,7 @@ function stateLine(node: StateNode): string {
 // ---------------------------------------------------------------------------------------
 
 /** Absolute paths are printed relative to the project root (`docs/05` §6). */
-function makePath(root: string | undefined): Path {
-  if (root === undefined || root === '') return (value) => value
-
-  const prefix = root.endsWith('/') ? root : `${root}/`
-  return (value) =>
-    value !== null && value.startsWith(prefix) ? value.slice(prefix.length) : value
-}
+const makePath = relativeTo
 
 export function formatValue(json: string): string {
   return inline(parseJson(json))
