@@ -27,6 +27,9 @@ jobs:
 
       - run: npm ci
 
+      # The Kit fixture consumes the built package through a `file:` link.
+      - run: npm --prefix fixtures/kit ci
+
       # One dev server per test, real browsers, and the built artifact — the same gate as CI.
       - run: npm run build
       - run: npm test

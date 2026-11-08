@@ -24,6 +24,7 @@ export default defineConfig({
   resolve: { conditions: ['browser'] },
   test: {
     globalSetup: ['./test/harness/setup.ts'],
+    setupFiles: ['./test/harness/setup-files.ts'],
     include: ['test/harness/**/*.test.ts'],
     environment: 'happy-dom',
     testTimeout: 20_000,
