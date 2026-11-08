@@ -53,6 +53,10 @@ prototype deferred.
   specifier to that file, applying the same “app modules only” rule. Vitest's client environment
   has no HTTP layer for `/@id/…`, so a `\0`-id cannot be loaded there; the real plumbing is
   covered against a dev server in `test/client-gate.test.ts`.
+- `test/harness/panel.test.ts` drives the panel: opens on a pick with focus in the instructions,
+  lists picks with number and label, removes and renumbers, reports the cap in words, keeps the
+  instructions across close/open, Clear empties the form, the option toggles persist, and Escape
+  closes the panel and returns focus to the control.
 - `test/harness/overlay.test.ts` drives the control through native listeners: pointer up/down
   toggles, drag moves and persists without toggling, the 4 px threshold, double-click reset,
   Escape, and the cursor lock. `test/harness/entry.test.ts` asserts the shadow host, the styles

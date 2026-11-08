@@ -10,11 +10,13 @@ function mountOverlay() {
   // `onMount` and `$effect` run in a microtask; the listeners exist after a flush.
   flushSync()
 
-  const control = target.querySelector<HTMLButtonElement>('.control')
+  const shell = target.querySelector<HTMLDivElement>('.control')
+  const control = target.querySelector<HTMLButtonElement>('.inspect')
 
-  if (!control) throw new Error('overlay: no control rendered')
+  if (!shell || !control) throw new Error('overlay: no control rendered')
 
   return {
+    shell,
     control,
     destroy() {
       unmount(app)
@@ -102,8 +104,8 @@ describe('the control', () => {
       pointer(window, 'pointerup', 90, 50)
 
       expect(pressed(view.control)).toBe('false')
-      expect(view.control.style.left).toBe('80px')
-      expect(view.control.style.top).toBe('40px')
+      expect(view.shell.style.left).toBe('80px')
+      expect(view.shell.style.top).toBe('40px')
       expect(JSON.parse(localStorage.getItem(CONTROL_KEY) ?? 'null')).toEqual({ x: 80, y: 40 })
     } finally {
       view.destroy()
@@ -130,7 +132,7 @@ describe('the control', () => {
     try {
       view.control.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }))
 
-      expect(view.control.style.left).toBe('')
+      expect(view.shell.style.left).toBe('')
       expect(localStorage.getItem(CONTROL_KEY)).toBeNull()
     } finally {
       view.destroy()
@@ -156,8 +158,8 @@ describe('the control', () => {
     const view = mountOverlay()
     try {
       // `onMount` reads storage once; Svelte applies it before the first paint we can observe.
-      expect(view.control.style.left).toBe('210px')
-      expect(view.control.style.top).toBe('130px')
+      expect(view.shell.style.left).toBe('210px')
+      expect(view.shell.style.top).toBe('130px')
     } finally {
       view.destroy()
     }

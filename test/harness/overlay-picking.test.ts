@@ -40,7 +40,7 @@ function mountOverlay() {
     giveRect(element, { top: 10 + index * 50, left: 20, width: 120, height: 30 })
   }
 
-  const control = target.querySelector<HTMLButtonElement>('.control')!
+  const control = target.querySelector<HTMLButtonElement>('.inspect')!
   const marks = () => [...target.querySelectorAll('.mark')] as HTMLElement[]
 
   return {

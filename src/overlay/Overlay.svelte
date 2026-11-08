@@ -1,12 +1,21 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import Panel from './Panel.svelte'
   import { lockCursor } from './cursor.js'
   import { dblpress, listen, press } from './events.js'
   import { measureMark, measureMarks, trackMarks, type Mark } from './marks.js'
   import { startPicking } from './picking.js'
+  import {
+    DEFAULT_OPTIONS,
+    readControl,
+    readOptions,
+    writeControl,
+    writeOptions,
+    type ControlPosition,
+    type OverlayOptions,
+  } from './storage.js'
   import { PICK_CAP, pickLabel, pickWhere, togglePick, type PickEntry } from './picks.js'
-  import { clampControl } from './position.js'
-  import { readControl, writeControl, type ControlPosition } from './storage.js'
+  import { clampControl, panelPlacement } from './position.js'
 
   interface Hover {
     top: number
@@ -18,13 +27,28 @@
     y: number
   }
 
+  interface Status {
+    text: string
+    error: boolean
+  }
+
+  const PANEL_WIDTH = 420
+
   let picking = $state(false)
   let position = $state<ControlPosition | null>(null)
   let picks = $state<PickEntry[]>([])
   let marks = $state<Mark[]>([])
   let hover = $state<Hover | null>(null)
+  let status = $state<Status | null>(null)
+
+  let options = $state<OverlayOptions>({ ...DEFAULT_OPTIONS })
+  let instructions = $state('')
+  let panelOpen = $state(false)
+  let panelStyle = $state('')
+  let focusInstructions = $state(false)
 
   let root: HTMLDivElement | undefined = $state()
+  let shell: HTMLDivElement | undefined = $state()
   let control: HTMLButtonElement | undefined = $state()
 
   let drag: {
@@ -33,17 +57,19 @@
     originX: number
     originY: number
     moved: boolean
+    togglesOnTap: boolean
   } | null = null
 
   onMount(() => {
     position = readControl()
+    options = readOptions()
   })
 
   // `bind:this` is assigned after mount, so the listener is attached from an effect rather than
   // from `onMount` (where the element can still be undefined).
   $effect(() => {
-    if (control === undefined) return
-    return listen<PointerEvent>(control, 'pointerdown', startDrag)
+    if (shell === undefined) return
+    return listen<PointerEvent>(shell, 'pointerdown', startDrag)
   })
 
   $effect(() => {
@@ -67,7 +93,9 @@
     if (!picking) return
 
     const onKeydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') picking = false
+      if (event.key !== 'Escape') return
+      picking = false
+      if (panelOpen) closePanel()
     }
 
     window.addEventListener('keydown', onKeydown)
@@ -119,27 +147,88 @@
     const entry: PickEntry = { element: target, label: pickLabel(target), where: pickWhere(target) }
     const result = togglePick(picks, entry, PICK_CAP)
 
-    // A full list refuses quietly; the panel reports the cap with words (docs/06 §5).
-    if (result.action === 'capped') return
+    if (result.action === 'capped') {
+      status = { text: `At most ${PICK_CAP} elements per prompt.`, error: true }
+      return
+    }
 
     picks = result.picks
     hover = null
+    status = {
+      text: result.action === 'added' ? `Added ${target.localName}` : `Removed ${target.localName}`,
+      error: false,
+    }
+
+    if (result.action === 'added' && !panelOpen) openPanel(true)
+  }
+
+  function removePick(pick: PickEntry) {
+    picks = picks.filter((entry) => entry !== pick)
+    status = { text: `Removed ${pick.element.localName}`, error: false }
+  }
+
+  function clearAll() {
+    picks = []
+    instructions = ''
+    status = { text: 'Cleared the prompt.', error: false }
+  }
+
+  function onOptionsChange(key: keyof OverlayOptions, value: boolean) {
+    options = { ...options, [key]: value }
+    writeOptions(options)
+  }
+
+  function openPanel(fromPick: boolean) {
+    if (shell === undefined) return
+
+    const rect = shell.getBoundingClientRect()
+    const viewport = { width: window.innerWidth, height: window.innerHeight }
+    const panel = {
+      width: Math.min(PANEL_WIDTH, viewport.width - 36),
+      height: Math.min(viewport.height * 0.7, 620),
+    }
+
+    const placement = panelPlacement(
+      { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+      panel,
+      viewport,
+    )
+
+    panelStyle = `left: ${placement.left}px; top: ${placement.top}px; max-height: ${placement.maxHeight}px;`
+    panelOpen = true
+    focusInstructions = fromPick
+  }
+
+  function closePanel() {
+    panelOpen = false
+    focusInstructions = false
+    control?.focus({ preventScroll: true })
+  }
+
+  function togglePanel() {
+    if (panelOpen) closePanel()
+    else openPanel(false)
   }
 
   function startDrag(event: PointerEvent) {
-    if (event.button !== 0 || control === undefined) return
+    if (event.button !== 0 || shell === undefined) return
+
+    const target = event.target
+    const fromChip = target instanceof Element && target.closest('.chip') !== null
+    if (fromChip) return
 
     event.preventDefault()
     // Browsers do not focus a button whose pointerdown default was prevented.
-    control.focus({ preventScroll: true })
+    control?.focus({ preventScroll: true })
 
-    const rect = control.getBoundingClientRect()
+    const rect = shell.getBoundingClientRect()
     drag = {
       pointerX: event.clientX,
       pointerY: event.clientY,
       originX: rect.left,
       originY: rect.top,
       moved: false,
+      togglesOnTap: !fromChip,
     }
 
     const stop = listen<PointerEvent>(window, 'pointermove', moveDrag)
@@ -151,7 +240,7 @@
   }
 
   function moveDrag(event: PointerEvent) {
-    if (drag === null || control === undefined) return
+    if (drag === null || shell === undefined) return
 
     const dx = event.clientX - drag.pointerX
     const dy = event.clientY - drag.pointerY
@@ -162,15 +251,15 @@
 
     position = clampControl(
       { x: drag.originX + dx, y: drag.originY + dy },
-      sizeOf(control),
-      viewportSize(),
+      { width: shell.offsetWidth, height: shell.offsetHeight },
+      { width: window.innerWidth, height: window.innerHeight },
     )
   }
 
   function endDrag() {
     if (drag === null) return
 
-    const { moved } = drag
+    const { moved, togglesOnTap } = drag
     drag = null
 
     if (moved) {
@@ -179,7 +268,7 @@
       return
     }
 
-    toggle()
+    if (togglesOnTap) toggle()
   }
 
   function toggle() {
@@ -198,13 +287,19 @@
     writeControl(null)
   }
 
-  function sizeOf(element: HTMLElement) {
-    return { width: element.offsetWidth, height: element.offsetHeight }
+  function onResize() {
+    if (position === null || shell === undefined) return
+    position = clampControl(
+      position,
+      { width: shell.offsetWidth, height: shell.offsetHeight },
+      { width: window.innerWidth, height: window.innerHeight },
+    )
   }
 
-  function viewportSize() {
-    return { width: window.innerWidth, height: window.innerHeight }
-  }
+  onMount(() => {
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  })
 
   const controlStyle = $derived(
     position === null
@@ -242,16 +337,45 @@
     </div>
   {/each}
 
-  <button
-    bind:this={control}
-    class="control"
-    type="button"
-    aria-pressed={picking}
-    style={controlStyle}
-    use:press={onClick}
-    use:dblpress={onDoubleClick}
-  >
-    <span class="dot" aria-hidden="true"></span>
-    <span class="label">Inspect</span>
-  </button>
+  {#if panelOpen}
+    <Panel
+      {picks}
+      {options}
+      {instructions}
+      {status}
+      {focusInstructions}
+      style={panelStyle}
+      onRemove={removePick}
+      onClear={clearAll}
+      onClose={closePanel}
+      onOptionsChange={onOptionsChange}
+      onInstructionsChange={(value) => (instructions = value)}
+    />
+  {/if}
+
+  <div class="control" bind:this={shell} style={controlStyle} role="group" aria-label="Sphere">
+    <button
+      bind:this={control}
+      class="inspect"
+      type="button"
+      aria-pressed={picking}
+      use:press={onClick}
+      use:dblpress={onDoubleClick}
+    >
+      <span class="dot" aria-hidden="true"></span>
+      <span class="label">Inspect</span>
+    </button>
+
+    {#if picks.length > 0}
+      <button
+        class="chip"
+        type="button"
+        aria-expanded={panelOpen}
+        aria-label={`${picks.length} picked. ${panelOpen ? 'Close' : 'Open'} the prompt panel`}
+        use:press={togglePanel}
+      >
+        {picks.length} picked
+      </button>
+    {/if}
+  </div>
 </div>

@@ -43,6 +43,11 @@ runs in the M5 matrix.
 
 ## M2 — Overlay and picking
 
+**Status:** in progress — the overlay (shadow root), the control with drag/persistence/keyboard,
+picking with the event matrix, marks with clipping and tracking, and the panel shell with picks,
+options, instructions and the status line exist and are covered by the runtime harness. Next: the
+Playwright scripts (`picking.mjs`, `a11y.mjs`) against a real browser.
+
 **Done when**
 
 - Overlay (Svelte, shadow root) with control, drag, count, panel shell, theme, a11y baseline.

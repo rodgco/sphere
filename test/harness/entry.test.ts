@@ -11,7 +11,7 @@ describe('the overlay entry', () => {
     const shadow = host?.shadowRoot
     expect(shadow).not.toBeNull()
     expect(shadow?.querySelector('style')?.textContent).toContain(':host')
-    expect(shadow?.querySelector('button.control')?.getAttribute('aria-pressed')).toBe('false')
+    expect(shadow?.querySelector('button.inspect')?.getAttribute('aria-pressed')).toBe('false')
   })
 
   it('does not mount twice (HMR, double import)', () => {

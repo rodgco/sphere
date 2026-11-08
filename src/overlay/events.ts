@@ -16,6 +16,12 @@ export const press = native('click')
 /** The double-click counterpart, `use:dblpress={handler}`. */
 export const dblpress = native('dblclick')
 
+/** `use:onChange={handler}` for checkboxes, which Svelte would otherwise delegate. */
+export const onChange = native('change')
+
+/** `use:onInput={handler}` for the instruction box, for the same reason. */
+export const onInput = native('input')
+
 function native(type: string) {
   return (node: HTMLElement, handler: Handler<MouseEvent>) => {
     let current = handler

@@ -67,9 +67,9 @@ button {
   bottom: 18px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 8px 0 12px;
   border-radius: 999px;
   border: 1px solid var(--sphere-border);
   background: var(--sphere-bg);
@@ -82,15 +82,23 @@ button {
 }
 
 .control:active { cursor: grabbing; }
-.control[aria-pressed='true'] { border-color: var(--sphere-accent); }
-.control .label { font-weight: 600; }
-.control .dot {
+.inspect {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0;
+  cursor: inherit;
+}
+.inspect .label { font-weight: 600; }
+.inspect .dot {
   width: 8px;
   height: 8px;
   border-radius: 999px;
   background: var(--sphere-muted);
 }
-.control[aria-pressed='true'] .dot { background: var(--sphere-accent); }
+.inspect[aria-pressed='true'] .dot { background: var(--sphere-accent); }
+.control:has(.inspect[aria-pressed='true']) { border-color: var(--sphere-accent); }
 
 .chip {
   height: 22px;
@@ -134,6 +142,43 @@ button {
 .panel-close:hover { background: var(--sphere-raised); color: var(--sphere-fg); }
 
 .panel-body { padding: 10px 14px; overflow-y: auto; }
+
+.instructions {
+  width: 100%;
+  min-height: 58px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--sphere-border);
+  background: var(--sphere-raised);
+  color: var(--sphere-fg);
+  font: inherit;
+  resize: vertical;
+}
+
+.panel-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--sphere-border);
+  flex-wrap: wrap;
+}
+.panel-footer .primary {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--sphere-accent);
+  color: #ffffff;
+  font-weight: 600;
+}
+.panel-footer .primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.panel-footer button:not(.primary) {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--sphere-border);
+}
+.panel-footer button:not(.primary):hover { background: var(--sphere-raised); }
 
 .picks { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
 .pick { display: flex; align-items: center; gap: 8px; }
