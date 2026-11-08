@@ -10,8 +10,10 @@
   `sphere({ enabled: false })`.
 
 - Keyboard selection while picking: `w`/`s`/`a`/`d` and the arrows walk parent, first child and
-  siblings, `Enter`/`Space` picks the outlined element, `Backspace` removes the last pick, `c` copies.
-  It is the answer to a container that covers its children and can never be clicked.
+  siblings from the moment picking starts — before anything is picked — `Enter`/`Space` picks the
+  outlined element, `Backspace` removes the last pick, `c` copies. A navigation key locks the
+  outline, so a click confirms the outlined element instead of whatever is under the pointer. It is
+  the answer to a container that covers its children and can never be clicked.
 
   The prompt format is documented as unstable until 1.0 (`docs/05-prompt-format.md`), so a minor
   release may change the clipboard document.

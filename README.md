@@ -46,8 +46,10 @@ you dragged it.
 
 While picking, keys work too — the answer to "the thing I want is behind this element":
 `w`/`↑` parent, `s`/`↓` first child, `a`/`←` previous sibling, `d`/`→` next sibling, `Enter` or
-`Space` to pick the outlined element, `Backspace` to remove the last pick, `c` to copy. Typing in the
-panel is typing; `Escape` works from anywhere.
+`Space` to pick the outlined element, `Backspace` to remove the last pick, `c` to copy. They work
+from the moment picking starts, and a navigation key locks the outline so a click confirms what is
+outlined rather than what is under the pointer. Typing in the panel is typing; `Escape` works from
+anywhere.
 
 | Light | Dark |
 |---|---|

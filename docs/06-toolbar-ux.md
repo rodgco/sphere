@@ -40,10 +40,18 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   | `c` | copy the prompt (same as the button) |
   | `Escape` | leave picking (existing) |
 
-  The cursor starts at the last pick (or the last hovered element), so "click the child, `w`, `Enter`"
-  reads as one gesture. Moving the pointer hands control back to the mouse. Keys with
-  `Alt`/`Ctrl`/`Cmd` are left to the app and the browser, and anything typed into the panel or an
-  app field is typing, not navigation — only `Escape` works from inside a text field.
+  Keys work from the moment picking starts, before anything is picked: the cursor begins at the
+  element the pointer last outlined (or, if it never entered the page, at the page's own content),
+  and the outline appears and moves with every step. So "hover the child, `w`, click" and "hover the
+  child, `w`, `Enter`" are both one gesture.
+
+  A navigation key **locks** the selection: the pointer no longer moves the outline, so a click can
+  confirm the outlined element even though the mouse had to travel to the click. The click picks
+  what is outlined, then hands the selection back to the pointer. `Enter` keeps the cursor where it
+  is, so a parent and then its grandparent can be collected without re-navigating.
+
+  Keys with `Alt`/`Ctrl`/`Cmd` are left to the app and the browser, and anything typed into the panel
+  or an app field is typing, not navigation — only `Escape` works from inside a text field.
 - Picking an already-picked element **unpicks** it.
 - The interaction never reaches the page: the full matrix is `docs/specs/event-matrix.md`.
 - Leaving: clicking the control again, pressing Escape (which also closes the panel), or

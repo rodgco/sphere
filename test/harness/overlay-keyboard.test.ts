@@ -79,6 +79,68 @@ beforeEach(() => {
 })
 
 describe('keyboard selection while picking', () => {
+  it('works before the first pick', () => {
+    const view = mountOverlay()
+    try {
+      view.startPicking()
+      expect(view.marks()).toBe(0)
+
+      // Nothing hovered, nothing picked: the first key starts from the page's own content and
+      // descends: app root → main → the header.
+      event(window, 'keydown', { key: 's' })
+      expect(view.outline()).toBe(true)
+      expect(view.tooltip()).toMatch(/^main/)
+
+      event(window, 'keydown', { key: 's' })
+      const header = view.tooltip()
+      expect(header).not.toMatch(/^main/)
+
+      event(window, 'keydown', { key: 'd' })
+      expect(view.tooltip()).not.toBe(header)
+    } finally {
+      view.destroy()
+    }
+  })
+
+  it('picks the outlined element on click, not the one under the pointer', () => {
+    const view = mountOverlay()
+    try {
+      view.startPicking()
+
+      // Hover the button, widen to the fill layer that covers it, then click elsewhere: the click
+      // confirms what is outlined.
+      event(document.querySelector('#inner')!, 'pointermove', { clientX: 12, clientY: 12 })
+      event(window, 'keydown', { key: 'w' })
+      expect(view.tooltip()).toMatch(/^div/)
+
+      event(document.querySelector('#side')!, 'pointermove', { clientX: 640, clientY: 20 })
+      expect(view.tooltip()).toMatch(/^div/)
+
+      event(document.querySelector('#side')!, 'pointerdown', { button: 0 })
+      expect(view.marks()).toBe(1)
+
+      const label = view.target.querySelector('.pick .name')?.textContent ?? ''
+      expect(label).toBe('div#fill')
+    } finally {
+      view.destroy()
+    }
+  })
+
+  it('gives the selection back to the pointer after a click', () => {
+    const view = mountOverlay()
+    try {
+      view.startPicking()
+      event(document.querySelector('#inner')!, 'pointermove', { clientX: 12, clientY: 12 })
+      event(window, 'keydown', { key: 'w' })
+      event(document.querySelector('#side')!, 'pointerdown', { button: 0 })
+
+      event(document.querySelector('#inner')!, 'pointermove', { clientX: 12, clientY: 12 })
+      expect(view.tooltip()).toMatch(/^button/)
+    } finally {
+      view.destroy()
+    }
+  })
+
   it('widens to a container that the pointer cannot reach, and picks it with Enter', () => {
     const view = mountOverlay()
     try {

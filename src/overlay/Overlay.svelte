@@ -48,8 +48,15 @@
   let picks = $state<PickEntry[]>([])
   let marks = $state<Mark[]>([])
   let hover = $state<Hover | null>(null)
-  /** Where the keyboard is, while picking with keys instead of the pointer. */
-  let keyboardTarget = $state<Element | null>(null)
+  /**
+   * The one selection the outline shows. The pointer sets it while it moves; a navigation key takes
+   * it over and *locks* it, so a click confirms what is outlined even though the mouse had to travel
+   * to get there (`docs/06-toolbar-ux.md` §2).
+   */
+  let selection = $state<Element | null>(null)
+  let locked = false
+  let pointerTarget: Element | null = null
+  let pointerPoint = { x: 0, y: 0 }
   let status = $state<Status | null>(null)
 
   let options = $state<OverlayOptions>({ ...DEFAULT_OPTIONS })
@@ -131,10 +138,11 @@
     return startPicking({
       host: overlayHost(),
       onHover: onHover,
-      onPick: onPick,
+      onPick: pickAtPointer,
       onLeave: () => {
         hover = null
-        keyboardTarget = null
+        selection = null
+        locked = false
       },
     })
   })
@@ -211,6 +219,8 @@
       case 'leave':
         picking = false
         if (panelOpen) closePanel()
+        selection = null
+        locked = false
         return
       case 'copy':
         void copyPrompt()
@@ -221,19 +231,22 @@
         return
       }
       case 'pick': {
-        const target =
-          keyboardTarget ?? initialTarget(picks.map((pick) => pick.element))
-        if (target !== null) onPick(target)
+        // What is outlined, whatever put it there — the pointer's own element or a key's.
+        const target = selection ?? pointerTarget
+        if (target !== null) pickElement(target)
         return
       }
       default: {
-        const start = keyboardTarget ?? initialTarget(picks.map((pick) => pick.element))
+        // Keys work before the first pick: they move from whatever the pointer last outlined, so
+        // entering picking and pressing `w` is enough to reach a covering parent.
+        const start = selection ?? pointerTarget ?? initialTarget(picks.map((entry) => entry.element))
         if (start === null) return
 
         const next = navigate(start, command)
         if (next === null) return
 
-        keyboardTarget = next
+        selection = next
+        locked = true
         showKeyboardHover(next)
       }
     }
@@ -259,9 +272,18 @@
   }
 
   function onHover(target: Element | null, clientX: number, clientY: number) {
-    // The pointer takes over from the keyboard, so the outline follows the mouse again.
-    keyboardTarget = null
+    pointerTarget = target
+    pointerPoint = { x: clientX, y: clientY }
 
+    // A keyboard selection is locked: the outline stays on it until a click confirms it, even though
+    // the pointer has to move to reach the click.
+    if (locked) return
+
+    selection = target
+    showPointerHover(target, clientX, clientY)
+  }
+
+  function showPointerHover(target: Element | null, clientX: number, clientY: number) {
     if (target === null || picks.some((pick) => pick.element === target)) {
       hover = null
       return
@@ -284,7 +306,19 @@
     }
   }
 
-  function onPick(target: Element) {
+  /** A click confirms the outline; afterwards the pointer owns the selection again. */
+  function pickAtPointer(target: Element, clientX: number, clientY: number) {
+    const chosen = locked && selection !== null ? selection : target
+
+    pickElement(chosen)
+
+    locked = false
+    selection = target
+    pointerTarget = target
+    showPointerHover(target, clientX, clientY)
+  }
+
+  function pickElement(target: Element) {
     const entry: PickEntry = {
       element: target,
       label: pickLabel(target),
@@ -522,7 +556,8 @@
     picking = !picking
     if (!picking) {
       hover = null
-      keyboardTarget = null
+      selection = null
+      locked = false
     }
   }
 

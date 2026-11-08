@@ -11,7 +11,7 @@ export interface PickingHandlers {
   /** The overlay host: events inside it are ours and are never swallowed. */
   host: Element | null
   onHover(target: Element | null, clientX: number, clientY: number): void
-  onPick(target: Element): void
+  onPick(target: Element, clientX: number, clientY: number): void
   onLeave(): void
 }
 
@@ -37,7 +37,7 @@ export function startPicking(handlers: PickingHandlers): () => void {
 
     kill(event)
     const target = elementAt(event.target)
-    if (target) handlers.onPick(target)
+    if (target) handlers.onPick(target, event.clientX, event.clientY)
   }
 
   const onPointerMove = (event: PointerEvent) => {

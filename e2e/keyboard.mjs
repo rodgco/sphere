@@ -42,7 +42,33 @@ async function main() {
       await page.goto(server.origin)
       await page.locator('[data-testid="title"]').waitFor()
 
-      // The pointer picks the heading; the card around it is only reachable with `w`.
+      // 1. Keys work from the moment picking starts, before anything is picked: descend from the
+      // page's content and watch the outline appear and move.
+      await startPicking(page)
+      assert((await marks(page).count()) === 0, 'picking started with a pick already')
+
+      await page.keyboard.press('s')
+      await tooltip(page).waitFor()
+      const pageRoot = (await tooltip(page).textContent()) ?? ''
+      await page.keyboard.press('s')
+      const descended = (await tooltip(page).textContent()) ?? ''
+      assert(descended !== pageRoot, `s did not descend: ${pageRoot} → ${descended}`)
+
+      // 2. A click confirms what is outlined, not what is under the pointer: the pointer has to
+      // travel to the click.
+      const outlined = descended.split(/\s+/)[0]
+      await page.mouse.click(600, 700)
+      await waitForMarks(page, 1)
+
+      const picked = (await panel(page).locator('.pick .name').first().textContent()) ?? ''
+      assert(picked.startsWith(outlined), `click picked "${picked}", outline was "${outlined}"`)
+
+      // Back to a clean slate for the rest of the walk.
+      await panel(page).getByRole('button', { name: 'Clear' }).click()
+      await page.keyboard.press('Escape')
+      await expectAttribute(page, control(page), 'aria-pressed', 'false')
+
+      // 3. The pointer picks the heading; the card around it is only reachable with `w`.
       await startPicking(page)
       await page.locator('.card h2').first().click()
       assert((await marks(page).count()) === 1, 'the heading was not picked')
