@@ -29,5 +29,9 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
-      - run: npm run test
       - run: npm run build
+
+      # The Kit fixture consumes the built package through a `file:` link.
+      - run: npm --prefix fixtures/kit ci
+
+      - run: npm test

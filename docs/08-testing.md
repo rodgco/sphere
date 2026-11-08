@@ -60,6 +60,11 @@ prototype deferred.
 
 One script per concern, each with its own dev server, one server at a time:
 
+Delivery tests that need a real framework server (`test/kit-injection.test.ts`) spawn the fixture's
+dev server on a free port, kill the process group in `afterAll`, and consume the **built** package
+through a `file:` link. The fixture's dependencies are installed separately
+(`npm --prefix fixtures/kit install`); locally a missing install skips, in CI it fails.
+
 | Script | Cases |
 |---|---|
 | `e2e/picking.mjs` | pick a link (no navigation), leave picking (navigation works), unpick, cap message, marks follow scroll/resize |

@@ -7,10 +7,9 @@
  * No base here on purpose: a tag returned from `transformIndexHtml` is rewritten by
  * Vite's own dev HTML transform, which prefixes `config.base` to every root-relative
  * `src` (Vite 8.3.6, `processNodeUrl`). Prefixing it as well produces `/app/app/…`
- * and a 404. Raw HTML insertion — the SvelteKit path in `docs/07-delivery.md` §3 —
- * bypasses that transform and must call `idToUrl` through `withBase`.
+ * and a 404. Raw HTML insertion — the SvelteKit path — bypasses that transform and
+ * must call `withBase` itself (see `inject.ts`).
  */
-export const HELLO_ID = '\0virtual:sphere/hello'
 
 export function idToUrl(id: string): string {
   return `/@id/${id.replaceAll('\0', '__x00__')}`

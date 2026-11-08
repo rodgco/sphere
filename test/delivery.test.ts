@@ -6,18 +6,20 @@ import { boot, closeServers, fixtureRoot, page } from './lib/vite.js'
 
 afterEach(closeServers)
 
-const PROBE_URL = '/@id/__x00__virtual:sphere/hello'
+const RUNTIME_URL = '/@id/virtual:sphere/runtime'
 
 describe('delivery through a plain Svelte app', () => {
-  it('injects the probe into index.html of the fixture', async () => {
+  it('injects the runtime into index.html of the fixture', async () => {
     const { origin } = await boot({ configFile: resolve(fixtureRoot, 'vite.config.ts') })
 
     const html = await page(origin)
-    expect(html).toContain(`src="${PROBE_URL}"`)
+    expect(html).toContain(`src="${RUNTIME_URL}"`)
     expect(html).toContain('type="module"')
 
-    const module = await page(origin, PROBE_URL)
-    expect(module).toContain('virtual:sphere/hello')
+    // The injected module is the instrumentation source, which installs the API on import.
+    const module = await page(origin, RUNTIME_URL)
+    expect(module).toContain('installSphereApi')
+    expect(module).not.toContain('dev-only probe')
   })
 
   it('injects nothing when the option is off', async () => {
@@ -40,10 +42,10 @@ describe('delivery through a plain Svelte app', () => {
 
     const html = await page(origin, '/app/')
     // Vite's dev HTML transform adds the base to a root-relative tag src.
-    expect(html).toContain(`src="/app${PROBE_URL}"`)
+    expect(html).toContain(`src="/app${RUNTIME_URL}"`)
     expect(html).not.toContain('/app/app/')
 
-    const module = await page(origin, `/app${PROBE_URL}`)
-    expect(module).toContain('virtual:sphere/hello')
+    const module = await page(origin, `/app${RUNTIME_URL}`)
+    expect(module).toContain('installSphereApi')
   })
 })

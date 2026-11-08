@@ -17,6 +17,9 @@ Generated module paths:
 | 2 | `.svelte-kit/generated/server/internal.js` |
 | 3 | `.svelte-kit/generated/dev/server.js` |
 
+Kit 3 also **removed `svelte.config.js`**: passing one fails with `config_file_unsupported`, and
+adapter/alias configuration moves into the `sveltekit()` plugin call in `vite.config.js`.
+
 The app template is a **JSON-escaped string literal** inside that module, so:
 
 - `</body>` appears verbatim (JSON escaping leaves `/` alone), which makes “insert before the
@@ -39,9 +42,17 @@ Vite addresses a virtual module (`\0`-prefixed id) in the browser as:
 ```
 
 - `__x00__` is the URL-safe encoding of `\0`; Vite unwraps it before resolving.
+- **SvelteKit does not.** Verified on Kit 3.1 + Vite 8.3: `/@id/__x00__virtual:sphere/runtime`
+  answers Kit's own 404 page (200 for `/@vite/client`, so the server is up), while
+  `/@id/virtual:sphere/runtime` and `/@id/svelte/internal/client` are resolved normally. Any id
+  that is *fetched as a URL* must therefore be URL-safe — no `\0`. Ids that are only *imported*
+  (resolved by a plugin, never fetched) can keep it.
 - This is how an injected `<script src>` can point at a module that imports other modules (a raw
   static file could not import anything without a bundler step).
-- With a base, the URL must be prefixed: `/app/@id/__x00__virtual:my-module`.
+- With a base, the URL must be prefixed: `/app/@id/virtual:my-module`.
+- `server.fs.allow` applies to the *resolved* file, not to the id: a package linked from outside
+  the app directory (a `file:` fixture) needs `fs: { allow: […] }`; a real install lives under
+  `node_modules` and needs nothing.
 - **Exception: `transformIndexHtml` tags.** A `src` returned from that hook is rewritten by
   Vite's dev HTML transform, which prefixes `config.base` to every root-relative URL
   (`processNodeUrl`, Vite 8.3.6 `dist/node/chunks/node.js`). The hook must therefore return

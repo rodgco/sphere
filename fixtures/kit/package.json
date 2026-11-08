@@ -1,0 +1,17 @@
+{
+  "name": "sphere-fixture-kit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^8.0.0",
+    "@sveltejs/kit": "^3.1.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "sphere-plugin": "file:../..",
+    "svelte": "^5.57.3",
+    "vite": "^8.3.6"
+  }
+}

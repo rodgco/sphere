@@ -24,12 +24,11 @@ prototype already proved; M3–M5 make it a product.
 
 ## M1 — Instrumentation and inspection (no UI)
 
-**Status:** in progress — the `svelte/internal/client` seam, its export guard, the `enabled: false`
-proof and the runtime harness exist (`src/plugin/svelte-client.ts`, `src/runtime/instrumentation.ts`,
-`test/client-gate.test.ts`, `test/harness/`, `fixtures/harness/`), plus the wrappers (instance
-registry, element stamps, block-callback ownership, `tag`/`tag_proxy` state) and
-`window.__SPHERE__` with `inspectElement`/`locateElement` per `docs/specs/payload-schema.md` and
-the budgets. Next: SvelteKit injection and a Kit fixture app, which close M1.
+**Status:** done — the seam and its `enabled: false` proof, the wrappers (instance registry,
+element stamps, block-callback ownership, `tag`/`tag_proxy`), `window.__SPHERE__` with
+`inspectElement`/`locateElement` and the budgets, the runtime harness, and delivery into a real
+SvelteKit 3 dev server (`fixtures/kit`). Kit 2's transform shape is unit-tested; a real Kit 2 app
+runs in the M5 matrix.
 
 **Done when**
 

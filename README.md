@@ -10,11 +10,11 @@ and a numbered source window — plus the instructions you typed.
 
 Nothing leaves the browser: the payload goes to your clipboard.
 
-> **Status: M1 in progress.** The plugin, its options, the delivery probe and the
-> `svelte/internal/client` seam (with its export guard and the `enabled: false` proof) exist under
-> `src/`, `fixtures/` and `test/`; there is no inspection or overlay yet. The behaviour in `docs/`
-> is derived from a working prototype (a private fork of `vite-devtools-svelte` developed inside
-> another project). `docs/11-roadmap.md` turns the specs into milestones.
+> **Status: M1 done.** Instrumentation, `window.__SPHERE__.inspectElement`, the runtime harness and
+> dev-server delivery (plain Vite and SvelteKit 3) exist under `src/`, `fixtures/` and `test/`.
+> There is no overlay and no prompt yet — that is M2 and M3. The behaviour in `docs/` is derived
+> from a working prototype (a private fork of `vite-devtools-svelte` developed inside another
+> project). `docs/11-roadmap.md` turns the specs into milestones.
 
 ## Why a separate project
 
@@ -39,12 +39,15 @@ coupling itself and must keep up with Svelte releases.
 
 ```bash
 npm install
-npm run check     # lint, format check, typecheck, tests, build
-npm run dev       # fixtures/plain on http://localhost:5201, probe in the console
+npm --prefix fixtures/kit install    # SvelteKit fixture (optional locally, installed in CI)
+
+npm run check     # lint, format check, typecheck, build, tests
+npm run dev       # fixtures/plain on http://localhost:5201
 ```
 
-The delivery probe (`virtual:sphere/hello`) is M0 scaffolding: it proves that a virtual module
-reaches the page, and is replaced by the runtime entry in M1.
+`fixtures/plain` is a plain Vite + Svelte app; `fixtures/kit` is a SvelteKit app that consumes the
+built package through a `file:` link, so the injection test runs against the artifact a user
+installs.
 
 ## Read this first
 

@@ -15,11 +15,15 @@ export default defineConfig({
 })
 ```
 
-- `name: 'sphere'`, `apply: 'serve'`, `enforce: 'pre'`:
-  `enforce: 'pre'` matters for `resolveId` — the `svelte/internal/client` redirect must be
-  resolved before any other plugin (the Svelte plugin compiles modules that import it).
-- Client-only: `applyToEnvironment(env) { return env.config.consumer === 'client' }` where
-  available, plus `transform(code, id, { ssr })` guards, so SSR never sees the instrumentation.
+- `apply: 'serve'`, `enforce: 'pre'` on everything: `enforce: 'pre'` matters for `resolveId` —
+  the `svelte/internal/client` redirect must be resolved before any other plugin (the Svelte
+  plugin compiles modules that import it).
+- **Two plugin objects**, because they run in different environments:
+  `sphere` (client only) resolves the seam, serves the runtime and injects the tag for plain Vite
+  apps; `sphere:kit-inject` transforms SvelteKit's generated server module, which is an **SSR**
+  module — a client-only gate would never see it.
+- Client-only for the instrumentation: `applyToEnvironment(env) { return env.config.consumer ===
+  'client' }`, so SSR never sees it.
 - Options are normalised once in `configResolved`; an invalid option fails at startup with a
   message naming it (dev-time, so failing loudly is cheap).
 
@@ -28,7 +32,7 @@ export default defineConfig({
 | Id | Contents | Consumer |
 |---|---|---|
 | `virtual:sphere/config` | `export default { root, base, options, version }` | runtime, overlay |
-| `virtual:sphere/runtime` | instrumentation + `inspectElement`/`locateElement`, installs `window.__SPHERE__` | page |
+| `virtual:sphere/runtime` | the instrumentation module: wrappers, `inspectElement`/`locateElement`, installs `window.__SPHERE__` | page |
 | `virtual:sphere/overlay` | the Svelte overlay entry: mounts the shadow host and renders `<Overlay />` | page |
 | `virtual:sphere/instrumentation` | resolved to `src/runtime/instrumentation.ts` (shipped source); the browser half of the client seam | generated client module |
 | `virtual:sphere/svelte-client` | generated wrapper for `svelte/internal/client`; reached through the bare specifier from app modules only, and only generated when enabled | compiled components |
@@ -62,14 +66,18 @@ through its own generated module). Two paths, in this order:
 The URL is Vite's id URL:
 
 ```
-/@id/__x00__virtual:sphere/overlay
+/@id/virtual:sphere/runtime
 ```
 
-`__x00__` is how Vite encodes the `\0` of a virtual module id in a URL. The base is added by
-whoever inserts the URL: a `transformIndexHtml` tag gets it from Vite's dev HTML transform
-(`processNodeUrl`), so the hook returns the bare `/@id/…`; the SvelteKit template is raw HTML and
-must be written as `<base>@id/…` itself. Either mistake fails quietly with a 404 — the base
-missing on the raw path, or present twice. Never use an inline `import 'virtual:…'` in a
+**No `\0` in the id.** Vite encodes a `\0`-prefixed id as `__x00__`, but SvelteKit's dev
+middleware does not unwrap it: `/@id/__x00__virtual:sphere/runtime` answers Kit's own 404 page,
+while `/@id/virtual:sphere/runtime` is resolved like any other plugin id. Virtual ids that are
+*imported* (the client wrapper) keep the `\0`; ids that are *fetched as URLs* must be URL-safe.
+
+The base is added by whoever inserts the URL: a `transformIndexHtml` tag gets it from Vite's dev
+HTML transform (`processNodeUrl`), so the hook returns the bare `/@id/…`; the SvelteKit template
+is raw HTML and must be written as `<base>@id/…` itself. Either mistake fails quietly with a 404 —
+the base missing on the raw path, or present twice. Never use an inline `import 'virtual:…'` in a
 SvelteKit-injected script: Vite does not rewrite the bare specifier there.
 
 ## 4. Configuration transport
@@ -106,10 +114,10 @@ The browser reads a file with:
 
 | Environment | Verified | Notes |
 |---|---|---|
-| SvelteKit 2 + Vite 8 | yes (prototype) | inject into `generated/server/internal.js` |
-| SvelteKit 3 + Vite 8 | yes (prototype) | inject into `generated/dev/server.js` |
-| Plain Svelte + Vite 8 | planned | `transformIndexHtml` |
-| `base: '/app/'` | planned | URL and `/@fs` both need the prefix |
+| SvelteKit 3.1 + Vite 8.3 | yes — `fixtures/kit` + `test/kit-injection.test.ts` | inject into `generated/dev/server.js`; `svelte.config.js` is gone in Kit 3 (config via `sveltekit()`) |
+| SvelteKit 2 + Vite 8 | transform only | `generated/server/internal.js`, shape covered by `test/inject.test.ts`; a real Kit 2 app is a matrix job (M5) |
+| Plain Svelte + Vite 8 | yes — `fixtures/plain` | `transformIndexHtml` |
+| `base: '/app/'` | transform only | Vite prefixes the tag; raw insertion calls `withBase` (`test/inject.test.ts`) |
 
 Two dev servers over the same app directory fight over `.svelte-kit/generated`: any harness or
 e2e script must run one server at a time.
