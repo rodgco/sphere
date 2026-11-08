@@ -1,0 +1,9 @@
+# Code is formatted by oxfmt; specs and ADRs are hand-wrapped on purpose (docs/AGENTS.md),
+# so a formatter run must not churn them.
+docs/
+*.md
+LICENSE
+THIRD_PARTY.md
+dist/
+coverage/
+node_modules/

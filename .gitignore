@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.svelte-kit/
+.svelte-check/
+coverage/
+*.tsbuildinfo
+
+# Test artifacts
+test-results/
+playwright-report/
+shots/
+*.png.tmp
+
+# Generated fixture apps / benchmark output
+.temp/
+perf/results/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Tooling caches
+.vite/
+.turbo/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
