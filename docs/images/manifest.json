@@ -1,0 +1,20 @@
+{
+  "commit": "82b2015",
+  "captured": "2026-11-08T20:58:59.177Z",
+  "runner": "linux x64",
+  "viewport": "1200×800",
+  "shots": [
+    {
+      "theme": "light",
+      "file": "docs/images/sphere-light.png",
+      "viewport": "1200×800",
+      "leaks": 0
+    },
+    {
+      "theme": "dark",
+      "file": "docs/images/sphere-dark.png",
+      "viewport": "1200×800",
+      "leaks": 0
+    }
+  ]
+}

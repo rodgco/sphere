@@ -53,7 +53,7 @@ async function main() {
       )
       assert(!verified.includes('- location note:'), 'a verified line grew a note')
 
-      // 2. Matched: the compiler recorded an ancestor; the element is found by its id.
+      // 2. Matched: the compiler recorded an ancestor; the element is found by its class needle.
       await reset(page, server.origin)
       await setRecordedLine(page, '#app-button', 1)
       const matched = await pickAndCopy(page, '#app-button')
@@ -64,7 +64,7 @@ async function main() {
       )
       assert(
         matched.includes(
-          '- location note: line matched by `id="app-button"`; Svelte recorded the enclosing element at `src/App.svelte:1`',
+          '- location note: line matched by `class="button"`; Svelte recorded the enclosing element at `src/App.svelte:1`',
         ),
         `missing the matched note:\n${matched}`,
       )
