@@ -1,5 +1,12 @@
 import type { Plugin } from 'vite'
 import { resolveOptions, type ResolvedOptions, type SphereOptions } from './options.js'
+import {
+  CLIENT_SPECIFIER,
+  INSTRUMENTATION_SPECIFIER,
+  WRAPPER_ID,
+  runtimeSource,
+  wrapperModule,
+} from './svelte-client.js'
 import { HELLO_ID, idToUrl } from './virtual.js'
 
 export type { ResolvedOptions, SphereOptions } from './options.js'
@@ -21,6 +28,9 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
   // Fail in the config file, naming the option, before a server exists.
   let resolved: ResolvedOptions = resolveOptions(options)
 
+  /** Resolved through the rest of the pipeline, so it is the host project's Svelte. */
+  let upstreamId: string | null = null
+
   return [
     {
       name: 'sphere',
@@ -35,12 +45,26 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
         return environment.config.consumer === 'client'
       },
 
-      resolveId(id) {
-        return id === HELLO_ID ? HELLO_ID : null
+      async resolveId(id, importer) {
+        if (!resolved.enabled) return null
+
+        if (id === INSTRUMENTATION_SPECIFIER) return runtimeSource('instrumentation')
+        if (id === HELLO_ID) return HELLO_ID
+        if (id !== CLIENT_SPECIFIER) return null
+
+        // Ask the rest of the pipeline where this Svelte's client entry actually is;
+        // `skipSelf` keeps the answer from being this hook again.
+        const upstream = await this.resolve(id, importer, { skipSelf: true })
+        if (!upstream) return null
+
+        upstreamId = upstream.id
+        return WRAPPER_ID
       },
 
       load(id) {
-        return id === HELLO_ID ? HELLO_SOURCE : null
+        if (id === HELLO_ID) return HELLO_SOURCE
+        if (id !== WRAPPER_ID || upstreamId === null) return null
+        return wrapperModule(upstreamId)
       },
 
       transformIndexHtml: {

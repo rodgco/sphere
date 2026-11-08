@@ -24,6 +24,10 @@ prototype already proved; M3–M5 make it a product.
 
 ## M1 — Instrumentation and inspection (no UI)
 
+**Status:** in progress — the `svelte/internal/client` seam, its export guard and the
+`enabled: false` proof exist (`src/plugin/svelte-client.ts`, `src/runtime/instrumentation.ts`,
+`test/client-gate.test.ts`). Next: runtime harness, then the wrappers, then `inspectElement`.
+
 **Done when**
 
 - Wrapper module generated with/without the element stamps; upstream module byte-identical when

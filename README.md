@@ -10,10 +10,11 @@ and a numbered source window — plus the instructions you typed.
 
 Nothing leaves the browser: the payload goes to your clipboard.
 
-> **Status: M0 — scaffold landed.** The plugin, its options, the delivery probe and the test suite
-> exist under `src/`, `fixtures/` and `test/`; no instrumentation or overlay yet. The behaviour in
-> `docs/` is derived from a working prototype (a private fork of `vite-devtools-svelte` developed
-> inside another project). `docs/11-roadmap.md` turns the specs into milestones.
+> **Status: M1 in progress.** The plugin, its options, the delivery probe and the
+> `svelte/internal/client` seam (with its export guard and the `enabled: false` proof) exist under
+> `src/`, `fixtures/` and `test/`; there is no inspection or overlay yet. The behaviour in `docs/`
+> is derived from a working prototype (a private fork of `vite-devtools-svelte` developed inside
+> another project). `docs/11-roadmap.md` turns the specs into milestones.
 
 ## Why a separate project
 

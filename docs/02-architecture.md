@@ -11,7 +11,7 @@ sphere/
       index.ts              factory + option normalisation
       virtual-modules.ts    ids, resolve/load, config transport
       inject.ts             SvelteKit template injection + transformIndexHtml
-      compile.ts            wrapper module assembly (gated instrumentation)
+      svelte-client.ts      the `svelte/internal/client` seam: ids, wrapper assembly
     runtime/                Browser side, served as virtual modules
       instrumentation.ts    wraps svelte/internal/client, publishes __SPHERE__
       inspect.ts            element → payload (the only place that reads __svelte_meta)

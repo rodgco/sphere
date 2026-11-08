@@ -21,22 +21,30 @@ Everything else (element location, template context) comes from Svelte's own met
 
 ## How it is installed
 
-The plugin serves the module that app code imports as `svelte/internal/client`:
+The plugin serves the module that app code imports as `svelte/internal/client`. It is
+**generated**, and its only decision (enabled or not) is taken before generation — never inside
+the module:
 
 ```ts
-// plugin/compile.ts (sketch)
-const wrapper = promptToolbarEnabled
-  ? `${trackingWrapper}\n${elementStamps}`   // two source files, concatenated in one module
-  : trackingWrapper                          // upstream client + lifecycle/tag overrides only
+// plugin/svelte-client.ts (sketch)
+const wrapper = wrapperModule(upstreamId)   // text: imports, `export *`, install call
 ```
 
-- The wrapper re-exports `*` from the real module and overrides a fixed set of functions.
-  The set is asserted by a test (`overrides exactly these exports`), so an upstream change
-  that adds/removes an export fails loudly.
-- The element-stamp file is **appended only when enabled**: with Sphere off, `push()` does not
-  call any hook and no DOM walk happens (see the ADR).
-- No runtime `if` in a hot path decides whether to instrument; the decision is made when the
-  module is generated.
+- The wrapper imports the resolved upstream file and `export *` from it, so the whole surface is
+  preserved and the host project's Svelte is used, not the plugin's own copy. It never imports the
+  bare specifier, which would resolve back to itself.
+- `src/runtime/instrumentation.ts` is imported through `virtual:sphere/instrumentation`, which the
+  plugin resolves to the shipped source; the host's Vite compiles it. It receives the upstream
+  namespace as an **argument**, so the appended instrumentation needs no import of its own and is
+  only in the module graph when Sphere is enabled.
+- Overrides are local exports in the wrapper, which shadow the star export of the same name. The set
+  is fixed and asserted by a test (`overrides exactly these exports`), so an upstream change that
+  adds or removes an export fails loudly.
+- Disabled: the specifier is not resolved at all. App code gets Svelte's own module, untouched —
+  "off" means the wrapper does not exist, not that it is quiet
+  (`docs/decisions/0002-opt-in-instrumentation.md`).
+- No runtime `if` in a hot path decides whether to instrument; the decision is made when the module
+  is generated.
 
 ## Rules the instrumentation must obey
 
