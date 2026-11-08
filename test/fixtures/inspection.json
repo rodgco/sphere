@@ -1,0 +1,245 @@
+{
+  "page": {
+    "url": "http://localhost:3000/dashboard",
+    "path": "/dashboard",
+    "title": "Home \u00b7 App",
+    "viewport": "1269\u00d7919"
+  },
+  "instructions": "Explain this component to me.",
+  "options": {
+    "state": true,
+    "props": true,
+    "source": true,
+    "template": true
+  },
+  "version": null,
+  "selections": [
+    {
+      "inspected": {
+        "page": {
+          "url": "http://localhost:3000/dashboard",
+          "path": "/dashboard",
+          "title": "Home \u00b7 App",
+          "viewport": "1269\u00d7919"
+        },
+        "element": {
+          "tag": "div",
+          "tagName": "DIV",
+          "id": "",
+          "classes": ["connection-pill"],
+          "attrs": {
+            "aria-live": "polite",
+            "title": "Live status of the app service"
+          },
+          "markup": "<div class=\"connection-pill\" aria-live=\"polite\" title=\"Live status of the app service\"></div>",
+          "size": "219\u00d737",
+          "selector": "div.connection-pill",
+          "domPath": "aside.sidebar > div#sidebar-menu.sidebar-content > div.sidebar-bottom > div:nth-of-type(1).connection-pill"
+        },
+        "source": {
+          "file": "src/lib/components/SystemStatus.svelte",
+          "line": 37,
+          "column": 0,
+          "enclosing": false
+        },
+        "template": [
+          {
+            "type": "component",
+            "file": "src/lib/components/AppSidebar.svelte",
+            "line": 177,
+            "column": 6,
+            "componentTag": "SystemStatus"
+          },
+          {
+            "type": "component",
+            "file": "src/routes/dashboard/+page.svelte",
+            "line": 44,
+            "column": 2,
+            "componentTag": "AppSidebar"
+          }
+        ],
+        "components": [
+          {
+            "id": 12,
+            "name": "SystemStatus",
+            "file": "src/lib/components/SystemStatus.svelte",
+            "usage": {
+              "file": "src/lib/components/AppSidebar.svelte",
+              "line": 177,
+              "column": 6,
+              "componentTag": "SystemStatus"
+            },
+            "props": "{}",
+            "state": [
+              {
+                "name": "health",
+                "type": "state",
+                "value": "{\"status\":\"ok\",\"service\":\"web\",\"database\":\"ok\",\"uptimeSeconds\":1234,\"latencyMs\":12}"
+              },
+              {
+                "name": "error",
+                "type": "state",
+                "value": "null"
+              },
+              {
+                "name": "tone",
+                "type": "derived",
+                "value": "\"ok\""
+              },
+              {
+                "name": "label",
+                "type": "derived",
+                "value": "\"All systems online\""
+              }
+            ],
+            "renders": 1
+          },
+          {
+            "id": 11,
+            "name": "AppSidebar",
+            "file": "src/lib/components/AppSidebar.svelte",
+            "usage": {
+              "file": "src/routes/dashboard/+page.svelte",
+              "line": 44,
+              "column": 2,
+              "componentTag": "AppSidebar"
+            },
+            "props": "{\"user\":{\"id\":1,\"name\":\"Rodrigo\",\"email\":\"r@rodg.co\",\"role\":\"owner\",\"createdAt\":\"2026-01-01\"},\"active\":\"overview\"}",
+            "state": [
+              {
+                "name": "initial",
+                "type": "derived",
+                "value": "\"R\""
+              },
+              {
+                "name": "menuOpen",
+                "type": "state",
+                "value": "false"
+              }
+            ],
+            "renders": 1
+          },
+          {
+            "id": 10,
+            "name": "+page",
+            "file": "src/routes/dashboard/+page.svelte",
+            "usage": null,
+            "props": "{\"data\":{\"locale\":\"pt-BR\",\"user\":{\"id\":1},\"channels\":[1,2,3],\"workspace\":{\"id\":7},\"conversations\":[1,2,3,4],\"guestConversations\":[]},\"form\":null,\"params\":{}}",
+            "state": [
+              {
+                "name": "firstName",
+                "type": "derived",
+                "value": "\"Rodrigo\""
+              },
+              {
+                "name": "greeting",
+                "type": "derived",
+                "value": "\"Your workspace, assistant, and conversations are ready.\""
+              }
+            ],
+            "renders": 1
+          }
+        ]
+      },
+      "source": {
+        "path": "src/lib/components/SystemStatus.svelte",
+        "text": "<script lang=\"ts\">\n  import { onMount } from 'svelte'\n  import { i18n } from '$lib/i18n'\n  import { api } from '$lib/api'\n  import type { Health } from '$lib/types'\n\n  let health = $state<Health>({\n    status: 'ok',\n    service: 'web',\n    database: 'ok',\n    uptimeSeconds: 1234,\n    latencyMs: 12,\n  })\n\n  let error = $state<string | null>(null)\n\n  const tone = $derived(health.status === 'ok' ? 'ok' : 'down')\n  const label = $derived(tone === 'ok' ? 'All systems online' : 'Degraded')\n\n  async function refresh() {\n    try {\n      health = await api.health()\n      error = null\n    } catch (cause) {\n      error = cause instanceof Error ? cause.message : String(cause)\n    }\n  }\n\n  onMount(() => {\n    void refresh()\n    const timer = window.setInterval(() => void refresh(), 30_000)\n    return () => window.clearInterval(timer)\n  })\n</script>\n\n<!-- Quiet by design: a dot, a label, and a live region. -->\n<div class=\"connection-pill\" aria-live=\"polite\" title={i18n.t('status.liveTitle')}>\n  <span class=\"dot {tone}\" aria-hidden=\"true\"></span>\n  <span>{label}</span>\n</div>\n\n<style>\n  .connection-pill {\n    display: inline-flex;\n    gap: 6px;\n    align-items: center;\n  }\n  .dot.ok {\n    background: #22c55e;\n  }\n  .dot.down {\n    background: #ef4444;\n  }\n</style>\n"
+      }
+    },
+    {
+      "inspected": {
+        "page": {
+          "url": "http://localhost:3000/dashboard",
+          "path": "/dashboard",
+          "title": "Home \u00b7 App",
+          "viewport": "1269\u00d7919"
+        },
+        "element": {
+          "tag": "a",
+          "tagName": "A",
+          "id": "",
+          "classes": ["button", "button-quiet"],
+          "attrs": {
+            "href": "/files"
+          },
+          "markup": "<a class=\"button button-quiet\" href=\"/files\"></a>",
+          "size": "144\u00d740",
+          "selector": "a.button.button-quiet",
+          "domPath": "main.app-main > section.home-greeting > div:nth-of-type(2).page-actions > a:nth-of-type(1).button.button-quiet"
+        },
+        "source": {
+          "file": "src/routes/dashboard/+page.svelte",
+          "line": 20,
+          "column": 4,
+          "enclosing": true
+        },
+        "template": [
+          {
+            "type": "render",
+            "file": "src/routes/+layout.svelte",
+            "line": 25,
+            "column": 0,
+            "componentTag": null
+          }
+        ],
+        "components": [
+          {
+            "id": 10,
+            "name": "+page",
+            "file": "src/routes/dashboard/+page.svelte",
+            "usage": null,
+            "props": "{\"data\":{\"locale\":\"pt-BR\",\"user\":{\"id\":1},\"channels\":[1,2,3],\"workspace\":{\"id\":7},\"conversations\":[1,2,3,4],\"guestConversations\":[]},\"form\":null,\"params\":{}}",
+            "state": [
+              {
+                "name": "greeting",
+                "type": "derived",
+                "value": "\"Your workspace, assistant, and conversations are ready.\""
+              }
+            ],
+            "renders": 1
+          }
+        ]
+      },
+      "source": {
+        "path": "src/routes/dashboard/+page.svelte",
+        "text": "<script lang=\"ts\">\n  import Icon from '$lib/components/Icon.svelte'\n  import { i18n } from '$lib/i18n'\n\n  let { data } = $props()\n\n  const firstName = $derived(data.user.name.split(' ')[0])\n  const greeting = $derived(i18n.t('dashboard.ready'))\n</script>\n\n<main class=\"app-main\">\n  <section class=\"home-greeting\">\n    <div>\n      <p class=\"eyebrow\">{i18n.t('dashboard.eyebrow')}</p>\n      <h1>{i18n.t('dashboard.welcome', { name: firstName })}</h1>\n      <p>{greeting}</p>\n    </div>\n\n    <!-- The actions wrap together on narrow screens. -->\n    <div class=\"page-actions\">\n      <a class=\"button button-quiet\" href=\"/files\">\n        <Icon name=\"folder\" />\n        {i18n.t('dashboard.openSpace')}\n      </a>\n      <a class=\"button\" href=\"/agent\">{i18n.t('dashboard.openChat')}</a>\n    </div>\n  </section>\n</main>\n"
+      }
+    },
+    {
+      "inspected": {
+        "page": {
+          "url": "http://localhost:3000/dashboard",
+          "path": "/dashboard",
+          "title": "Home \u00b7 App",
+          "viewport": "1269\u00d7919"
+        },
+        "element": {
+          "tag": "button",
+          "tagName": "BUTTON",
+          "id": "",
+          "classes": [],
+          "attrs": {
+            "type": "submit"
+          },
+          "markup": "<button type=\"submit\"></button>",
+          "size": "96\u00d732",
+          "selector": "button",
+          "domPath": "main > form > button"
+        },
+        "source": null,
+        "template": [],
+        "components": [
+          {
+            "id": 10,
+            "name": "+page",
+            "file": "src/routes/dashboard/+page.svelte",
+            "usage": null,
+            "props": "{}",
+            "state": [],
+            "renders": 0
+          }
+        ]
+      }
+    }
+  ]
+}

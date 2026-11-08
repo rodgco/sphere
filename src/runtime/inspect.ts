@@ -171,6 +171,7 @@ function elementInfo(element: Element): ElementInfo {
       element.getBoundingClientRect().height,
     )}`,
     selector: selectorOf(element),
+    domPath: selectorOf(element, { nthOfType: true }),
   }
 }
 
@@ -230,7 +231,7 @@ function serializeAttributes(element: Element): string {
   return out
 }
 
-function selectorOf(element: Element): string {
+function selectorOf(element: Element, options: { nthOfType?: boolean } = {}): string {
   const parts: string[] = []
 
   for (
@@ -245,7 +246,19 @@ function selectorOf(element: Element): string {
       .map((name) => `.${name}`)
       .join('')
 
-    parts.unshift(`${cursor.localName}${cursor.id === '' ? '' : `#${cursor.id}`}${classes}`)
+    let suffix = ''
+    if (options.nthOfType === true) {
+      const sameTag = cursor.parentElement
+        ? [...cursor.parentElement.children].filter(
+            (child) => child.localName === cursor?.localName,
+          )
+        : []
+      if (sameTag.length > 1) suffix = `:nth-of-type(${sameTag.indexOf(cursor) + 1})`
+    }
+
+    parts.unshift(
+      `${cursor.localName}${cursor.id === '' ? '' : `#${cursor.id}`}${classes}${suffix}`,
+    )
   }
 
   return parts.join(' > ')
@@ -399,7 +412,7 @@ function stateValue(entry: StateLike, budget: ReturnType<typeof createBudget>): 
 // Page
 // ---------------------------------------------------------------------------------------
 
-function pageInfo(): PageInfo {
+export function pageInfo(): PageInfo {
   if (typeof window === 'undefined') {
     return { url: '', path: '', title: '', viewport: '' }
   }

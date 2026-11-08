@@ -55,7 +55,10 @@
     "typecheck:svelte": "svelte-check --threshold error",
     "e2e": "node e2e/picking.mjs && node e2e/a11y.mjs",
     "e2e:a11y": "node e2e/a11y.mjs",
-    "e2e:picking": "node e2e/picking.mjs"
+    "e2e:picking": "node e2e/picking.mjs",
+    "golden": "node --experimental-strip-types scripts/golden.mjs",
+    "docs:example": "node --experimental-strip-types scripts/clipboard-example.mjs",
+    "check:generated": "npm run golden && npm run docs:example && git diff --exit-code test/golden/prompt.md docs/specs/clipboard-example.md"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",

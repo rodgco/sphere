@@ -1,30 +1,22 @@
 # Spec — clipboard example (golden shape)
 
-Two real cases from a SvelteKit app, rewritten in the v1 format. These are the reference for
-`test/golden/prompt.md` and `docs/05-prompt-format.md`.
+Three cases from a SvelteKit app in the v1 format. **Generated**: the code blocks come from
+`scripts/clipboard-example.mjs` running the real formatter over `test/fixtures/inspection.json`,
+and CI fails if this file and that output disagree. The prose around them is hand-written.
 
 ## Case A — a verified location, one selection
 
 The user picked `div.connection-pill` (a small status pill), typed one sentence.
 
+<!-- sphere:example case-a -->
 ````md
-# UI context from the running app
-
-Page: `http://localhost:3000/dashboard` (Home · App)
-Viewport: 1269×919
-
-## What I need
-
-Explain this component to me.
-
-## Selection
-
 ### Selected element div.connection-pill
 
-- markup: `src/lib/components/SystemStatus.svelte:41:0`
+- markup: `src/lib/components/SystemStatus.svelte:37:0`
 - DOM path: `aside.sidebar > div#sidebar-menu.sidebar-content > div.sidebar-bottom > div:nth-of-type(1).connection-pill`
 - size: 219×37
 - attributes: aria-live="polite" title="Live status of the app service"
+
 ```html
 <div class="connection-pill" aria-live="polite" title="Live status of the app service"></div>
 ```
@@ -44,42 +36,47 @@ Component chain (innermost first):
   - $derived label = "All systems online"
 2. AppSidebar — `src/lib/components/AppSidebar.svelte`
   - rendered by `src/routes/dashboard/+page.svelte:44:2`
-  - props: user={id, name, email, role, createdAt}, active="overview"
+  - renders: 1
+  - props: user={id: 1, name: "Rodrigo", email: "r@rodg.co", role: "owner", createdAt: "2026-01-01"}, active="overview"
   - $derived initial = "R"
   - $state menuOpen = false
-  - $derived primary = [4 items]
 3. +page — `src/routes/dashboard/+page.svelte`
-  - props: data={locale, user, channels, workspace, conversations, guestConversations}, form=null, params={}
+  - renders: 1
+  - props: data={locale: "pt-BR", user: {id: 1}, channels: [1, 2, 3], workspace: {id: 7}, conversations: [1, 2, 3, 4], guestConversations: []}, form=null, params={}
   - $derived firstName = "Rodrigo"
-  - $derived greeting = "Your workspace, assistant, and conversations are ready."
+  - $derived greeting = "Your workspace, assistant, and conversa…"
 
 Source of `src/lib/components/SystemStatus.svelte`:
 ```svelte
-  33 | 
-  34 | onMount(() => {
-  35 |   void refresh();
-  36 |   const timer = window.setInterval(() => void refresh(), 30_000);
-  37 |   return () => window.clearInterval(timer);
-  38 | });
-  39 | </script>
-  40 | 
-> 41 | <div
-  42 |   class="connection-pill"
-  43 |   title={error ?? i18n.t("status.liveTitle")}
-  44 |   aria-live="polite"
-  45 | >
-  46 |   <span class="dot {tone}" aria-hidden="true"></span>
-  47 |   <span>{label}</span>
-  48 | </div>
+  29 |   onMount(() => {
+  30 |     void refresh()
+  31 |     const timer = window.setInterval(() => void refresh(), 30_000)
+  32 |     return () => window.clearInterval(timer)
+  33 |   })
+  34 | </script>
+  35 |
+  36 | <!-- Quiet by design: a dot, a label, and a live region. -->
+> 37 | <div class="connection-pill" aria-live="polite" title={i18n.t('status.liveTitle')}>
+  38 |   <span class="dot {tone}" aria-hidden="true"></span>
+  39 |   <span>{label}</span>
+  40 | </div>
+  41 |
+  42 | <style>
+  43 |   .connection-pill {
+  44 |     display: inline-flex;
+  45 |     gap: 6px;
 ```
 ````
+<!-- /sphere:example case-a -->
 
 Notes on the shape:
 
 - No rendered text in the heading or the markup (`All systems online` is gone) — the class
   names, the location and the `$derived label` already identify it.
-- `$state health` keeps its scalar values because they fit the budget; `primary` (a list of
-  records) collapses to `[4 items]`.
+- `$state health` keeps its scalar values because they fit the budget; a list of records
+  collapses to `[N items]`, and a value past its budget shows structure only.
+- The window is `line ± 8`, the reported line is marked `>`, and a line that ends at `|` is an
+  empty source line, not a formatting bug.
 - `+layout` is not in the chain: it is rendered through SvelteKit's root component, which is a
   `node_modules` frame, so the chain stops at the page. `template` likewise shows only project
   frames.
@@ -87,17 +84,19 @@ Notes on the shape:
 
 ## Case B — a location the compiler only recorded for an ancestor
 
-The user picked a CTA inside a big static markup block; Svelte's `loc` pointed at the enclosing
-`<div>`.
+The user picked a CTA whose `loc` pointed at the enclosing `<div>`; nothing was matched in the
+file, so the prompt says which ancestor it is.
 
+<!-- sphere:example case-b -->
 ````md
 ### Selected element a.button.button-quiet
 
-- markup: `src/routes/dashboard/+page.svelte:55`
-- location note: line matched by `class="button button-quiet"`; Svelte recorded the enclosing element at `src/routes/dashboard/+page.svelte:43`
+- markup: `src/routes/dashboard/+page.svelte:20`
+- location note: `src/routes/dashboard/+page.svelte:20` is the enclosing element Svelte recorded; the element's own line was not found
 - DOM path: `main.app-main > section.home-greeting > div:nth-of-type(2).page-actions > a:nth-of-type(1).button.button-quiet`
 - size: 144×40
 - attributes: href="/files"
+
 ```html
 <a class="button button-quiet" href="/files"></a>
 ```
@@ -107,53 +106,62 @@ Template context (innermost first):
 
 Component chain (innermost first):
 1. +page — `src/routes/dashboard/+page.svelte`
-  - props: data={locale, user, channels, workspace, conversations, guestConversations}, form=null, params={}
-  - $derived greeting = "Your workspace, assistant, and conversations are ready."
+  - renders: 1
+  - props: data={locale: "pt-BR", user: {id: 1}, channels: [1, 2, 3], workspace: {id: 7}, conversations: [1, 2, 3, 4], guestConversations: []}, form=null, params={}
+  - $derived greeting = "Your workspace, assistant, and conversa…"
 
 Source of `src/routes/dashboard/+page.svelte`:
 ```svelte
-  47 | <section class="home-greeting">
-  48 |   <div>
-  49 |     <p class="eyebrow">{i18n.t("dashboard.eyebrow")}</p>
-  50 |     <h1>{i18n.t("dashboard.welcome", { name: firstName })}</h1>
-  51 |     <p>{greeting}</p>
-  52 |   </div>
-  53 | 
-  54 |   <div class="page-actions">
-> 55 |     <a class="button button-quiet" href="/files">
-  56 |       <Icon name="folder" />
-  57 |       {i18n.t("dashboard.openSpace")}
-  58 |     </a>
-  59 |     <a class="button" href="/agent">{i18n.t("dashboard.openChat")}</a>
-  60 |   </div>
-  61 | </section>
+  12 |   <section class="home-greeting">
+  13 |     <div>
+  14 |       <p class="eyebrow">{i18n.t('dashboard.eyebrow')}</p>
+  15 |       <h1>{i18n.t('dashboard.welcome', { name: firstName })}</h1>
+  16 |       <p>{greeting}</p>
+  17 |     </div>
+  18 |
+  19 |     <!-- The actions wrap together on narrow screens. -->
+> 20 |     <div class="page-actions">
+  21 |       <a class="button button-quiet" href="/files">
+  22 |         <Icon name="folder" />
+  23 |         {i18n.t('dashboard.openSpace')}
+  24 |       </a>
+  25 |       <a class="button" href="/agent">{i18n.t('dashboard.openChat')}</a>
+  26 |     </div>
+  27 |   </section>
+  28 | </main>
 ```
 ````
+<!-- /sphere:example case-b -->
 
 Notes:
 
-- The line is the element's own line (55), found by matching `class="button button-quiet"`, and
-  the note says what happened. The column is omitted in this case because the compiler's column
-  belongs to the ancestor.
-- `href="/files"` alone would not have been enough (the other CTA shares no class but does share
-  the shape); the class needle is what makes the match exact.
-- The chip in the panel shows the same line prefixed with `~`.
+- This is the **enclosing** case: the compiler recorded the action group, not the link. The
+  prompt says so, the column is dropped (it belongs to the ancestor), and the panel chip shows
+  the same location prefixed with `~`.
+- The matched case (`line matched by `class="…"`, see `docs/05-prompt-format.md` §4) needs the
+  element to be searched in the file; that lands with the source verification in M4, and its
+  example will be generated here too.
+- `href="/files"` alone would not identify the link: the other CTA shares the tag and shape.
 
 ## Case C — no location at all
 
-```md
+<!-- sphere:example case-c -->
+````md
 ### Selected element button
 
 - DOM path: `main > form > button`
 - size: 96×32
 - attributes: type="submit"
+
 ```html
 <button type="submit"></button>
 ```
 
 Component chain (innermost first):
-1. …
-```
+1. +page — `src/routes/dashboard/+page.svelte`
+  - props: {}
+````
+<!-- /sphere:example case-c -->
 
-The `- markup:` line is absent: nothing reliable was recorded and nothing matched in the file.
-The prompt still says which file's chain produced the element.
+The `- markup:` line is absent: nothing reliable was recorded and there is no file to check
+against. The component chain still says which file's element this is.

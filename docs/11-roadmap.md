@@ -58,6 +58,10 @@ instructions and the status line. Covered by the runtime harness and by `e2e/pic
 
 ## M3 — The prompt
 
+**Status:** in progress — `format.ts` implements `docs/05-prompt-format.md` with a golden test,
+and `docs/specs/clipboard-example.md` is generated from the same fixture and diffed in CI. Next:
+Copy prompt with the clipboard fallback and the browser test.
+
 **Done when**
 
 - `format.ts` implements `docs/05-prompt-format.md` exactly; golden test green.

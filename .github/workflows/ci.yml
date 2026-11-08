@@ -36,5 +36,8 @@ jobs:
 
       - run: npm test
 
+      # The golden prompt and the doc's examples must be the real formatter's output.
+      - run: npm run check:generated
+
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e

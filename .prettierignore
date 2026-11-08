@@ -6,5 +6,6 @@ LICENSE
 THIRD_PARTY.md
 dist/
 test/harness/generated/
+test/fixtures/
 coverage/
 node_modules/

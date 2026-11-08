@@ -47,8 +47,10 @@ export interface ElementInfo {
   markup: string
   /** `144×40`, rounded CSS pixels. */
   size: string
-  /** Readable path, ≤ 6 levels. */
+  /** Readable path for the panel, ≤ 6 levels. */
   selector: string
+  /** Path for the prompt: same, with `:nth-of-type(n)` where siblings share the tag. */
+  domPath: string
 }
 
 export interface SourceLocation {
