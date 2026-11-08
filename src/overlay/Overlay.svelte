@@ -61,6 +61,13 @@
   let shell: HTMLDivElement | undefined = $state()
   let control: HTMLButtonElement | undefined = $state()
 
+  // Focus modality, tracked ourselves: Chromium reports `:focus-visible` after a programmatic
+  // `focus()` from a pointerdown handler, which painted a rectangular ring on the pill for every
+  // mouse click. The ring belongs to keyboard use only (docs/06 §8).
+  let keyboard = $state(false)
+  let focused = $state(false)
+  const focusRing = $derived(keyboard && focused)
+
   let drag: {
     pointerX: number
     pointerY: number
@@ -70,9 +77,25 @@
     togglesOnTap: boolean
   } | null = null
 
+  function noteKeyboardModality(event: KeyboardEvent) {
+    if (event.key === 'Tab' || event.key === 'Shift') keyboard = true
+  }
+
+  function notePointerModality() {
+    keyboard = false
+  }
+
   onMount(() => {
     position = readControl()
     options = readOptions()
+
+    window.addEventListener('keydown', noteKeyboardModality, true)
+    window.addEventListener('pointerdown', notePointerModality, true)
+
+    return () => {
+      window.removeEventListener('keydown', noteKeyboardModality, true)
+      window.removeEventListener('pointerdown', notePointerModality, true)
+    }
   })
 
   // `bind:this` is assigned after mount, so the listener is attached from an effect rather than
@@ -80,6 +103,19 @@
   $effect(() => {
     if (shell === undefined) return
     return listen<PointerEvent>(shell, 'pointerdown', startDrag)
+  })
+
+  $effect(() => {
+    if (control === undefined) return
+
+    const stops = [
+      listen<FocusEvent>(control, 'focus', () => (focused = true)),
+      listen<FocusEvent>(control, 'blur', () => (focused = false)),
+    ]
+
+    return () => {
+      for (const stop of stops) stop()
+    }
   })
 
   $effect(() => {
@@ -472,6 +508,7 @@
 
   <div
     class="control"
+    class:focus-ring={focusRing}
     bind:this={shell}
     style={controlStyle}
     role="group"

@@ -61,6 +61,18 @@ button {
   outline-offset: 2px;
 }
 
+/* The control draws its own ring on the pill, and only for keyboard use: the outline follows the
+   pill's radius instead of boxing the label inside it. */
+.inspect:focus,
+.inspect:focus-visible {
+  outline: none;
+}
+
+.control.focus-ring {
+  outline: 2px solid var(--sphere-accent);
+  outline-offset: 3px;
+}
+
 .control {
   position: fixed;
   right: 18px;

@@ -126,6 +126,25 @@ describe('the control', () => {
     }
   })
 
+  it('draws the focus ring for the keyboard, never for a pointer', () => {
+    const view = mountOverlay()
+    try {
+      // A primary click focuses the pill (docs/06 §1) but must not paint a ring: Chromium would
+      // report :focus-visible here, which is why the modality is tracked by hand.
+      pointer(view.control, 'pointerdown', 10, 10)
+      pointer(window, 'pointerup', 10, 10)
+      expect(view.shell.classList.contains('focus-ring')).toBe(false)
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
+      view.control.focus()
+      flushSync()
+
+      expect(view.shell.classList.contains('focus-ring')).toBe(true)
+    } finally {
+      view.destroy()
+    }
+  })
+
   it('returns to the default corner on double click', () => {
     const view = mountOverlay()
     writeControl({ x: 200, y: 120 })

@@ -43,16 +43,48 @@ async function main() {
       await page.keyboard.press('Space')
       await expectAttribute(page, control(page), 'aria-pressed', 'false')
 
-      // 2. Focus ring: keyboard focus is visible, and it is not the browser default outline.
-      await control(page).focus()
-      const outline = await control(page).evaluate((element) => {
-        const style = getComputedStyle(element)
-        return { style: style.outlineStyle, width: style.outlineWidth }
-      })
-      assert(outline.style !== 'none' && outline.width !== '0px', `no focus ring: ${outline.style}`)
+      // 2. Focus ring: it sits on the pill, and only for keyboard focus. A pointer press focuses
+      //    the control without painting a rectangle around the label.
+      const ring = () =>
+        page.evaluate(() => {
+          const shell = document
+            .getElementById('sphere-host')
+            ?.shadowRoot?.querySelector('.control')
+          const style = shell ? getComputedStyle(shell) : null
+          return {
+            class: shell?.classList.contains('focus-ring') ?? false,
+            outline: style?.outlineStyle ?? null,
+          }
+        })
 
-      // 3. Every button in the overlay has an accessible name.
-      await page.keyboard.press('Enter')
+      await control(page).click()
+      await page.waitForTimeout(60)
+      const afterPointer = await ring()
+      assert(
+        !afterPointer.class && afterPointer.outline === 'none',
+        `a pointer press painted a ring: ${JSON.stringify(afterPointer)}`,
+      )
+
+      await page.evaluate(() =>
+        document.getElementById('sphere-host')?.shadowRoot?.querySelector('.inspect')?.blur(),
+      )
+      const reachedKeyboard = await tabTo(
+        page,
+        async () => (await activeHostId(page)) === 'sphere-host',
+      )
+      assert(reachedKeyboard, 'the control was not reachable with Tab again')
+      const afterKeyboard = await ring()
+      assert(
+        afterKeyboard.class && afterKeyboard.outline !== 'none',
+        `no focus ring for the keyboard: ${JSON.stringify(afterKeyboard)}`,
+      )
+
+      // 3. Every button in the overlay has an accessible name. The ring checks left picking on
+      //    (the pointer press toggled it); make the state explicit instead of assuming it.
+      if ((await control(page).getAttribute('aria-pressed')) !== 'true') {
+        await page.keyboard.press('Enter')
+        await expectAttribute(page, control(page), 'aria-pressed', 'true')
+      }
       await page.locator('#app-link').click()
       await panel(page).waitFor()
 
