@@ -29,6 +29,14 @@ The app template is a **JSON-escaped string literal** inside that module, so:
 - the transform must be idempotent (the module is transformed again on HMR) and must bail out if
   the marker shape changes.
 
+Kit also **rejects the hook loudly**: `configResolved` warns for every plugin with a
+`transformIndexHtml` property (`uses_unsupported_html_hook`, `src/exports/vite/utils.js:354`), with
+only `vitest:browser:loader` and storybook plugins excused, and no config flag to silence it. A
+plugin that needs the hook for plain Vite must therefore not *have* it in a Kit app. A getter that
+answers `undefined` after `configResolved` does that: the plugin list there is final, while the
+`config` hook sees the raw one (`plugins: [[…], null]` in a Kit app, because Vite rewrites it
+while resolving).
+
 `vite-plugin-svelte`'s own inspector corroborates the problem: it injects by appending an import
 to Vite's client module (`vite/dist/client/client.mjs`) with the comment
 `// TODO: inject with transformIndexHtml when it works with SSR`.

@@ -21,6 +21,47 @@ export const RUNTIME_ID = 'virtual:sphere/runtime'
 export const KIT_TEMPLATE_FILE =
   /\.svelte-kit\/generated\/(?<file>server\/internal|dev\/server)\.js$/
 
+/**
+ * Whether the config contains SvelteKit's own plugins.
+ *
+ * SvelteKit warns about every plugin that *has* a `transformIndexHtml` hook, whether or not the hook
+ * would run (`uses_unsupported_html_hook`, `@sveltejs/kit/src/exports/vite/utils.js`). The warning is
+ * correct in general and wrong for us: Kit injection happens in the generated server module. So the
+ * hook is only added, for plain Vite apps, from this same plugin's `config` hook.
+ */
+export function usesSvelteKit(plugins: readonly unknown[] | undefined): boolean {
+  import('node:fs').then(({ writeFileSync }) => {
+    writeFileSync(
+      '/tmp/config-plugins.json',
+      JSON.stringify(
+        {
+          isArray: Array.isArray(plugins),
+          length: (plugins as unknown[])?.length,
+          names: (plugins as any[])?.map?.((p) =>
+            Array.isArray(p) ? p.map((q) => q?.name) : p?.name,
+          ),
+        },
+        null,
+        1,
+      ),
+    )
+  })
+  // `sveltekit()` returns a plugin **array**, so a config's `plugins` holds arrays inside it.
+  return flatten(plugins).some((plugin) => {
+    const name = (plugin as { name?: unknown }).name
+    return typeof name === 'string' && name.startsWith('vite-plugin-sveltekit')
+  })
+}
+
+function flatten(values: readonly unknown[] | undefined, out: unknown[] = []): unknown[] {
+  for (const value of values ?? []) {
+    if (Array.isArray(value)) flatten(value, out)
+    else if (value !== null && value !== undefined) out.push(value)
+  }
+
+  return out
+}
+
 export function isKitTemplateModule(id: string): boolean {
   return KIT_TEMPLATE_FILE.test(id.split('?')[0] ?? id)
 }

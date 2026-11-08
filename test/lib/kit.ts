@@ -13,6 +13,8 @@ export function kitFixtureInstalled(): boolean {
 
 export interface SpawnedServer {
   origin: string
+  /** Everything the dev server printed so far (startup warnings included). */
+  output(): string
   stop(): Promise<void>
 }
 
@@ -56,7 +58,7 @@ export async function startKitServer(): Promise<SpawnedServer> {
     throw error
   }
 
-  return { origin, stop: () => stopGroup(child) }
+  return { origin, output: () => output, stop: () => stopGroup(child) }
 }
 
 async function freePort(): Promise<number> {

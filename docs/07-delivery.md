@@ -24,6 +24,13 @@ export default defineConfig({
   module — a client-only gate would never see it.
 - Client-only for the instrumentation: `applyToEnvironment(env) { return env.config.consumer ===
   'client' }`, so SSR never sees it.
+- **`transformIndexHtml` exists only where it works.** SvelteKit warns about every plugin that
+  *declares* the hook, whether or not it would run (`uses_unsupported_html_hook`,
+  `@sveltejs/kit/src/exports/vite/utils.js`) and offers no opt-out. Sphere exposes the hook through
+  a getter that answers `undefined` once the resolved plugin list shows SvelteKit: detection runs in
+  `configResolved` because the config file's `plugins` array is not final in earlier hooks (nested
+  `sveltekit()` arrays, and Vite rewrites the list while resolving). A Kit app starts clean instead
+  of warning about a hook it never needed.
 - Options are normalised once in `configResolved`; an invalid option fails at startup with a
   message naming it (dev-time, so failing loudly is cheap).
 

@@ -1,4 +1,4 @@
-import type { Plugin } from 'vite'
+import type { IndexHtmlTransform, Plugin } from 'vite'
 import {
   injectIntoKitModule,
   injectionSrc,
@@ -6,6 +6,7 @@ import {
   isKitTemplateModule,
   OVERLAY_ID,
   RUNTIME_ID,
+  usesSvelteKit,
 } from './inject.js'
 import { resolveOptions, type ResolvedOptions, type SphereOptions } from './options.js'
 import {
@@ -38,6 +39,8 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
 
   /** Resolved through the rest of the pipeline, so it is the host project's Svelte. */
   let upstreamId: string | null = null
+  /** Set by the `config` hook; `true` when SvelteKit's own plugins are present. */
+  let svelteKit: boolean | null = null
   let root = process.cwd()
   let base = '/'
 
@@ -50,10 +53,29 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
       resolved = resolveOptions(options)
       root = config.root
       base = config.base
+
+      // SvelteKit warns about every plugin that *has* a `transformIndexHtml` hook, whether or not
+      // the hook would run (`uses_unsupported_html_hook`). The resolved plugin list is the only one
+      // that is complete, and both checks read the hook after `configResolved`; the getter above
+      // therefore answers `undefined` for Kit, whose pages are served by `sphere:kit-inject`.
+      svelteKit = usesSvelteKit(config.plugins)
     },
 
     applyToEnvironment(environment) {
       return environment.config.consumer === 'client'
+    },
+
+    config(config) {
+      // SvelteKit warns about every plugin that *has* a `transformIndexHtml` hook, whether or not
+      // the hook would run. Record the answer before the hook map is built; the getter below keeps
+      // it absent for Kit, whose pages are served by `sphere:kit-inject` instead.
+      svelteKit = usesSvelteKit(config.plugins)
+    },
+
+    // `undefined` at runtime for SvelteKit apps — Vite treats an absent hook as absent, and Kit's
+    // warning check must not see one. The type forbids it, so the cast is deliberate.
+    get transformIndexHtml(): IndexHtmlTransform {
+      return (svelteKit === false ? plainViteTag() : undefined) as IndexHtmlTransform
     },
 
     async resolveId(id, importer) {
@@ -82,10 +104,13 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
       if (id !== WRAPPER_ID || upstreamId === null) return null
       return wrapperModule(upstreamId)
     },
+  }
 
-    transformIndexHtml: {
-      order: 'pre',
-      handler(html, context) {
+  /** The hook itself: a separate object so its presence can depend on the project. */
+  function plainViteTag() {
+    return {
+      order: 'pre' as const,
+      handler(html: string, context: { server?: unknown }) {
         if (!resolved.enabled || !context.server) return html
 
         const src = injectionSrc(base, { absolute: false })
@@ -93,10 +118,10 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
 
         return {
           html,
-          tags: [{ tag: 'script', attrs: { type: 'module', src }, injectTo: 'body' }],
+          tags: [{ tag: 'script', attrs: { type: 'module', src }, injectTo: 'body' as const }],
         }
       },
-    },
+    }
   }
 
   const kit: Plugin = {

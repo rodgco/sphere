@@ -42,6 +42,12 @@ suite('injection into a real SvelteKit dev server', () => {
     expect(html.split(OVERLAY_URL)).toHaveLength(2)
   })
 
+  it("does not trigger SvelteKit's transformIndexHtml warning", () => {
+    // Kit warns about plugins that *declare* the hook (`uses_unsupported_html_hook`). Ours is
+    // only present for plain Vite apps, so a Kit app must start clean.
+    expect(server.output()).not.toContain('transform_index_html_unsupported')
+  })
+
   it('serves the runtime module the tag asks for', async () => {
     const response = await fetch(`${server.origin}${OVERLAY_URL}`)
     expect(response.status).toBe(200)
