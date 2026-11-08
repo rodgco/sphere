@@ -60,7 +60,11 @@ export interface PromptInput {
   selections: readonly PromptSelection[]
   /** Rendered as `Collected with: sphere <version>` when present. */
   version?: string
+  /** Absolute project root; absolute file paths are printed relative to it (docs/05 §6). */
+  root?: string
 }
+
+type Path = (path: string | null) => string | null
 
 export interface FormattedPrompt {
   text: string
@@ -73,12 +77,13 @@ const PLACEHOLDER = '(no instructions added — describe the change here)'
 
 export function formatPrompt(input: PromptInput): FormattedPrompt {
   const parts: string[] = [header(input), instructions(input.instructions)]
+  const path = makePath(input.root)
 
   if (input.selections.length > 0) {
     parts.push('## Selection')
     parts.push(
       input.selections
-        .map((selection) => formatSelection(selection, input.options))
+        .map((selection) => formatSelection(selection, input.options, path))
         .join('\n---\n\n'),
     )
   }
@@ -127,25 +132,29 @@ function instructions(text: string): string {
 // One selection
 // ---------------------------------------------------------------------------------------
 
-export function formatSelection(selection: PromptSelection, options: PromptOptions): string {
+export function formatSelection(
+  selection: PromptSelection,
+  options: PromptOptions,
+  path: Path = makePath(undefined),
+): string {
   const { inspected, source } = selection
   const element = inspected.element
   if (element === null) return selectionError(inspected)
 
-  const blocks: string[] = [heading(element), bullets(element, inspected.source).join('\n')]
+  const blocks: string[] = [heading(element), bullets(element, inspected.source, path).join('\n')]
 
   blocks.push(['```html', element.markup, '```'].join('\n'))
 
   if (options.template) {
-    const template = templateSection(inspected.template)
+    const template = templateSection(inspected.template, path)
     if (template !== '') blocks.push(template)
   }
 
-  const chain = chainSection(inspected.components, inspected.source, options)
+  const chain = chainSection(inspected.components, inspected.source, options, path)
   if (chain !== '') blocks.push(chain)
 
   if (options.source) {
-    const window = sourceWindow(source, inspected.source)
+    const window = sourceWindow(source, inspected.source, path)
     if (window !== '') blocks.push(window)
   }
 
@@ -165,13 +174,13 @@ function heading(element: ElementInfo): string {
   return `### Selected element ${identity}`
 }
 
-function bullets(element: ElementInfo, source: SourceLocation | null): string[] {
+function bullets(element: ElementInfo, source: SourceLocation | null, path: Path): string[] {
   const lines: string[] = []
 
-  const markup = markupLine(source)
+  const markup = markupLine(source, path)
   if (markup !== null) lines.push(`- markup: ${markup}`)
 
-  const note = locationNote(source)
+  const note = locationNote(source, path)
   if (note !== null) lines.push(`- location note: ${note}`)
 
   lines.push(`- DOM path: \`${element.domPath}\``)
@@ -184,20 +193,26 @@ function bullets(element: ElementInfo, source: SourceLocation | null): string[] 
 }
 
 /** `file:line:col` when verified, `file:line` when Svelte only recorded an ancestor. */
-function markupLine(source: SourceLocation | null): string | null {
+function markupLine(source: SourceLocation | null, path: Path): string | null {
   if (source === null || source.file === null || source.line === null) return null
 
-  const place = `${source.file}:${source.line}`
+  const place = `${path(source.file)}:${source.line}`
   const withColumn =
     source.enclosing === true || source.column === null ? place : `${place}:${source.column}`
   return `\`${withColumn}\``
 }
 
-function locationNote(source: SourceLocation | null): string | null {
+function locationNote(source: SourceLocation | null, path: Path): string | null {
   if (source === null || source.file === null || source.line === null) return null
+
+  if (typeof source.matched === 'string' && source.matched !== '') {
+    const recorded = source.recorded ?? { file: source.file, line: null }
+    return `line matched by \`${source.matched}\`; Svelte recorded the enclosing element at \`${path(recorded.file)}:${recorded.line ?? ''}\``
+  }
+
   if (source.enclosing !== true) return null
 
-  return `\`${source.file}:${source.line}\` is the enclosing element Svelte recorded; the element's own line was not found`
+  return `\`${path(source.file)}:${source.line}\` is the enclosing element Svelte recorded; the element's own line was not found`
 }
 
 function attributesLine(element: ElementInfo): string | null {
@@ -207,7 +222,7 @@ function attributesLine(element: ElementInfo): string | null {
   return entries.map(([name, value]) => `${name}="${value}"`).join(' ')
 }
 
-function templateSection(frames: readonly TemplateFrame[]): string {
+function templateSection(frames: readonly TemplateFrame[], path: Path): string {
   const visible = frames
     .filter((frame) => frame.file !== null && !frame.file.includes('node_modules'))
     .slice(0, TEMPLATE_LIMIT)
@@ -215,7 +230,9 @@ function templateSection(frames: readonly TemplateFrame[]): string {
   if (visible.length === 0) return ''
 
   const lines = visible.map((frame) => {
-    const where = [frame.file, frame.line, frame.column].filter((part) => part !== null).join(':')
+    const where = [path(frame.file), frame.line, frame.column]
+      .filter((part) => part !== null)
+      .join(':')
     return `- ${frameLabel(frame)} at \`${where}\``
   })
 
@@ -249,6 +266,7 @@ function chainSection(
   components: readonly ComponentInfo[],
   elementSource: SourceLocation | null,
   options: PromptOptions,
+  path: Path,
 ): string {
   const visible = components.filter((component) => !component.file.includes('node_modules'))
   if (visible.length === 0) return ''
@@ -258,10 +276,12 @@ function chainSection(
     elementFile === null ? -1 : visible.findIndex((component) => component.file === elementFile)
 
   const entries = visible.map((component, index) => {
-    const lines = [`${index + 1}. ${component.name} — \`${component.file}\`${role(index, definer)}`]
+    const lines = [
+      `${index + 1}. ${component.name} — \`${path(component.file)}\`${role(index, definer)}`,
+    ]
 
     if (component.usage !== null && component.usage.file !== null) {
-      const where = [component.usage.file, component.usage.line, component.usage.column]
+      const where = [path(component.usage.file), component.usage.line, component.usage.column]
         .filter((part) => part !== null)
         .join(':')
       lines.push(`  - rendered by \`${where}\``)
@@ -325,6 +345,15 @@ function stateLine(node: StateNode): string {
 // ---------------------------------------------------------------------------------------
 // Values (§3)
 // ---------------------------------------------------------------------------------------
+
+/** Absolute paths are printed relative to the project root (`docs/05` §6). */
+function makePath(root: string | undefined): Path {
+  if (root === undefined || root === '') return (value) => value
+
+  const prefix = root.endsWith('/') ? root : `${root}/`
+  return (value) =>
+    value !== null && value.startsWith(prefix) ? value.slice(prefix.length) : value
+}
 
 export function formatValue(json: string): string {
   return inline(parseJson(json))
@@ -406,6 +435,7 @@ function parseJson(text: string): unknown {
 function sourceWindow(
   source: { path: string; text: string } | undefined,
   location: SourceLocation | null,
+  path: Path,
 ): string {
   if (source === undefined || location?.line === null || location?.line === undefined) return ''
 
@@ -424,12 +454,8 @@ function sourceWindow(
     return `${marker} ${String(number).padStart(width)} | ${text}`.trimEnd()
   })
 
-  return [
-    `Source of \`${location.file ?? source.path}\`:`,
-    `\`\`\`${languageOf(location.file ?? source.path)}`,
-    ...body,
-    '```',
-  ].join('\n')
+  const file = location.file ?? source.path
+  return [`Source of \`${path(file)}\`:`, `\`\`\`${languageOf(file)}`, ...body, '```'].join('\n')
 }
 
 function languageOf(path: string): string {

@@ -2,11 +2,15 @@ import { dirname, resolve } from 'node:path'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { wrapperModule } from '../../src/plugin/svelte-client.js'
+import { VERSION } from '../../src/shared/version.js'
 
 export const generatedDir = resolve(import.meta.dirname, 'generated')
 
 /** Where the harness keeps the wrapper it hands to the test graph (gitignored). */
 export const wrapperFile = resolve(generatedDir, 'svelte-client.ts')
+
+/** The config module the plugin serves; the harness writes it for the same reason. */
+export const configFile = resolve(generatedDir, 'config.ts')
 
 /**
  * Writes the wrapper to disk before the test graph is built.
@@ -24,4 +28,12 @@ export default function setup(): void {
 
   mkdirSync(dirname(wrapperFile), { recursive: true })
   writeFileSync(wrapperFile, wrapperModule(upstream))
+  writeFileSync(
+    configFile,
+    `export default ${JSON.stringify({
+      root: resolve(generatedDir, '../../..'),
+      base: '/',
+      version: VERSION,
+    })}\n`,
+  )
 }

@@ -1,5 +1,6 @@
 import type { IndexHtmlTransform, Plugin } from 'vite'
 import {
+  CONFIG_ID,
   injectIntoKitModule,
   injectionSrc,
   injectionTag,
@@ -18,6 +19,7 @@ import {
   sourceFile,
   wrapperModule,
 } from './svelte-client.js'
+import { VERSION } from '../shared/version.js'
 
 export type { ResolvedOptions, SphereOptions } from './options.js'
 
@@ -89,6 +91,8 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
         return runtimeSource('instrumentation')
       }
 
+      if (id === CONFIG_ID || id === `\0${CONFIG_ID}`) return `\0${CONFIG_ID}`
+
       if (id !== CLIENT_SPECIFIER || !isAppModule(importer, root)) return null
 
       // Ask the rest of the pipeline where this Svelte's client entry actually is;
@@ -101,6 +105,12 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
     },
 
     load(id) {
+      if (id === `\0${CONFIG_ID}`) {
+        // Never in the page's HTML and never in a URL: the absolute project path stays here
+        // (docs/07 §4), and the overlay reads it once at import.
+        return `export default ${JSON.stringify({ root, base, version: VERSION })}\n`
+      }
+
       if (id !== WRAPPER_ID || upstreamId === null) return null
       return wrapperModule(upstreamId)
     },

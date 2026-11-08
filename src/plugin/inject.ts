@@ -17,6 +17,9 @@ export const OVERLAY_ID = 'virtual:sphere/overlay'
 /** Also resolvable, for tests and for anyone who wants the runtime without the UI. */
 export const RUNTIME_ID = 'virtual:sphere/runtime'
 
+/** Root and base for the browser, so `/@fs` reads and path relativisation work (docs/07 §4). */
+export const CONFIG_ID = 'virtual:sphere/config'
+
 /** Ids of the two generated SvelteKit modules that carry the app template. */
 export const KIT_TEMPLATE_FILE =
   /\.svelte-kit\/generated\/(?<file>server\/internal|dev\/server)\.js$/

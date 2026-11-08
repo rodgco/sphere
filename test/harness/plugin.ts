@@ -5,7 +5,8 @@ import {
   isAppModule,
   runtimeSource,
 } from '../../src/plugin/svelte-client.js'
-import { wrapperFile } from './setup.js'
+import { CONFIG_ID } from '../../src/plugin/inject.js'
+import { configFile, wrapperFile } from './setup.js'
 
 /**
  * The delivery shim for the harness.
@@ -29,6 +30,7 @@ export function harnessWrapper(): Plugin {
 
     resolveId(id, importer) {
       if (id === INSTRUMENTATION_SPECIFIER) return runtimeSource('instrumentation')
+      if (id === CONFIG_ID) return configFile
       if (id === CLIENT_SPECIFIER && isAppModule(importer, root)) return wrapperFile
       return null
     },

@@ -60,6 +60,10 @@ export interface SourceLocation {
   column: number | null
   /** True when Svelte only recorded an ancestor for this element. */
   enclosing?: boolean
+  /** The needle that matched, e.g. `class="button primary"`; null when verified or enclosing. */
+  matched?: string | null
+  /** What the compiler recorded, when the reported line differs from it. */
+  recorded?: { file: string | null; line: number | null } | null
 }
 
 export interface TemplateFrame {

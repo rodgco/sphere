@@ -59,6 +59,10 @@ walks the *existing* DOM, so a child component's markup can shift the mapping
   authored classes (otherwise every link with the same `href` would match).
 - If nothing matches, the compiler's line is reported **as the enclosing element**, with a note
   and a `~` marker; its column is dropped because it belongs to the ancestor.
+- The resolution carries what it needed to say that: `matched` (the needle that hit) and
+  `recorded` (what the compiler said), so the formatter can name both. The implementation is
+  `src/runtime/location.ts`; the file text comes from `src/runtime/source.ts` (fetched, cached per
+  page, silent on failure).
 - Reporting rules, exactly:
 
 | Situation | `- markup:` | note |

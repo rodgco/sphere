@@ -16,4 +16,13 @@ declare module '*.svelte' {
  * when one is missing (`src/runtime/instrumentation.ts`). A shorthand declaration is
  * the honest state — delete it if Svelte ever types this entry.
  */
+/**
+ * Served by the plugin (`virtual:sphere/config`), never fetched by the page as a URL. Typed here
+ * because it is a virtual module and `tsc` cannot see what the plugin returns.
+ */
+declare module 'virtual:sphere/config' {
+  const config: { root: string; base: string; version: string }
+  export default config
+}
+
 declare module 'svelte/internal/client'

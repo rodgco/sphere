@@ -89,8 +89,9 @@ SvelteKit-injected script: Vite does not rewrite the bare specifier there.
 
 ## 4. Configuration transport
 
-Root base and options travel in `virtual:sphere/config`, never in the injected URL and never in
-the app's HTML. Two reasons: the absolute project path would be visible in every page's markup,
+Root base and options travel in `virtual:sphere/config` — implemented: the plugin's `load` returns
+`export default { root, base, version }`, and the overlay reads it once at import. Never in the
+injected URL and never in the app's HTML. Two reasons: the absolute project path would be visible in every page's markup,
 and a query string is a cache-busting hack we do not need (`Cache-Control` is Vite's business).
 The runtime reads the config module once at import.
 
@@ -108,7 +109,8 @@ The browser reads a file with:
 - **The base prefix is mandatory** (`base: '/app/'` → a bare `/@fs/…` is a 404).
 - Vite's `server.fs.allow` must include the project root (default) — the same root Sphere uses, so
   no extra configuration is expected. A denied read degrades silently: no source window.
-- Reads are cached per file per page load (one fetch per file, not per selection).
+- Reads are cached per file per page load (one fetch per file, not per selection)
+  (`src/runtime/source.ts`), and a failed read is remembered as “no source”, not retried per pick.
 
 ## 6. Production
 

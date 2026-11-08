@@ -185,6 +185,83 @@ describe('formatPrompt', () => {
     )
   })
 
+  it('says what matched when the element was found on another line', () => {
+    const { text } = formatPrompt({
+      page,
+      instructions: '',
+      options,
+      selections: [
+        {
+          inspected: inspected({
+            source: {
+              file: 'src/routes/+page.svelte',
+              line: 55,
+              column: null,
+              enclosing: false,
+              matched: 'class="button button-quiet"',
+              recorded: { file: 'src/routes/+page.svelte', line: 43 },
+            },
+          }),
+        },
+      ],
+    })
+
+    expect(text).toContain('- markup: `src/routes/+page.svelte:55`')
+    expect(text).toContain(
+      '- location note: line matched by `class="button button-quiet"`; Svelte recorded the enclosing element at `src/routes/+page.svelte:43`',
+    )
+  })
+
+  it('prints absolute paths relative to the project root', () => {
+    const { text } = formatPrompt({
+      page,
+      instructions: '',
+      options,
+      root: '/home/me/app',
+      selections: [
+        {
+          inspected: inspected({
+            source: {
+              file: '/home/me/app/src/lib/SystemStatus.svelte',
+              line: 41,
+              column: 0,
+              enclosing: false,
+            },
+            components: [
+              {
+                id: 12,
+                name: 'SystemStatus',
+                file: '/home/me/app/src/lib/SystemStatus.svelte',
+                usage: {
+                  file: '/home/me/app/src/lib/AppSidebar.svelte',
+                  line: 177,
+                  column: 6,
+                  componentTag: 'SystemStatus',
+                },
+                props: '{}',
+                state: [],
+                renders: 1,
+              },
+            ],
+          }),
+          source: {
+            path: '/home/me/app/src/lib/SystemStatus.svelte',
+            text: Array.from(
+              { length: 60 },
+              (_, index) => `let line${index + 1} = ${index + 1}`,
+            ).join('\n'),
+          },
+        },
+      ],
+    })
+
+    expect(text).toContain('- markup: `src/lib/SystemStatus.svelte:41:0`')
+    expect(text).toContain('1. SystemStatus — `src/lib/SystemStatus.svelte`')
+    expect(text).toContain('- rendered by `src/lib/AppSidebar.svelte:177:6`')
+    expect(text).toContain('Source of `src/lib/SystemStatus.svelte`')
+    expect(text).not.toContain('/home/me/app')
+  })
+
   it('omits the markup line when nothing reliable was recorded', () => {
     const { text } = formatPrompt({
       page,
