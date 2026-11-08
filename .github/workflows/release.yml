@@ -3,6 +3,9 @@ name: Release
 on:
   push:
     branches: [master]
+  # Lets you publish the version already committed (the first release, or a retry after a failed
+  # run) without an empty commit.
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref }}
