@@ -1,6 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { formatPrompt } from '../runtime/format.js'
+  import { pageInfo } from '../runtime/inspect.js'
+  import type { Inspected } from '../shared/payload.js'
   import Panel from './Panel.svelte'
+  import { groupDigits, writeClipboard } from './clipboard.js'
   import { lockCursor } from './cursor.js'
   import { dblpress, listen, press, shield } from './events.js'
   import { measureMark, measureMarks, trackMarks, type Mark } from './marks.js'
@@ -160,6 +164,38 @@
     }
 
     if (result.action === 'added' && !panelOpen) openPanel(true)
+  }
+
+  async function copyPrompt() {
+    const api = typeof window === 'undefined' ? undefined : window.__SPHERE__
+    const fallbackPage = pageInfo()
+
+    const selections = picks.map((pick) => ({
+      inspected: api
+        ? api.inspectElement(pick.element)
+        : { page: fallbackPage, element: null, source: null, template: [], components: [] } satisfies Inspected,
+    }))
+
+    const prompt = formatPrompt({
+      page: selections[0]?.inspected.page ?? fallbackPage,
+      instructions,
+      options,
+      selections,
+      ...(api === undefined ? {} : { version: api.version }),
+    })
+
+    if (!(await writeClipboard(prompt.text))) {
+      status = { text: 'Could not write to the clipboard.', error: true }
+      return
+    }
+
+    status = {
+      text: `Copied ${groupDigits(prompt.text.length)} chars${prompt.truncated ? ' (truncated)' : ''}`,
+      error: false,
+    }
+    // Copying ends the flow (docs/06 §2): the prompt is on the clipboard, the next step is the agent.
+    picking = false
+    hover = null
   }
 
   function removePick(pick: PickEntry) {
@@ -345,6 +381,7 @@
       {status}
       {focusInstructions}
       style={panelStyle}
+      onCopy={copyPrompt}
       onRemove={removePick}
       onClear={clearAll}
       onClose={closePanel}

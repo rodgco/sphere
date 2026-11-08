@@ -11,6 +11,7 @@
     status: { text: string; error: boolean } | null
     style: string
     focusInstructions: boolean
+    onCopy(): void
     onRemove(pick: PickEntry): void
     onClear(): void
     onClose(): void
@@ -25,6 +26,7 @@
     status,
     style,
     focusInstructions,
+    onCopy,
     onRemove,
     onClear,
     onClose,
@@ -121,7 +123,13 @@
   </div>
 
   <footer class="panel-footer">
-    <button class="primary" type="button" disabled title="The prompt format arrives in M3">
+    <button
+      class="primary"
+      type="button"
+      disabled={picks.length === 0}
+      use:press={onCopy}
+      title="Copy the prompt to the clipboard"
+    >
       Copy prompt
     </button>
     <button type="button" use:press={onClear}>Clear</button>
