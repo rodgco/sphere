@@ -5,7 +5,7 @@
     "suspicious": "error"
   },
   "rules": {
-    "no-underscore-dangle": ["error", { "allow": ["__svelte_meta"] }]
+    "no-underscore-dangle": ["error", { "allow": ["__svelte_meta", "__SPHERE__"] }]
   },
   "ignorePatterns": ["dist/**", "coverage/**", "fixtures/**/dist/**", "test/harness/generated/**"]
 }

@@ -39,8 +39,9 @@ Rules:
   truncated at a tag boundary.
 - **No `svelte-xxxx` scopes**, neither in `classes`/`selector`/`markup` nor in the attributes
   shown for `class`.
-- Attributes are capped (24 entries, 120 chars each); `class`/`style` are not repeated in the
-  human-readable attribute line because they are already in `markup`.
+- Attributes are capped (24 entries, 120 chars each). `class` and `style` are not copied into
+  `attrs` at all: they are already in `markup`, and repeating the class list is what made the old
+  payload half its size.
 
 ## 3. Source location (the honest-part)
 
@@ -50,6 +51,8 @@ walks the *existing* DOM, so a child component's markup can shift the mapping
 
 - The compiler's line is used **as-is only if it verifies**: the line opens the element's tag
   and contains its authored class list (or, for classless elements, its identifying attribute).
+  Until the source window exists (M4) there is nothing to verify against, so every recorded line
+  is reported as `enclosing` — the pessimistic default in the algorithm below.
 - Otherwise the element is searched in its file: tag on the line **and** an exact attribute —
   authored `class="a b"`, then `id`, then `href`/`type`/`name`/`aria-label`/`title`/
   `placeholder`/`value`/`src`. A bare attribute is only accepted when the element has no

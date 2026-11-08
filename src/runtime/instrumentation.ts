@@ -1,3 +1,5 @@
+import { installSphereApi } from './inspect.js'
+
 /**
  * The runtime half of the `svelte/internal/client` seam.
  *
@@ -445,3 +447,7 @@ function tagOf(additional: unknown): string | undefined {
 function isNode(value: unknown): value is Node {
   return typeof value === 'object' && value !== null && 'nodeType' in value
 }
+
+// The API exists exactly when Sphere is in the graph. With no stamps (an unsupported Svelte) it
+// still answers with element identity and an honest null for the chain.
+installSphereApi({ instanceOf, frameOf })

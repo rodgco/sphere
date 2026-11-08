@@ -13,15 +13,19 @@ sphere/
       inject.ts             SvelteKit template injection + transformIndexHtml
       svelte-client.ts      the `svelte/internal/client` seam: ids, wrapper assembly
     runtime/                Browser side, served as virtual modules
-      instrumentation.ts    wraps svelte/internal/client, publishes __SPHERE__
-      inspect.ts            element → payload (the only place that reads __svelte_meta)
+      instrumentation.ts    wraps svelte/internal/client, instance registry, element stamps
+      inspect.ts            element → payload (the only place that reads __svelte_meta);
+                            installs window.__SPHERE__
+      budgets.ts            shared bounds + bounded, always-valid JSON clone
       format.ts             payload → markdown (pure, unit-tested)
       overlay/              the UI, written in Svelte, compiled by the host plugin
         Overlay.svelte
         Panel.svelte
         marks.ts            outline bookkeeping (pure-ish)
         picking.ts          pointer handling + event swallowing
-    shared/                 types shared by both sides (payload, options)
+    shared/                 types shared by both sides
+      payload.ts            the __SPHERE__ contract, in types
+      version.ts            reported by the API until virtual:sphere/config carries it
 ```
 
 Why sources instead of inlined strings: the prototype shipped its browser code as `?raw`
@@ -86,6 +90,9 @@ Options are validated once in `configResolved` and travel to the browser through
 
 - `instrumentation.ts` knows about Svelte internals; `inspect.ts` knows about DOM and metadata;
   `format.ts` knows nothing about either.
+- The dependency runs one way: `instrumentation` installs the API and hands `inspect` the two
+  accessors it needs (`instanceOf`, `frameOf`). `inspect` never imports the registry, so the
+  module graph of the served sources stays acyclic.
 - The instrumentation is appended to the served client module **only when enabled**
   (`docs/decisions/0002-opt-in-instrumentation.md`); `instrumentation` itself is imported by
   `inspect.ts` through a single accessor (`getRuntime()`), so a disabled Sphere has no cost.

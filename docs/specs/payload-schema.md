@@ -6,7 +6,19 @@ The runtime's public surface (consumed by the overlay, and testable from the pag
 window.__SPHERE__: {
   version: string
   inspectElement(node: Node | null): Inspected
-  locateElement(node: Node | null): { source: SourceLocation | null; component: ChainSummary | null }
+  locateElement(node: Node | null): Located
+}
+
+export interface Located {
+  source: SourceLocation | null
+  component: ChainSummary | null
+}
+
+/** What the hover tooltip needs: the innermost instance and how deep the chain is. */
+export interface ChainSummary {
+  name: string          // instance name (file basename)
+  file: string | null
+  depth: number         // instances counted, the innermost included
 }
 ```
 
@@ -38,7 +50,7 @@ export interface ElementInfo {
   tagName: string          // raw, matching (SVG camelCase)
   id: string
   classes: string[]        // authored only (no svelte-xxxx)
-  attrs: Record<string, string>   // ≤ 24 entries, values ≤ 120 chars
+  attrs: Record<string, string>   // ≤ 24 entries, values ≤ 120 chars; no class/style
   markup: string           // skeleton, ≤ 600 chars, no text nodes
   size: string             // "144×40" (rounded CSS pixels)
   selector: string         // readable path, ≤ 6 levels
@@ -72,7 +84,7 @@ export interface ComponentInfo {
   } | null                 // null for the root instance
   props: string | null     // JSON text (bounded clone) or null when unknown
   state: StateNode[]
-  renders: number          // re-renders after mount
+  renders: number          // re-renders after mount; 0 until template effects are wrapped
 }
 
 export interface StateNode {
@@ -81,6 +93,17 @@ export interface StateNode {
   value: string            // JSON text (bounded clone); always parseable
 }
 ```
+
+Three deliberate limits, because a payload that lies is worse than a payload that is small:
+
+- **`renders` is `0`** until `template_effect` is wrapped (not in the M1 override set). It is a
+  number because the schema needs one, not because it was measured.
+- **A lazy `$derived` value is the JSON string `"<not evaluated>"`**: the signal still holds
+  `UNINITIALIZED` (a symbol) because nothing has read it, and a plausible-looking value would be
+  an invention.
+- **`source.enclosing` is pessimistic**: a recorded line is marked enclosing until it can be
+  verified against the file text, which arrives with the source window (M4). Until then every
+  location is “Svelte said this line”; the `~` marker is accurate rather than decorative.
 
 ## Invariants (tested)
 
@@ -94,6 +117,9 @@ export interface StateNode {
    inspection).
 6. No absolute machine path appears in `element.markup`, `element.attrs` or `template`
    (paths are relativised by the formatter, not by the runtime).
+7. `template` comes from Svelte's dev stack (`__svelte_meta.parent`), innermost first, with
+   `node_modules` frames filtered; when Svelte has no stack for the element (a branch rendered
+   from an effect after init) the mirrored one from `docs/03` is used instead.
 
 ## Example (abridged, from a real app)
 
