@@ -45,6 +45,9 @@ export const OVERLAY_CSS = `
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* The wrapper must not create a box: the marks, outline and panel are viewport-fixed. */
+.overlay { display: contents; }
+
 button {
   font: inherit;
   color: inherit;
