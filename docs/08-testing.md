@@ -81,8 +81,10 @@ through a `file:` link. The fixture's dependencies are installed separately
 | `e2e/a11y.mjs` | Enter/Space toggles, Escape leaves, focus returns, aria attributes present |
 | `e2e/clipboard.mjs` | full flow with clipboard permissions; payload contains no absolute path and no rendered text |
 
-Shared plumbing (spawn dev server with isolated `HOME`, free port, process-group kill, browser
-context with clipboard permissions) lives in `e2e/lib/`; the scripts stay readable.
+Shared plumbing (free port, process-group kill, browser context with clipboard permissions) lives
+in `e2e/lib/`; the scripts stay readable and print one line on success. `fixtures/plain` exposes
+bubble-phase counters on `window.__sphereTestCounters` — the only way to prove that a swallowed
+event never reached the app and that a passed-through one did.
 
 ## 5. Screenshots
 

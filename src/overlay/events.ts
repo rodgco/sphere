@@ -40,6 +40,28 @@ function native(type: string) {
   }
 }
 
+/**
+ * Keeps the overlay's own interactions out of the app (`docs/06-toolbar-ux.md` §7). Capture on
+ * `document` already ignores them (picking), but the app's own bubble listeners on `window` would
+ * otherwise see every click on our buttons. Propagation only — defaults still happen, so typing,
+ * selecting and the checkboxes work.
+ */
+export function shield(node: HTMLElement) {
+  const types = ['pointerdown', 'mousedown', 'mouseup', 'click']
+
+  for (const type of types) node.addEventListener(type, stopPropagation)
+
+  return {
+    destroy() {
+      for (const type of types) node.removeEventListener(type, stopPropagation)
+    },
+  }
+}
+
+function stopPropagation(event: Event) {
+  event.stopPropagation()
+}
+
 export function listen<T extends Event>(
   target: EventTarget,
   type: string,

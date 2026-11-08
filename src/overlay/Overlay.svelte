@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import Panel from './Panel.svelte'
   import { lockCursor } from './cursor.js'
-  import { dblpress, listen, press } from './events.js'
+  import { dblpress, listen, press, shield } from './events.js'
   import { measureMark, measureMarks, trackMarks, type Mark } from './marks.js'
   import { startPicking } from './picking.js'
   import {
@@ -353,7 +353,14 @@
     />
   {/if}
 
-  <div class="control" bind:this={shell} style={controlStyle} role="group" aria-label="Sphere">
+  <div
+    class="control"
+    bind:this={shell}
+    style={controlStyle}
+    role="group"
+    aria-label="Sphere"
+    use:shield
+  >
     <button
       bind:this={control}
       class="inspect"

@@ -214,6 +214,29 @@ describe('the panel', () => {
     }
   })
 
+  it('keeps the app out of its typing, but lets Escape through', () => {
+    view = mountOverlay()
+    try {
+      view.startPicking()
+      view.pick(0)
+
+      const seen: string[] = []
+      const watcher = (pressed: KeyboardEvent) => seen.push(pressed.key)
+      document.addEventListener('keydown', watcher)
+
+      const textarea = view.target.querySelector<HTMLTextAreaElement>('textarea')!
+      event(textarea, 'keydown', { key: 'k' })
+      expect(seen).toEqual([])
+
+      event(textarea, 'keydown', { key: 'Escape' })
+      expect(seen).toEqual(['Escape'])
+
+      document.removeEventListener('keydown', watcher)
+    } finally {
+      view.destroy()
+    }
+  })
+
   it('closes on Escape and gives focus back to the control', () => {
     view = mountOverlay()
     try {

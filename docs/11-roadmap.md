@@ -43,10 +43,10 @@ runs in the M5 matrix.
 
 ## M2 — Overlay and picking
 
-**Status:** in progress — the overlay (shadow root), the control with drag/persistence/keyboard,
-picking with the event matrix, marks with clipping and tracking, and the panel shell with picks,
-options, instructions and the status line exist and are covered by the runtime harness. Next: the
-Playwright scripts (`picking.mjs`, `a11y.mjs`) against a real browser.
+**Status:** done — the overlay (shadow root), the control with drag/persistence/keyboard, picking
+with the event matrix, marks with clipping and tracking, and the panel shell with picks, options,
+instructions and the status line. Covered by the runtime harness and by `e2e/picking.mjs` /
+`e2e/a11y.mjs` in a real Chromium.
 
 **Done when**
 

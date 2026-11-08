@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onChange, onInput, press } from './events.js'
+  import { onMount } from 'svelte'
+  import { listen, onChange, onInput, press, shield } from './events.js'
   import type { OverlayOptions } from './storage.js'
   import type { PickEntry } from './picks.js'
 
@@ -38,7 +39,17 @@
     ['template', 'template'],
   ]
 
+  let root: HTMLDivElement | undefined = $state()
   let textarea: HTMLTextAreaElement | undefined = $state()
+
+  // docs/specs/event-matrix.md: typing in the panel never triggers the app's shortcuts. Escape is
+  // let through, because it is how picking and the panel are left.
+  onMount(() => {
+    if (root === undefined) return
+    return listen<KeyboardEvent>(root, 'keydown', (event) => {
+      if (event.key !== 'Escape') event.stopPropagation()
+    })
+  })
 
   // docs/06 §8: when the panel opens from a pick, the instruction box takes focus.
   $effect(() => {
@@ -46,7 +57,14 @@
   })
 </script>
 
-<div class="panel" role="dialog" aria-label="Build a prompt" {style}>
+<div
+  class="panel"
+  role="dialog"
+  aria-label="Build a prompt"
+  {style}
+  bind:this={root}
+  use:shield
+>
   <header class="panel-header">
     <h2>Prompt</h2>
     <p class="hint">{picks.length === 0 ? 'nothing picked' : `${picks.length} picked`}</p>

@@ -52,7 +52,10 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:svelte",
     "check": "npm run lint && npm run format:check && npm run typecheck && npm run build && npm test",
-    "typecheck:svelte": "svelte-check --threshold error"
+    "typecheck:svelte": "svelte-check --threshold error",
+    "e2e": "node e2e/picking.mjs && node e2e/a11y.mjs",
+    "e2e:a11y": "node e2e/a11y.mjs",
+    "e2e:picking": "node e2e/picking.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
@@ -60,6 +63,7 @@
     "happy-dom": "^21.0.4",
     "oxfmt": "^0.77.0",
     "oxlint": "^1.92.0",
+    "playwright": "^1.65.0",
     "svelte": "^5.57.3",
     "svelte-check": "^4.7.8",
     "typescript": "^6.0.3",
