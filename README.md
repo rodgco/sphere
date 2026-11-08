@@ -129,8 +129,17 @@ until `1.0`**, so a minor release may change the clipboard document — `docs/05
 and the golden test are what make that visible.
 
 Publishing runs from `master` (`.github/workflows/release.yml`) with `changesets/action` and
-`--provenance`. It needs `NPM_TOKEN` in the repository secrets; without it the job skips the publish
-step instead of failing on every push.
+`--provenance`, authenticated by **trusted publishing** (OIDC, no long-lived token):
+
+1. On npmjs.com, configure a trusted publisher for `sphere-plugin`: provider GitHub Actions,
+   organization/user `rodgco`, repository `sphere`, workflow `release.yml`. A configuration for a
+   package that does not exist yet must complete its first publish **within two days** or it expires.
+2. `gh variable set NPM_PUBLISH --body true` — publishing is opt-in through a variable, so a clone
+   without this set stays green instead of failing on every push.
+3. `gh workflow run release.yml` (the job also runs on every push to `master`).
+
+`NPM_TOKEN` is only a fallback for the first release if trusted publishing is still being set up;
+with OIDC in place no token is needed and none should be stored.
 
 ## Read this first
 

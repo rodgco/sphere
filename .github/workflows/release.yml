@@ -14,8 +14,6 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     permissions:
       contents: write
       id-token: write # npm provenance via OIDC
@@ -30,6 +28,10 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
+      # Trusted publishing needs npm >= 11.5.1; Node 22 ships npm 10.
+      - run: npm install --global npm@latest
+      - run: npm --version
+
       - run: npm ci
 
       # The Kit fixture consumes the built package through a `file:` link.
@@ -41,13 +43,14 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
 
-      # Without the secret the job stays green and skips: a red X on every push for a missing
-      # publish credential trains people to ignore the workflow.
+      # Publishing is opt-in through a repository *variable* (`gh variable set NPM_PUBLISH --body
+      # true`), so a clone without trusted publishing configured stays green instead of failing on
+      # every push. Authentication is OIDC (trusted publishing); `NPM_TOKEN` is only a fallback for
+      # the first release if trusted publishing is still being set up.
       - uses: changesets/action@v1
-        if: env.NPM_TOKEN != ''
+        if: vars.NPM_PUBLISH == 'true'
         with:
           publish: npm publish --provenance --access public
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
