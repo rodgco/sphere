@@ -53,9 +53,11 @@ async function main() {
       assert(clipboard.includes('Component chain (innermost first):'), 'no component chain')
       assert(clipboard.includes('- DOM path: `'), 'no DOM path')
 
-      // The two things the format forbids.
-      assert(!clipboard.includes('go to the next page'), 'rendered text leaked into the prompt')
-      assert(!clipboard.includes('clicked 0 times'), 'rendered text leaked into the prompt')
+      // Two things the format forbids. The source window legitimately quotes the file, so it is
+      // removed first: what must not carry rendered text is the element's identity.
+      const identity = clipboard.replace(/Source of `[^`]+`:\n```[a-z]*\n[\s\S]*?\n```/g, '')
+      assert(!identity.includes('go to the next page'), 'rendered text leaked into the identity')
+      assert(!identity.includes('clicked 0 times'), 'rendered text leaked into the identity')
       assert(
         !/\/home\/|\/Users\/|node_modules/.test(clipboard),
         'machine path or node_modules leaked',

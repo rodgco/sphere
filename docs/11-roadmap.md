@@ -72,6 +72,11 @@ real browser (no rendered text, no machine paths, picks separated, Copy disabled
 
 ## M4 — Locations done right
 
+**Status:** done — `src/runtime/location.ts` implements the conservative matcher with every row of
+the spec's test matrix as a unit test, `src/runtime/source.ts` reads files through `<base>@fs…?raw`
+with a per-page cache and silent degradation, `virtual:sphere/config` carries root/base to the
+browser, and `e2e/location.mjs` / `e2e/base-path.mjs` prove the four outcomes in a real browser.
+
 **Done when**
 
 - The conservative matcher, the note text, `~` in chip/tooltip: all cases of the test matrix exist

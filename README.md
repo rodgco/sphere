@@ -10,12 +10,49 @@ and a numbered source window — plus the instructions you typed.
 
 Nothing leaves the browser: the payload goes to your clipboard.
 
-> **Status: M3 done.** Instrumentation, `inspectElement`, the shadow-root overlay with picking and
-> marks, the panel, and the prompt (format, golden, clipboard) exist under `src/`, `fixtures/`,
-> `test/` and `e2e/`. Remaining before `0.1.0`: locations verified against the file (M4) and
-> hardening/release (M5). The behaviour in `docs/` is derived from a working prototype (a private
-> fork of `vite-devtools-svelte` developed inside another project). `docs/11-roadmap.md` turns the
-> specs into milestones.
+> **Status: M4 done.** Instrumentation, `inspectElement`, the shadow-root overlay with picking,
+> marks and the panel, the prompt with verified source locations and the numbered source window,
+> and the browser tests all exist under `src/`, `fixtures/`, `test/` and `e2e/`. Remaining before
+> `0.1.0`: hardening and release (M5). The behaviour in `docs/` is derived from a working prototype
+> (a private fork of `vite-devtools-svelte` developed inside another project).
+> `docs/11-roadmap.md` turns the specs into milestones.
+
+## Install
+
+```bash
+npm install --save-dev sphere-plugin
+```
+
+```ts
+// vite.config.ts
+import { sveltekit } from '@sveltejs/kit/vite'
+import { sphere } from 'sphere-plugin'
+
+export default defineConfig({
+  plugins: [sphere(), sveltekit()], // Sphere first, always
+})
+```
+
+A plain Svelte + Vite app is the same with `svelte()` instead of `sveltekit()`.
+
+Requirements: Node ≥ 22, Vite ≥ 8, Svelte 5. SvelteKit 2 and 3 are supported; Kit 3 is verified
+end to end in CI, Kit 2's template shape is covered by the transform's tests.
+
+Then open the dev server, click **Inspect** (bottom-right, draggable), click the elements you want
+to change, type what you want done and press **Copy prompt**. Paste it into your coding agent.
+`Escape` leaves picking, the count chip opens and closes the panel, and the pill remembers where
+you dragged it.
+
+Two details worth knowing before the first run:
+
+- It is a **dev-server plugin**: `apply: 'serve'`, nothing in a production build, and with
+  `sphere({ enabled: false })` the served Svelte module is the upstream one — no wrapper at all.
+- The only output channel is the **clipboard**. No network, no storage of your code, no accounts.
+  `localStorage` holds two UI preferences (`sphere:control`, `sphere:options`) and nothing else.
+
+Options today: `{ enabled?: boolean }`. The rest of the v1 surface (`maxSelections`, `include`,
+`startPosition`, `matchAttributes`) is specified in `docs/02-architecture.md` and arrives with the
+milestones that need it.
 
 ## Why a separate project
 
