@@ -51,13 +51,35 @@ const wrapper = wrapperModule(upstreamId)   // text: imports, `export *`, instal
 - No runtime `if` in a hot path decides whether to instrument; the decision is made when the module
   is generated.
 
+## What the wrappers do
+
+The wrapper replaces exactly `push`, `pop`, `add_svelte_meta`, `add_locations`, `tag`, `tag_proxy`,
+`component`, `each`, `if`, `key` (`src/runtime/instrumentation.ts`). The contract is the list:
+the wrapper differs from upstream on those names and on no others.
+
+| Wrapper | Bookkeeping |
+|---|---|
+| `push` / `pop` | An **instance** per component: id, file (`fn[FILENAME]`), function name, parent, the `component` frame it was pushed under, and the `$$props` object. `current` is a stack; a component that throws during init restores it. |
+| `add_svelte_meta` | A mirrored **dev frame** stack (`type`, `file`, `line`, `column`, `componentTag`, parent, owning instance). Svelte's `dev_stack` is not exported, so it has to be mirrored. The frame is a linked list, so a stamp can keep one reference to its whole context. |
+| `add_locations` | **Element stamps**: after the real assignment, walk siblings exactly like `assign_locations` (one location per element node, comments ignored) and write `element.__sphere = { instanceId, frame }`. Bounded by 20 000 nodes; a failing walk is swallowed. |
+| `tag` / `tag_proxy` | Named state on the current instance, in creation order: the signal (`.v` is the value; a lazy `$derived` may be `UNINITIALIZED`) or the proxy value. |
+| `if`, `key`, `component`, `each` | The callbacks and getters Svelte invokes **later** are wrapped so the owning instance is restored while the block renders. Without it, an element inside `{#if}` renders with no `current` and would be unattributable. |
+| all of them | The upstream module is untouched between calls; `installInstrumentation` returns the same override record on re-install, so HMR cannot stack wrappers. |
+
+Fallbacks, in order: the current instance; the `ctx` of `active_effect`, mapped to an instance when
+the component's init was seen (`create_effect` gives every effect created during init that
+component's context); the instance stored on the active dev frame. Instance ids are stored by
+elements, so the registry is capped (5 000, oldest evicted) — a long session must not retain every
+component's props and state proxies.
+
 ## Rules the instrumentation must obey
 
 1. **Call through, always.** Every wrapper calls the original with the original `this` and
    arguments, and returns its value; side effects run in `try/catch` so a Sphere bug cannot
    break the app.
-2. **Never retain state longer than the instance lives.** Props are held per instance and
-   released in `unmount`; a WeakMap keyed by component context is used where possible.
+2. **Never retain state longer than the instance lives.** Props and state hang off the instance
+   record; contexts are held in a `WeakMap`, and the instance registry is capped so an unmounted
+   tree is collectable.
 3. **Stamp only what Svelte located.** The stamp walk starts at the node Svelte was given and
    walks siblings, one per entry in the compiler's location list (this is what makes multi-root
    templates work during hydration). No global `querySelectorAll`.

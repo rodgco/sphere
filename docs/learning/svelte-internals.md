@@ -84,6 +84,10 @@ Rules we derived:
   `.reactions`, and `_isProxy` for proxies.
 - A `$derived` is **lazy**: until read, `.v` is the `UNINITIALIZED` symbol. A devtools must show
   “not evaluated yet”, not a bogus value.
+- A `$state` that is **never reassigned is compiled away** (`let x = $state(0)` becomes `let x = 0`
+  and never reaches `tag`). A mutable one is named: `let count = $.tag($.state(0), 'count')`
+  (Svelte 5.57, client dev output). So “state” means “named signals Svelte told us about”, and a
+  missing name is not a bug.
 - Proxy state mutates in place: reassignment bumps `.wv`, deep mutation does not — polling must
   re-read objects periodically to notice (`_stateSnapshots` in the prototype).
 - Functions and symbols are not state data; skip them rather than serialising.
@@ -93,6 +97,14 @@ Rules we derived:
 - Block helpers (`each`, `if`, `key`, `await`, `component`, `boundary`) are called during the
   owner's init, but their callbacks run later, when the wrapper stack is empty. Wrapping the
   helpers and re-pushing the owner id around every function argument restores attribution.
+- **Verified in Sphere's harness** (Svelte 5.57): a block's *first* render is synchronous, inside
+  the `add_svelte_meta` callback — so `__svelte_meta.parent` is populated for elements created
+  then. A render that happens from an effect afterwards (a state write in `$effect`) creates its
+  elements with no frame and no `current` instance: only restoring the owner around the callback
+  keeps `{#if}`/`{#each}` content attributable. The fixture `fixtures/harness/Late.svelte` pins it.
+- Signatures, for the wrappers: `if(node, fn)`, `key(node, get_key, render_fn)`,
+  `component(node, get_component, render_fn)`,
+  `each(node, flags, get_collection, get_key, render_fn, fallback_fn)`.
 - `snippet(node, getSnippet, ...args)` and `wrap_snippet(component, fn)` exist for `{#snippet}` /
   `{@render}`; `wrap_snippet` sets `dev_current_component_function` to the **defining** component
   (for ownership checks).

@@ -27,8 +27,16 @@ describe('wrapperModule', () => {
     expect(text).toContain('from "virtual:sphere/instrumentation"')
   })
 
+  it('shadows exactly the wrapped bindings and no others', () => {
+    expect(text).toContain('export const { push, pop, add_svelte_meta, add_locations, tag')
+    expect(text).toContain('component, each } = __sphere')
+    // `if` and `key` are reserved words: exported under their real names, bound under others.
+    expect(text).toContain('const { if: __sphere_if, key: __sphere_key } = __sphere')
+    expect(text).toContain('export { __sphere_if as if, __sphere_key as key }')
+  })
+
   it('contains no branch: the decision was made when the module was built', () => {
-    expect(text).toContain('installInstrumentation(__sphereUpstream)')
+    expect(text).toContain('const __sphere = installInstrumentation(__sphereUpstream)')
     expect(text).not.toMatch(/\bif\s*\(/)
   })
 
@@ -91,13 +99,18 @@ describe('installInstrumentation', () => {
     expect(message).toContain('Instrumentation is off')
   })
 
-  it('becomes installed only when a namespace passes the contract', () => {
-    const complete = Object.fromEntries(
-      (REQUIRED_EXPORTS as readonly string[]).map((name) => [name, () => {}]),
-    )
+  it('returns one wrapper per required binding, and the same record on re-install', () => {
+    const overrides = installInstrumentation(client as Record<string, unknown>)
+    const again = installInstrumentation(client as Record<string, unknown>)
 
-    installInstrumentation(complete)
+    expect(Object.keys(overrides).toSorted()).toEqual([...REQUIRED_EXPORTS].toSorted())
+    expect(Object.values(overrides).every((value) => typeof value === 'function')).toBe(true)
+    expect(again).toBe(overrides)
     expect(isInstrumentationInstalled()).toBe(true)
+    // Every wrapper is a different function than the upstream one it replaces.
+    for (const name of REQUIRED_EXPORTS) {
+      expect(overrides[name]).not.toBe((client as Record<string, unknown>)[name])
+    }
   })
 
   it('degrades instead of throwing when the module is nothing like Svelte', () => {

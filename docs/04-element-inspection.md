@@ -10,7 +10,8 @@ From a clicked DOM node to the payload the formatter consumes. The payload type 
 2. Walk up from there to the nearest element carrying `__svelte_meta`. Two things come from
    that walk:
    - `loc` — `{ file, line, column }` of the nearest located element;
-   - `dtComponentId` — the component instance the element-stamp pass recorded.
+   - `__sphere` — `{ instanceId, frame }`, the component instance and mirrored dev frame the
+     element-stamp pass recorded (`docs/03-instrumentation.md` §What the wrappers do).
 3. If no `__svelte_meta` exists anywhere (metadata lost, `{@html}`, a DOM node created outside
    Svelte), the payload keeps `source: null` and the component chain is empty; the toolbar
    reports "no Svelte source location" instead of pretending.

@@ -56,22 +56,47 @@ export function isAppModule(importer: string | undefined, root: string): boolean
 }
 
 /**
+ * The wrapper's replacements, split because four of them are reserved words: an export
+ * *name* may be `if`, a local binding may not, so those are renamed on the way out.
+ */
+export const OVERRIDES = [
+  'push',
+  'pop',
+  'add_svelte_meta',
+  'add_locations',
+  'tag',
+  'tag_proxy',
+  'component',
+  'each',
+] as const
+
+export const RESERVED_OVERRIDES = ['if', 'key'] as const
+
+/**
  * The generated client module.
  *
- * Deliberately text, not a template with conditionals: the only decision (enabled
- * or not) is made before this is called, so the module never contains a branch of
- * its own. `export *` first, so a later commit can add `export const { push } = …`
- * and shadow exactly those bindings; local exports win over star exports.
+ * Deliberately text, not a template with conditionals: the only decision (enabled or
+ * not) is made before this is called, so the module never contains a branch of its own.
+ * `export *` keeps the whole upstream surface; the local exports below shadow exactly the
+ * bindings in `REQUIRED_EXPORTS`, because a local export wins over a star export.
  */
 export function wrapperModule(upstreamId: string): string {
   const upstream = JSON.stringify(upstreamId)
+  const reserved = RESERVED_OVERRIDES.map((name) => `__sphere_${name}`)
 
   return [
     `import * as __sphereUpstream from ${upstream}`,
     `import { installInstrumentation } from ${JSON.stringify(INSTRUMENTATION_SPECIFIER)}`,
     `export * from ${upstream}`,
     '',
-    'installInstrumentation(__sphereUpstream)',
+    'const __sphere = installInstrumentation(__sphereUpstream)',
+    `export const { ${OVERRIDES.join(', ')} } = __sphere`,
+    ...(RESERVED_OVERRIDES.length > 0
+      ? [
+          `const { ${RESERVED_OVERRIDES.map((name, i) => `${name}: ${reserved[i]}`).join(', ')} } = __sphere`,
+          `export { ${RESERVED_OVERRIDES.map((name, i) => `${reserved[i]} as ${name}`).join(', ')} }`,
+        ]
+      : []),
     '',
   ].join('\n')
 }

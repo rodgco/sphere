@@ -26,8 +26,9 @@ prototype already proved; M3–M5 make it a product.
 
 **Status:** in progress — the `svelte/internal/client` seam, its export guard, the `enabled: false`
 proof and the runtime harness exist (`src/plugin/svelte-client.ts`, `src/runtime/instrumentation.ts`,
-`test/client-gate.test.ts`, `test/harness/`, `fixtures/harness/`). Next: the wrappers (frame stack,
-stamps), then `inspectElement`.
+`test/client-gate.test.ts`, `test/harness/`, `fixtures/harness/`), plus the wrappers: instance
+registry, element stamps, block-callback ownership, `tag`/`tag_proxy` state. Next: `inspectElement`
+and the payload.
 
 **Done when**
 
