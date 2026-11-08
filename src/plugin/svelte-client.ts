@@ -1,3 +1,4 @@
+import { isAbsolute, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /**
@@ -31,6 +32,27 @@ export const WRAPPER_URL = '/@id/__x00__virtual:sphere/svelte-client'
  */
 export function runtimeSource(name: string): string {
   return fileURLToPath(new URL(`../../src/runtime/${name}.ts`, import.meta.url))
+}
+
+/**
+ * Whether an importer is app code: a file inside the project and outside `node_modules`.
+ *
+ * The redirect is deliberately narrow. Svelte's own modules import
+ * `svelte/internal/client` too (`src/attachments/index.js` does), and pointing those at
+ * the wrapper makes the wrapper import itself through Svelte's internals — a cycle that
+ * changes nothing (the wrapper only re-exports) and breaks the module graph. Internal
+ * calls are meant to bypass the wrapper: instrumentation needs the entry points compiled
+ * components use, not Svelte's private call sites.
+ */
+export function isAppModule(importer: string | undefined, root: string): boolean {
+  if (!importer) return false
+
+  const id = importer.split('?')[0] ?? ''
+  if (!isAbsolute(id)) return false
+  if (id.split(sep).includes('node_modules')) return false
+
+  const rel = relative(root, id)
+  return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel)
 }
 
 /**

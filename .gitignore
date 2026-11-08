@@ -9,6 +9,9 @@ build/
 coverage/
 *.tsbuildinfo
 
+# Generated harness wrapper (test/harness/setup.ts)
+test/harness/generated/
+
 # Test artifacts
 test-results/
 playwright-report/

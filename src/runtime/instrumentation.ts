@@ -13,7 +13,7 @@
 /**
  * The upstream bindings the instrumentation wraps. This list is the contract with
  * Svelte: a test asserts each name exists in the installed `svelte/internal/client`
- * (`test/instrumentation.test.ts`), so a Svelte release that drops one fails here
+ * (`test/svelte-client.test.ts`), so a Svelte release that drops one fails here
  * instead of silently producing a prompt without component context.
  */
 export const REQUIRED_EXPORTS = [
@@ -30,24 +30,44 @@ export const REQUIRED_EXPORTS = [
 
 export type UpstreamClient = Record<string, unknown>
 
-/** One warning per upstream namespace, so HMR cannot spam the console. */
+/** Installed namespaces, keyed by the namespace itself so HMR cannot duplicate work. */
+const installed = new WeakSet<object>()
+
+/** One warning per upstream namespace, so a re-import cannot spam the console. */
 const warned = new WeakSet<object>()
+
+/** Set once any wrapper installed; the page has one Svelte, so one flag is enough. */
+let installedOnce = false
+
+/**
+ * The honest state of the seam, for `inspectElement` to report later: `false` means the
+ * prompt will have no component chain, props or state, and nothing else is broken.
+ */
+export function isInstrumentationInstalled(): boolean {
+  return installedOnce
+}
 
 /**
  * Validates the upstream surface and installs the instrumentation.
  *
- * At M1 step 1 this only validates; the wrappers arrive with the frame stack. The
+ * At M1 step 2 this only validates; the wrappers arrive with the frame stack. The
  * missing-export path is already exercised because it is the one that must never
  * throw: an unsupported Svelte degrades to no component context, not to a broken app.
  */
 export function installInstrumentation(upstream: UpstreamClient): void {
-  const missing = REQUIRED_EXPORTS.filter((name) => typeof upstream[name] !== 'function')
-  if (missing.length === 0) return
-  if (warned.has(upstream)) return
+  if (installed.has(upstream)) return
 
-  warned.add(upstream)
-  console.warn(
-    `[sphere] unsupported svelte/internal/client: missing ${missing.join(', ')}. ` +
-      'Instrumentation is off; the prompt will lack component context.',
-  )
+  const missing = REQUIRED_EXPORTS.filter((name) => typeof upstream[name] !== 'function')
+  if (missing.length > 0) {
+    if (warned.has(upstream)) return
+    warned.add(upstream)
+    console.warn(
+      `[sphere] unsupported svelte/internal/client: missing ${missing.join(', ')}. ` +
+        'Instrumentation is off; the prompt will lack component context.',
+    )
+    return
+  }
+
+  installed.add(upstream)
+  installedOnce = true
 }

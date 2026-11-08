@@ -41,6 +41,7 @@ Read in order on a first pass; the ADRs and learning notes are reference materia
 - [Svelte 5 dev runtime](learning/svelte-internals.md) — `__svelte_meta`, dev stack, hydration assignment, signals, snippets.
 - [SvelteKit + Vite dev server](learning/sveltekit-vite-dev-server.md) — `transformIndexHtml` bypass, virtual-module URLs, `base` + `/@fs`, one-server rule.
 - [Dev overlay lessons](learning/ui-overlay-lessons.md) — shadow DOM inheritance, cursor, event chain, focus, marks, a11y.
+- [Vitest + Svelte harness](learning/vitest-svelte-harness.md) — client transforms in Vitest 5, the `browser` condition, `unmount`, `__svelte_meta`.
 
 ## Reuse
 

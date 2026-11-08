@@ -17,5 +17,6 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["src", "test", "types", "fixtures", "vitest.config.ts"]
+  "include": ["src", "test", "types", "fixtures", "vitest.config.ts", "vitest.harness.config.ts"],
+  "exclude": ["test/harness/generated"]
 }

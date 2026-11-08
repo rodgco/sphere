@@ -33,6 +33,11 @@ const wrapper = wrapperModule(upstreamId)   // text: imports, `export *`, instal
 - The wrapper imports the resolved upstream file and `export *` from it, so the whole surface is
   preserved and the host project's Svelte is used, not the plugin's own copy. It never imports the
   bare specifier, which would resolve back to itself.
+- Only **app modules** are redirected: importers inside the project root and outside
+  `node_modules`. Svelte's own files import `svelte/internal/client` too
+  (`src/attachments/index.js`), and pointing those at the wrapper puts the wrapper back into its
+  own graph through Svelte's internals. Internal calls are meant to bypass it — instrumentation
+  needs the entry points compiled components use, not Svelte's private call sites.
 - `src/runtime/instrumentation.ts` is imported through `virtual:sphere/instrumentation`, which the
   plugin resolves to the shipped source; the host's Vite compiles it. It receives the upstream
   namespace as an **argument**, so the appended instrumentation needs no import of its own and is

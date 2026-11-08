@@ -31,7 +31,7 @@ export default defineConfig({
 | `virtual:sphere/runtime` | instrumentation + `inspectElement`/`locateElement`, installs `window.__SPHERE__` | page |
 | `virtual:sphere/overlay` | the Svelte overlay entry: mounts the shadow host and renders `<Overlay />` | page |
 | `virtual:sphere/instrumentation` | resolved to `src/runtime/instrumentation.ts` (shipped source); the browser half of the client seam | generated client module |
-| `virtual:sphere/svelte-client` | generated wrapper for `svelte/internal/client`; reached through the bare specifier, not imported directly, and only generated when enabled | compiled components |
+| `virtual:sphere/svelte-client` | generated wrapper for `svelte/internal/client`; reached through the bare specifier from app modules only, and only generated when enabled | compiled components |
 
 - **Sources are shipped, not inlined.** `resolveId('virtual:sphere/overlay')` returns the real
   path of `src/overlay/entry.ts` inside the published package (the `files` field must include

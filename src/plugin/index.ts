@@ -4,6 +4,7 @@ import {
   CLIENT_SPECIFIER,
   INSTRUMENTATION_SPECIFIER,
   WRAPPER_ID,
+  isAppModule,
   runtimeSource,
   wrapperModule,
 } from './svelte-client.js'
@@ -30,6 +31,7 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
 
   /** Resolved through the rest of the pipeline, so it is the host project's Svelte. */
   let upstreamId: string | null = null
+  let root = process.cwd()
 
   return [
     {
@@ -37,8 +39,9 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
       apply: 'serve',
       enforce: 'pre',
 
-      configResolved() {
+      configResolved(config) {
         resolved = resolveOptions(options)
+        root = config.root
       },
 
       applyToEnvironment(environment) {
@@ -50,7 +53,7 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
 
         if (id === INSTRUMENTATION_SPECIFIER) return runtimeSource('instrumentation')
         if (id === HELLO_ID) return HELLO_ID
-        if (id !== CLIENT_SPECIFIER) return null
+        if (id !== CLIENT_SPECIFIER || !isAppModule(importer, root)) return null
 
         // Ask the rest of the pipeline where this Svelte's client entry actually is;
         // `skipSelf` keeps the answer from being this hook again.

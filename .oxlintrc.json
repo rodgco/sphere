@@ -4,5 +4,8 @@
     "correctness": "error",
     "suspicious": "error"
   },
-  "ignorePatterns": ["dist/**", "coverage/**", "fixtures/**/dist/**"]
+  "rules": {
+    "no-underscore-dangle": ["error", { "allow": ["__svelte_meta"] }]
+  },
+  "ignorePatterns": ["dist/**", "coverage/**", "fixtures/**/dist/**", "test/harness/generated/**"]
 }

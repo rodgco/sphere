@@ -1,8 +1,17 @@
 import { existsSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import * as client from 'svelte/internal/client'
-import { REQUIRED_EXPORTS, installInstrumentation } from '../src/runtime/instrumentation.js'
-import { WRAPPER_URL, runtimeSource, wrapperModule } from '../src/plugin/svelte-client.js'
+import {
+  REQUIRED_EXPORTS,
+  installInstrumentation,
+  isInstrumentationInstalled,
+} from '../src/runtime/instrumentation.js'
+import {
+  WRAPPER_URL,
+  isAppModule,
+  runtimeSource,
+  wrapperModule,
+} from '../src/plugin/svelte-client.js'
 
 const upstreamId = '/app/node_modules/svelte/src/internal/client/index.js'
 
@@ -29,6 +38,27 @@ describe('wrapperModule', () => {
 
   it('never imports the bare upstream specifier, which would recurse', () => {
     expect(text).not.toContain('from "svelte/internal/client"')
+  })
+})
+
+describe('isAppModule', () => {
+  const root = '/project'
+
+  it('accepts files inside the project, with or without a query', () => {
+    expect(isAppModule('/project/src/App.svelte', root)).toBe(true)
+    expect(isAppModule('/project/src/lib/deep/Thing.ts?x=1', root)).toBe(true)
+  })
+
+  it('rejects anything under node_modules, including Vite deps', () => {
+    expect(isAppModule('/project/node_modules/svelte/src/attachments/index.js', root)).toBe(false)
+    expect(isAppModule('/project/node_modules/.vite/deps/svelte.js', root)).toBe(false)
+  })
+
+  it('rejects files outside the project and non-file importers', () => {
+    expect(isAppModule('/elsewhere/App.svelte', root)).toBe(false)
+    expect(isAppModule(undefined, root)).toBe(false)
+    expect(isAppModule('src/App.svelte', root)).toBe(false)
+    expect(isAppModule('\0virtual:mine', root)).toBe(false)
   })
 })
 
@@ -59,6 +89,15 @@ describe('installInstrumentation', () => {
     expect(message).toContain('missing ')
     expect(message).toContain('add_locations')
     expect(message).toContain('Instrumentation is off')
+  })
+
+  it('becomes installed only when a namespace passes the contract', () => {
+    const complete = Object.fromEntries(
+      (REQUIRED_EXPORTS as readonly string[]).map((name) => [name, () => {}]),
+    )
+
+    installInstrumentation(complete)
+    expect(isInstrumentationInstalled()).toBe(true)
   })
 
   it('degrades instead of throwing when the module is nothing like Svelte', () => {
