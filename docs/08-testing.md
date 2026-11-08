@@ -79,7 +79,7 @@ through a `file:` link. The fixture's dependencies are installed separately
 | `e2e/location.mjs` | chip line equals the line read from disk; `~` when metadata is dropped; note text present |
 | `e2e/base-path.mjs` | `paths.base: '/app'` profile: overlay loads, pick works, source window fetched through the base |
 | `e2e/a11y.mjs` | Enter/Space toggles, Escape leaves, focus returns, aria attributes present |
-| `e2e/clipboard.mjs` | full flow with clipboard permissions; payload contains no absolute path and no rendered text |
+| `e2e/clipboard.mjs` | full flow with clipboard permissions; the pasted document has the header, both picks with the rule between them and the instructions; it contains no rendered text, no absolute path and no `node_modules`; the status line reports its size; Copy is disabled with nothing picked |
 
 Shared plumbing (free port, process-group kill, browser context with clipboard permissions) lives
 in `e2e/lib/`; the scripts stay readable and print one line on success. `fixtures/plain` exposes

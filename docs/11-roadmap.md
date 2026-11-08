@@ -58,9 +58,10 @@ instructions and the status line. Covered by the runtime harness and by `e2e/pic
 
 ## M3 — The prompt
 
-**Status:** in progress — `format.ts` implements `docs/05-prompt-format.md` with a golden test,
-and `docs/specs/clipboard-example.md` is generated from the same fixture and diffed in CI. Next:
-Copy prompt with the clipboard fallback and the browser test.
+**Status:** done — `format.ts` implements `docs/05-prompt-format.md` with a golden test, the
+clipboard example is generated from the same fixture and diffed in CI, the panel copies with a
+legacy fallback and an honest status line, and `e2e/clipboard.mjs` proves the pasted document in a
+real browser (no rendered text, no machine paths, picks separated, Copy disabled when empty).
 
 **Done when**
 

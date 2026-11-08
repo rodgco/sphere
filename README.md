@@ -10,11 +10,12 @@ and a numbered source window — plus the instructions you typed.
 
 Nothing leaves the browser: the payload goes to your clipboard.
 
-> **Status: M1 done.** Instrumentation, `window.__SPHERE__.inspectElement`, the runtime harness and
-> dev-server delivery (plain Vite and SvelteKit 3) exist under `src/`, `fixtures/` and `test/`.
-> There is no overlay and no prompt yet — that is M2 and M3. The behaviour in `docs/` is derived
-> from a working prototype (a private fork of `vite-devtools-svelte` developed inside another
-> project). `docs/11-roadmap.md` turns the specs into milestones.
+> **Status: M3 done.** Instrumentation, `inspectElement`, the shadow-root overlay with picking and
+> marks, the panel, and the prompt (format, golden, clipboard) exist under `src/`, `fixtures/`,
+> `test/` and `e2e/`. Remaining before `0.1.0`: locations verified against the file (M4) and
+> hardening/release (M5). The behaviour in `docs/` is derived from a working prototype (a private
+> fork of `vite-devtools-svelte` developed inside another project). `docs/11-roadmap.md` turns the
+> specs into milestones.
 
 ## Why a separate project
 
