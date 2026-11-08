@@ -31,6 +31,11 @@ async function main() {
 
       // 1. Picking a link does not navigate, and the app never sees the click.
       await startPicking(page)
+
+      // One cursor everywhere: a link's own `cursor: pointer` must not win while picking.
+      const pickingCursor = await link(page).evaluate((element) => getComputedStyle(element).cursor)
+      if (pickingCursor !== 'crosshair') throw new Error(`picking cursor is ${pickingCursor}`)
+
       const before = await counters(page)
       await link(page).click()
 
@@ -47,6 +52,9 @@ async function main() {
       // 2. Leaving picking gives the page back: the same click now navigates.
       await control(page).click()
       await expectAttribute(page, control(page), 'aria-pressed', 'false')
+
+      const pageCursor = await link(page).evaluate((element) => getComputedStyle(element).cursor)
+      if (pageCursor !== 'pointer') throw new Error(`the page lost its cursor: ${pageCursor}`)
       await link(page).click()
       await page.waitForURL(/navigated=1/)
       await page.locator('[data-testid="title"]').waitFor()

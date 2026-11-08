@@ -79,8 +79,10 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   host's `none` must not leak into the panel).
 - The overlay must not use the app's CSS, fonts or classes, and must not add classes to the
   app's DOM (marks are drawn by the overlay, not by styling the element). The one exception is the
-  crosshair cursor while picking: it is set inline on `documentElement` and the previous value is
-  restored on leaving, because a shadow-root stylesheet cannot reach the page.
+  crosshair cursor while picking: a single `<style>` element is appended to the page with
+  `cursor: crosshair !important` and removed on leaving, because links and buttons set their own
+  cursor and an inherited value would lose to them. Nothing is left behind, and the overlay's own
+  styles (inside the shadow root) keep their cursor.
 
 ## 8. Accessibility baseline
 

@@ -70,13 +70,15 @@ describe('the control', () => {
       pointer(window, 'pointerup', 10, 10)
 
       expect(pressed(view.control)).toBe('true')
-      expect(document.documentElement.style.cursor).toBe('crosshair')
+      // A stylesheet with `!important`, because links and buttons set their own cursor.
+      const cursorRule = document.getElementById('sphere-picking-cursor')?.textContent ?? ''
+      expect(cursorRule).toContain('crosshair !important')
 
       pointer(view.control, 'pointerdown', 10, 10)
       pointer(window, 'pointerup', 10, 10)
 
       expect(pressed(view.control)).toBe('false')
-      expect(document.documentElement.style.cursor).toBe('')
+      expect(document.getElementById('sphere-picking-cursor')).toBeNull()
     } finally {
       view.destroy()
     }
