@@ -5,10 +5,12 @@
  * The document is the specification a reader trusts; the examples must be real output, not a
  * hand-written approximation. CI runs this and fails if the committed document differs.
  *
- *   node --experimental-strip-types scripts/clipboard-example.mjs
+ *   node scripts/clipboard-example.mjs
  */
 import { readFileSync, writeFileSync } from 'node:fs'
-import { formatSelection } from '../src/runtime/format.ts'
+import { loadSourceModule } from './load-source-module.mjs'
+
+const { formatSelection } = await loadSourceModule('/src/runtime/format.ts')
 
 const DOC = 'docs/specs/clipboard-example.md'
 const fixture = JSON.parse(readFileSync('test/fixtures/inspection.json', 'utf8'))

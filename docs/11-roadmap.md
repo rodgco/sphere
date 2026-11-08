@@ -87,6 +87,12 @@ browser, and `e2e/location.mjs` / `e2e/base-path.mjs` prove the four outcomes in
 
 ## M5 — Hardening and release
 
+**Status:** done, with two explicit gaps. `prod-noop` is a test, `publint`/`attw` run in CI, the
+Svelte-minor matrix runs the harness, the screenshots are generated with a privacy scan, changesets
+and a provenance release workflow exist, and the version is `0.1.0`. Not done: a real SvelteKit 2
+fixture job (the transform is unit-tested) and the bundle-size budget.
+
+
 **Done when**
 
 - Matrix jobs (Svelte minors, Kit 2/3, plain Vite) green; prod-noop grep green.

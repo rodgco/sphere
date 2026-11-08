@@ -6,8 +6,9 @@
  * that was not committed.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
-import { formatPrompt } from '../src/runtime/format.ts'
+import { loadSourceModule } from './load-source-module.mjs'
 
+const { formatPrompt } = await loadSourceModule('/src/runtime/format.ts')
 const fixture = JSON.parse(readFileSync('test/fixtures/inspection.json', 'utf8'))
 
 const prompt = formatPrompt({

@@ -31,6 +31,9 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
 
+      # publint and attw: what a consumer's tooling will say about the published files.
+      - run: npm run pkg:check
+
       # The Kit fixture consumes the built package through a `file:` link.
       - run: npm --prefix fixtures/kit ci
 
@@ -41,3 +44,28 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
+
+      # Regenerates docs/images and fails on a privacy hit; the images themselves are committed
+      # and reviewed, because font rendering differs between runners (docs/08-testing.md §5).
+      - run: node scripts/screenshots/sphere.mjs
+
+  svelte-minors:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        svelte: ['5.52.0', '5.54.1', '5.56.10', '5.57.3']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The instrumentation is the part that can silently mis-attribute after a Svelte release.
+      - run: npm install --no-save --no-fund svelte@${{ matrix.svelte }}
+      - run: npm run build
+      - run: npm run test:harness
