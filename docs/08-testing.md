@@ -53,6 +53,10 @@ prototype deferred.
   specifier to that file, applying the same “app modules only” rule. Vitest's client environment
   has no HTTP layer for `/@id/…`, so a `\0`-id cannot be loaded there; the real plumbing is
   covered against a dev server in `test/client-gate.test.ts`.
+- `test/harness/overlay.test.ts` drives the control through native listeners: pointer up/down
+  toggles, drag moves and persists without toggling, the 4 px threshold, double-click reset,
+  Escape, and the cursor lock. `test/harness/entry.test.ts` asserts the shadow host, the styles
+  and the single mount.
 - **Known limit**: this harness mounts client-side; hydration behaviour cannot be tested here
   (vitest compiles a module for one target). Hydration belongs to the browser layer.
 
@@ -101,8 +105,8 @@ context with clipboard permissions) lives in `e2e/lib/`; the scripts stay readab
 - Coverage thresholds are global and per critical module (`location`, `format`): ≥ 95 % branches,
   ≥ 98 % lines. The overlay is excluded from coverage **only** if it is Svelte-only and covered by
   e2e; the exclusion must carry that sentence as its justification.
-- Lint/format/typecheck are blockers (`oxlint`/`eslint` per the repo's choice, `oxfmt`,
-  `tsc --noEmit`, `svelte-check`).
+- Lint/format/typecheck are blockers (`oxlint`, `oxfmt`, `tsc --noEmit`, `svelte-check` for the
+  overlay; `npm run typecheck` runs both).
 - No test may assert wall-clock timings; performance lives in `perf/` and is reported, not gated.
 
 ## 8. Flakiness rules

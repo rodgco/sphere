@@ -31,7 +31,12 @@ export const WRAPPER_URL = '/@id/__x00__virtual:sphere/svelte-client'
  * both cases. The runtime is served as source and compiled by the host's Vite.
  */
 export function runtimeSource(name: string): string {
-  return fileURLToPath(new URL(`../../src/runtime/${name}.ts`, import.meta.url))
+  return sourceFile(`runtime/${name}`)
+}
+
+/** Any shipped source, relative to `src/` and without the extension. */
+export function sourceFile(name: string): string {
+  return fileURLToPath(new URL(`../../src/${name}.ts`, import.meta.url))
 }
 
 /**

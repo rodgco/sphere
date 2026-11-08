@@ -50,8 +50,9 @@
     "test:harness": "vitest run --config vitest.harness.config.ts",
     "test:unit": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm run build && npm test"
+    "typecheck": "tsc -p tsconfig.json --noEmit && npm run typecheck:svelte",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run build && npm test",
+    "typecheck:svelte": "svelte-check --threshold error"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
@@ -60,7 +61,8 @@
     "oxfmt": "^0.77.0",
     "oxlint": "^1.92.0",
     "svelte": "^5.57.3",
-    "typescript": "^7.0.2",
+    "svelte-check": "^4.7.8",
+    "typescript": "^6.0.3",
     "vite": "^8.3.6",
     "vitest": "^5.1.0"
   },

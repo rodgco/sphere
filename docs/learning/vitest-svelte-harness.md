@@ -99,3 +99,18 @@ Consequence for the harness: it writes the same generated text — from `wrapper
 copy — to `test/harness/generated/svelte-client.ts` and resolves the specifier to that file
 (`test/harness/plugin.ts`), keeping the plugin's rule that only app modules are redirected. The
 `\0` plumbing itself is proved against a real dev server in `test/client-gate.test.ts`.
+
+## 6. Delegated events and batched updates in the harness
+
+Two Svelte 5 behaviour that the overlay's tests had to account for:
+
+- **Delegation uses `composedPath()`.** Compiling `onclick={…}` emits `$.delegated('click', element,
+  handler)` plus a module-level `$.delegate(['click'])`; the runtime installs one listener and finds
+  the handler by walking `event.composedPath()`. happy-dom returns an **empty** path
+  (`event.composedPath().length === 0`), so `event.target` is used and the walk-up starts there —
+  but the element never receives Svelte's handler in practice: nothing toggles. The overlay
+  therefore attaches its own listeners (`src/overlay/events.ts`, `listen()` and the `use:press`
+  action), which also gives it capture-phase control for the picking matrix.
+- **Updates are batched.** An assignment inside a handler marks state dirty; `aria-pressed`, style
+  and newly attached effects only exist after a flush. Harness tests must call `flushSync()` after
+  mounting (for `onMount`/`$effect`) and after each dispatched event before asserting.

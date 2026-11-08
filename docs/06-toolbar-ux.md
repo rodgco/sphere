@@ -78,7 +78,9 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   needs, including `pointer-events: auto` on interactive children (it is inherited, and the
   host's `none` must not leak into the panel).
 - The overlay must not use the app's CSS, fonts or classes, and must not add classes to the
-  app's DOM (marks are drawn by the overlay, not by styling the element).
+  app's DOM (marks are drawn by the overlay, not by styling the element). The one exception is the
+  crosshair cursor while picking: it is set inline on `documentElement` and the previous value is
+  restored on leaving, because a shadow-root stylesheet cannot reach the page.
 
 ## 8. Accessibility baseline
 

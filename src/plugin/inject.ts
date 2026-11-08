@@ -10,8 +10,11 @@ import { idToUrl, withBase } from './virtual.js'
 /**
  * No `\0` prefix: SvelteKit's dev middleware does not unwrap `__x00__` in `/@id/` URLs (it
  * answers its own 404 page), so the id must be one it can resolve. Vite resolves any specifier a
- * plugin claims, and `/@id/virtual:sphere/runtime` works in both plain Vite and Kit.
+ * plugin claims, and `/@id/virtual:sphere/overlay` works in both plain Vite and Kit.
  */
+export const OVERLAY_ID = 'virtual:sphere/overlay'
+
+/** Also resolvable, for tests and for anyone who wants the runtime without the UI. */
 export const RUNTIME_ID = 'virtual:sphere/runtime'
 
 /** Ids of the two generated SvelteKit modules that carry the app template. */
@@ -26,13 +29,13 @@ export function isKitTemplateModule(id: string): boolean {
  * The script URL. `transformIndexHtml` tags are rewritten by Vite's dev HTML transform, which
  * prefixes `config.base`; a raw insertion into a Kit template must prefix it itself.
  */
-export function runtimeSrc(base: string, options: { absolute: boolean }): string {
-  const url = idToUrl(RUNTIME_ID)
+export function injectionSrc(base: string, options: { absolute: boolean }): string {
+  const url = idToUrl(OVERLAY_ID)
   return options.absolute ? withBase(url, base) : url
 }
 
-export function runtimeTag(base: string, options: { absolute: boolean }): string {
-  return `<script type="module" src="${runtimeSrc(base, options)}"></script>`
+export function injectionTag(base: string, options: { absolute: boolean }): string {
+  return `<script type="module" src="${injectionSrc(base, options)}"></script>`
 }
 
 export interface Injection {

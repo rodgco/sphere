@@ -1,10 +1,11 @@
 import type { Plugin } from 'vite'
 import {
   injectIntoKitModule,
+  injectionSrc,
+  injectionTag,
   isKitTemplateModule,
+  OVERLAY_ID,
   RUNTIME_ID,
-  runtimeSrc,
-  runtimeTag,
 } from './inject.js'
 import { resolveOptions, type ResolvedOptions, type SphereOptions } from './options.js'
 import {
@@ -13,6 +14,7 @@ import {
   WRAPPER_ID,
   isAppModule,
   runtimeSource,
+  sourceFile,
   wrapperModule,
 } from './svelte-client.js'
 
@@ -57,9 +59,10 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
     async resolveId(id, importer) {
       if (!resolved.enabled) return null
 
-      // The injected tag asks for the runtime; it is the instrumentation module itself, which
-      // installs `window.__SPHERE__` on import. Both the bare and the `\0`-prefixed form are
-      // accepted: which one arrives depends on how the URL was built.
+      // Two entry points, both served as shipped source and compiled by the host's Vite:
+      // the overlay (what the page loads) and the runtime on its own (tests, and future sinks).
+      if (id === OVERLAY_ID || id === `\0${OVERLAY_ID}`) return sourceFile('overlay/entry')
+
       if (id === RUNTIME_ID || id === `\0${RUNTIME_ID}` || id === INSTRUMENTATION_SPECIFIER) {
         return runtimeSource('instrumentation')
       }
@@ -85,7 +88,7 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
       handler(html, context) {
         if (!resolved.enabled || !context.server) return html
 
-        const src = runtimeSrc(base, { absolute: false })
+        const src = injectionSrc(base, { absolute: false })
         if (html.includes(src)) return html
 
         return {
@@ -110,7 +113,7 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
 
       const { code: injected, injected: changed } = injectIntoKitModule(
         code,
-        runtimeTag(base, { absolute: true }),
+        injectionTag(base, { absolute: true }),
       )
 
       // `map: null` is honest: the insertion is a script tag inside a string literal, so the

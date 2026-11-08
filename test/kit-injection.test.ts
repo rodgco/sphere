@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { isKitTemplateModule } from '../src/plugin/inject.js'
 import { kitFixtureInstalled, startKitServer, type SpawnedServer } from './lib/kit.js'
 
-const RUNTIME_URL = '/@id/virtual:sphere/runtime'
+const OVERLAY_URL = '/@id/virtual:sphere/overlay'
 
 // The fixture has its own `node_modules`; CI installs it (see .github/workflows/ci.yml). Locally,
 // a missing install skips instead of failing, but a skip in CI is a failure.
@@ -32,20 +32,20 @@ suite('injection into a real SvelteKit dev server', () => {
 
     const html = await response.text()
     expect(html).toContain('data-testid="kit-page"')
-    expect(html).toContain(`<script type="module" src="${RUNTIME_URL}"></script>`)
+    expect(html).toContain(`<script type="module" src="${OVERLAY_URL}"></script>`)
     // Quotes inside the template literal survived the injection.
     expect(html).toContain('type="module"')
   })
 
   it('injects once, even though the module is transformed again on HMR', async () => {
     const html = await (await fetch(`${server.origin}/`)).text()
-    expect(html.split(RUNTIME_URL)).toHaveLength(2)
+    expect(html.split(OVERLAY_URL)).toHaveLength(2)
   })
 
   it('serves the runtime module the tag asks for', async () => {
-    const response = await fetch(`${server.origin}${RUNTIME_URL}`)
+    const response = await fetch(`${server.origin}${OVERLAY_URL}`)
     expect(response.status).toBe(200)
-    expect(await response.text()).toContain('installSphereApi')
+    expect(await response.text()).toContain('mountOverlay')
   })
 })
 

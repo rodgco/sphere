@@ -6,19 +6,19 @@ import { boot, closeServers, fixtureRoot, page } from './lib/vite.js'
 
 afterEach(closeServers)
 
-const RUNTIME_URL = '/@id/virtual:sphere/runtime'
+const OVERLAY_URL = '/@id/virtual:sphere/overlay'
 
 describe('delivery through a plain Svelte app', () => {
   it('injects the runtime into index.html of the fixture', async () => {
     const { origin } = await boot({ configFile: resolve(fixtureRoot, 'vite.config.ts') })
 
     const html = await page(origin)
-    expect(html).toContain(`src="${RUNTIME_URL}"`)
+    expect(html).toContain(`src="${OVERLAY_URL}"`)
     expect(html).toContain('type="module"')
 
     // The injected module is the instrumentation source, which installs the API on import.
-    const module = await page(origin, RUNTIME_URL)
-    expect(module).toContain('installSphereApi')
+    const module = await page(origin, OVERLAY_URL)
+    expect(module).toContain('mountOverlay')
     expect(module).not.toContain('dev-only probe')
   })
 
@@ -42,10 +42,10 @@ describe('delivery through a plain Svelte app', () => {
 
     const html = await page(origin, '/app/')
     // Vite's dev HTML transform adds the base to a root-relative tag src.
-    expect(html).toContain(`src="/app${RUNTIME_URL}"`)
+    expect(html).toContain(`src="/app${OVERLAY_URL}"`)
     expect(html).not.toContain('/app/app/')
 
-    const module = await page(origin, `/app${RUNTIME_URL}`)
-    expect(module).toContain('installSphereApi')
+    const module = await page(origin, `/app${OVERLAY_URL}`)
+    expect(module).toContain('mountOverlay')
   })
 })
