@@ -33,10 +33,9 @@ export function safeStorage(): Storage | undefined {
   try {
     const storage = globalThis.localStorage
     if (!storage) return undefined
-    // Touching it can throw in Safari's private mode.
-    const probe = '__sphere__'
-    storage.setItem(probe, '1')
-    storage.removeItem(probe)
+    // Touching it can throw in Safari's private mode. A read proves availability without
+    // mutating the host app's storage or firing a `storage` event in other tabs.
+    storage.getItem('__sphere__')
     return storage
   } catch {
     return undefined

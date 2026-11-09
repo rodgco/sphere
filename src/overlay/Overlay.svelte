@@ -98,7 +98,15 @@
   }
 
   onMount(() => {
-    position = readControl()
+    const stored = readControl()
+    position =
+      stored === null || shell === undefined
+        ? stored
+        : clampControl(
+            stored,
+            { width: shell.offsetWidth, height: shell.offsetHeight },
+            { width: window.innerWidth, height: window.innerHeight },
+          )
     options = readOptions()
 
     window.addEventListener('keydown', noteKeyboardModality, true)
@@ -527,10 +535,18 @@
     }
 
     const stop = listen<PointerEvent>(window, 'pointermove', moveDrag)
-    const end = listen<PointerEvent>(window, 'pointerup', () => {
+    const finish = () => {
       stop()
       end()
+      cancel()
+    }
+    const end = listen<PointerEvent>(window, 'pointerup', () => {
+      finish()
       endDrag()
+    })
+    const cancel = listen<PointerEvent>(window, 'pointercancel', () => {
+      finish()
+      drag = null
     })
   }
 

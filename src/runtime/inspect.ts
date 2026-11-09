@@ -61,6 +61,8 @@ export interface InstanceLike {
 export interface InspectorAccess {
   instanceOf(node: Node | null): InstanceLike | null
   frameOf(node: Node | null): FrameLike | null
+  /** Reads a signal through Svelte when available; `.v` is only the fallback. */
+  readSignal(source: unknown): unknown
 }
 
 /** Svelte's dev metadata, assigned to located elements (`dev/elements.js`). */
@@ -78,7 +80,11 @@ interface DevFrame {
   parent: DevFrame | null
 }
 
-let access: InspectorAccess = { instanceOf: () => null, frameOf: () => null }
+let access: InspectorAccess = {
+  instanceOf: () => null,
+  frameOf: () => null,
+  readSignal: (source) => (source as { v?: unknown } | null)?.v,
+}
 
 /**
  * Wires the instrumentation accessors. Deliberately not a page global: a same-page script or
@@ -244,6 +250,12 @@ function serializeAttributes(element: Element): string {
   return out
 }
 
+function cssEscape(value: string): string {
+  const css = globalThis.CSS as { escape?: (input: string) => string } | undefined
+  if (typeof css?.escape === 'function') return css.escape(value)
+  return value.replace(/[^a-zA-Z0-9_-]/g, (character) => `\\${character}`)
+}
+
 function selectorOf(element: Element, options: { nthOfType?: boolean } = {}): string {
   const parts: string[] = []
 
@@ -256,7 +268,7 @@ function selectorOf(element: Element, options: { nthOfType?: boolean } = {}): st
 
     const classes = [...cursor.classList]
       .filter((name) => !SVELTE_HASH.test(name))
-      .map((name) => `.${name}`)
+      .map((name) => `.${cssEscape(name)}`)
       .join('')
 
     let suffix = ''
@@ -270,7 +282,7 @@ function selectorOf(element: Element, options: { nthOfType?: boolean } = {}): st
     }
 
     parts.unshift(
-      `${cursor.localName}${cursor.id === '' ? '' : `#${cursor.id}`}${classes}${suffix}`,
+      `${cursor.localName}${cursor.id === '' ? '' : `#${cssEscape(cursor.id)}`}${classes}${suffix}`,
     )
   }
 
@@ -413,7 +425,7 @@ function stateType(entry: StateLike): StateNode['type'] {
  * reporting a bogus value would be worse than saying nothing was read yet.
  */
 function stateValue(entry: StateLike, budget: ReturnType<typeof createBudget>): string {
-  const value = entry.kind === 'signal' ? (entry.source as { v?: unknown } | null)?.v : entry.source
+  const value = entry.kind === 'signal' ? access.readSignal(entry.source) : entry.source
 
   if (typeof value === 'symbol') return JSON.stringify(NOT_EVALUATED)
 

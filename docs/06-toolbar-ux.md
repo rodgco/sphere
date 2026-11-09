@@ -7,7 +7,8 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 
 - A compact pill: a status dot, the label **Inspect**, and — when there are picks — a count
   chip (`2 picked`). Height 36 px; bottom-right by default, 18 px from the edges.
-- **Drag** anywhere on the pill moves it; the position is stored in `localStorage`
+- **Drag** anywhere on the pill moves it; the position is stored in `localStorage` and clamped
+  into the viewport on mount and resize
   (`sphere:control`) and restored on load. Double-click returns it to the default corner.
 - Dragging must not toggle picking: the gesture is decided by movement (> 4 px), and the `click`
   that follows a drag is suppressed.
@@ -151,7 +152,7 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 
 | Key | Content |
 |---|---|
-| `sphere:control` | `{ x, y }` of the control (null when default) |
+| `sphere:control` | `{ x, y }` of the control (null when default); clamped into the viewport |
 | `sphere:options` | `{ state, props, source, template }` |
 
 Nothing else is stored. Picks, instructions and the prompt are session-only by design: closing

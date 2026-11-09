@@ -113,6 +113,19 @@ let frame: Frame | null = null
 let fileNameKey: FileNameKey | null = null
 let installedOnce = false
 let activeEffect: (() => { ctx?: unknown } | null | undefined) | null = null
+let signalReader: ((source: unknown) => unknown) | null = null
+
+/** Read a signal through Svelte's own `get`, which refreshes a dirty `$derived`. */
+export function readSignal(source: unknown): unknown {
+  if (signalReader !== null) {
+    try {
+      return signalReader(source)
+    } catch {
+      // A source that is not a signal falls back to the field Svelte keeps on it.
+    }
+  }
+  return (source as { v?: unknown } | null)?.v
+}
 
 /**
  * The honest state of the seam, for `inspectElement` to report later: `false` means the
@@ -189,6 +202,10 @@ export function installInstrumentation(upstream: UpstreamClient): Record<string,
   // One Svelte client per page: the first upstream to install wins the symbols.
   fileNameKey ??= (upstream.FILENAME as FileNameKey | undefined) ?? null
   activeEffect = () => upstream.active_effect as { ctx?: unknown } | null | undefined
+  signalReader =
+    typeof upstream.get === 'function'
+      ? (source: unknown) => (upstream.get as AnyFunction)(source)
+      : null
 
   const overrides: Record<string, unknown> = {
     push: wrapPush(upstream),
@@ -455,4 +472,4 @@ function isNode(value: unknown): value is Node {
 
 // The API exists exactly when Sphere is in the graph. With no stamps (an unsupported Svelte) it
 // still answers with element identity and an honest null for the chain.
-installInspector({ instanceOf, frameOf })
+installInspector({ instanceOf, frameOf, readSignal })

@@ -22,6 +22,23 @@ describe('inspection API', () => {
   })
 })
 
+describe('element identity', () => {
+  it('escapes identifiers in the readable selector', () => {
+    const element = document.createElement('div')
+    element.id = 'a:b'
+    element.className = 'x.y'
+    document.body.append(element)
+
+    try {
+      const inspected = inspect(element)
+      expect(inspected.element?.selector).toContain('#a\\:b')
+      expect(inspected.element?.selector).toContain('.x\\.y')
+    } finally {
+      element.remove()
+    }
+  })
+})
+
 describe('inspectElement', () => {
   it('describes the element without its rendered text', () => {
     const view = render(Single)

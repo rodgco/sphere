@@ -178,9 +178,12 @@ describe('copying the prompt', () => {
     try {
       view.startPicking()
       view.pick('link')
+      view.control.focus()
       event(view.copy(), 'click', { detail: 1 })
       await vi.waitFor(() => expect(exec).toHaveBeenCalledWith('copy'))
       expect(view.status()).toMatch(/^Copied \d/)
+      // The textarea is temporary; focus belongs back where the developer left it.
+      expect(document.activeElement).toBe(view.control)
     } finally {
       view.destroy()
     }

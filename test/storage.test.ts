@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   CONTROL_KEY,
   DEFAULT_OPTIONS,
@@ -110,5 +110,20 @@ describe('options', () => {
 describe('safeStorage', () => {
   it('is undefined outside a browser', () => {
     expect(safeStorage()).toBeUndefined()
+  })
+
+  it("probes without writing to the host app's storage", () => {
+    const storage = new MemoryStorage()
+    const set = vi.spyOn(storage, 'setItem')
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage })
+    try {
+      expect(safeStorage()).toBe(storage)
+      expect(set).not.toHaveBeenCalled()
+    } finally {
+      if (descriptor === undefined) delete (globalThis as { localStorage?: Storage }).localStorage
+      else Object.defineProperty(globalThis, 'localStorage', descriptor)
+    }
   })
 })

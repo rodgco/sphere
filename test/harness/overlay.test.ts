@@ -98,6 +98,21 @@ describe('the control', () => {
     }
   })
 
+  it('clamps an off-screen stored position into the viewport', () => {
+    writeControl({ x: 999_999, y: -5_000 })
+    const view = mountOverlay()
+    try {
+      const left = Number.parseFloat(view.shell.style.left)
+      const top = Number.parseFloat(view.shell.style.top)
+
+      expect(left).toBeLessThanOrEqual(window.innerWidth)
+      expect(top).toBeGreaterThanOrEqual(0)
+      expect(top).toBeLessThanOrEqual(window.innerHeight)
+    } finally {
+      view.destroy()
+    }
+  })
+
   it('drags the pill, persists the position and does not toggle', () => {
     const view = mountOverlay()
     try {

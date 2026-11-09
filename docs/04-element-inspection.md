@@ -39,6 +39,8 @@ Rules:
   truncated at a tag boundary.
 - **No `svelte-xxxx` scopes**, neither in `classes`/`selector`/`markup` nor in the attributes
   shown for `class`.
+- **Selectors are escaped** with `CSS.escape`, so an id such as `foo:bar` produces a valid
+  selector rather than one that throws in `querySelector`.
 - Attributes are capped (24 entries, 120 chars each). `class` and `style` are not copied into
   `attrs` at all: they are already in `markup`, and repeating the class list is what made the old
   payload half its size.

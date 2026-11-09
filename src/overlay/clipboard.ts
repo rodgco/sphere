@@ -20,8 +20,17 @@ export async function writeClipboard(text: string): Promise<boolean> {
 }
 
 export function legacyCopy(text: string): boolean {
+  const active = document.activeElement as HTMLElement | null
+  const selection = document.getSelection()
+  const ranges =
+    selection === null
+      ? []
+      : Array.from({ length: selection.rangeCount }, (_, index) =>
+          selection.getRangeAt(index).cloneRange(),
+        )
+
+  const area = document.createElement('textarea')
   try {
-    const area = document.createElement('textarea')
     area.value = text
     area.setAttribute('readonly', '')
     area.style.position = 'fixed'
@@ -29,14 +38,20 @@ export function legacyCopy(text: string): boolean {
     area.style.opacity = '0'
 
     document.body.append(area)
+    area.focus({ preventScroll: true })
     area.select()
 
-    const copied = typeof document.execCommand === 'function' && document.execCommand('copy')
-    area.remove()
-
-    return copied
+    return typeof document.execCommand === 'function' && document.execCommand('copy')
   } catch {
     return false
+  } finally {
+    area.remove()
+    // Copying a prompt must not move the developer's caret or focus in the app.
+    active?.focus({ preventScroll: true })
+    if (selection !== null) {
+      selection.removeAllRanges()
+      for (const range of ranges) selection.addRange(range)
+    }
   }
 }
 

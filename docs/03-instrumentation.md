@@ -62,7 +62,7 @@ the wrapper differs from upstream on those names and on no others.
 | `push` / `pop` | An **instance** per component: id, file (`fn[FILENAME]`), function name, parent, the `component` frame it was pushed under, and the `$$props` object. `current` is a stack; a component that throws during init restores it. |
 | `add_svelte_meta` | A mirrored **dev frame** stack (`type`, `file`, `line`, `column`, `componentTag`, parent, owning instance). Svelte's `dev_stack` is not exported, so it has to be mirrored. The frame is a linked list, so a stamp can keep one reference to its whole context. |
 | `add_locations` | **Element stamps**: after the real assignment, walk siblings exactly like `assign_locations` (one location per element node, comments ignored) and write `element.__sphere = { instanceId, frame }`. Bounded by 20 000 nodes; a failing walk is swallowed. |
-| `tag` / `tag_proxy` | Named state on the current instance, in creation order: the signal (`.v` is the value; a lazy `$derived` may be `UNINITIALIZED`) or the proxy value. |
+| `tag` / `tag_proxy` | Named state on the current instance, in creation order: the signal (read through Svelte's `get` so a lazy/dirty `$derived` is current, falling back to `.v`; an unevaluated `$derived` may still be `UNINITIALIZED`) or the proxy value. |
 | `if`, `key`, `component`, `each` | The callbacks and getters Svelte invokes **later** are wrapped so the owning instance is restored while the block renders. Without it, an element inside `{#if}` renders with no `current` and would be unattributable. |
 | all of them | The upstream module is untouched between calls; `installInstrumentation` returns the same override record on re-install, so HMR cannot stack wrappers. |
 
