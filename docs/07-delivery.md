@@ -39,7 +39,7 @@ export default defineConfig({
 | Id | Contents | Consumer |
 |---|---|---|
 | `virtual:sphere/config` | `export default { root, base, version }` | overlay |
-| `virtual:sphere/runtime` | the instrumentation module: wrappers, `inspectElement`/`locateElement`, wires the accessors | page |
+| `virtual:sphere/runtime` | the instrumentation module: wrappers, `inspectElement`/`locateElement`, wires the accessors | tests and direct importers |
 | `virtual:sphere/overlay` | the Svelte overlay entry: mounts the shadow host and renders `<Overlay />` | page |
 | `virtual:sphere/instrumentation` | resolved to `src/runtime/instrumentation.ts` (shipped source); the browser half of the client seam | generated client module |
 | `virtual:sphere/svelte-client` | generated wrapper for `svelte/internal/client`; reached through the bare specifier from app modules only, and only generated when enabled | compiled components |
