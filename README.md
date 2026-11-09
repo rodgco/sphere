@@ -76,20 +76,9 @@ image whose visible text leaks a machine path or a token (`docs/08-testing.md` �
 The full rules are in `docs/09-security-and-privacy.md`; reporting instructions are in
 [`SECURITY.md`](SECURITY.md).
 
-Options today: `{ enabled?: boolean }`. The rest of the v1 surface (`maxSelections`, `include`,
-`startPosition`, `matchAttributes`) is specified in `docs/02-architecture.md` and arrives with the
-milestones that need it.
-
-## Why it is its own thing
-
-A prompt builder needs very little: the element under the pointer, the instance that rendered it,
-its props and state, the file behind it. That is a *small* runtime, and it has to be small — it
-ships into every page that enables it and it wraps code the app runs on every render.
-
-So Sphere owns its own layer instead of borrowing a suite's: one package, one purpose, one option
-object, and the freedom to change the instrumentation and the UI together. The trade-off is
-explicit (`docs/10-risks.md`): it carries the Svelte-internals coupling itself and must keep up
-with Svelte releases.
+Options today: `{ enabled?: boolean; instrumentation?: boolean }`. The rest of the v1 surface
+(`maxSelections`, `include`, `startPosition`, `matchAttributes`) is specified in
+`docs/02-architecture.md` and arrives with the milestones that need it.
 
 ## What it is not
 
@@ -121,56 +110,9 @@ npm run e2e       # picking, clipboard, location, base path, a11y — needs Chro
 built package through a `file:` link, so the injection test runs against the artifact a user
 installs.
 
-## Releasing
-
-Versioning is [changesets](https://github.com/changesets/changesets): add a changeset with the
-change, and `CHANGELOG.md` plus the version follow. The prompt format is documented as **unstable
-until `1.0`**, so a minor release may change the clipboard document — `docs/05-prompt-format.md`
-and the golden test are what make that visible.
-
-Publishing runs from `master` (`.github/workflows/release.yml`) as `changeset publish` — which is
-what creates the git tag `sphere-plugin@<version>` and lets the action write the GitHub release from
-the changelog — with provenance on, authenticated by **trusted publishing** (OIDC, no long-lived
-token):
-
-1. On npmjs.com, configure a trusted publisher for `sphere-plugin`: provider GitHub Actions,
-   organization/user `rodgco`, repository `sphere`, workflow `release.yml`. A configuration for a
-   package that does not exist yet must complete its first publish **within two days** or it expires.
-2. `gh variable set NPM_PUBLISH --body true` — publishing is opt-in through a variable, so a clone
-   without this set stays green instead of failing on every push.
-3. `gh workflow run release.yml` (the job also runs on every push to `master`).
-
-No npm token is needed or stored: OIDC trusted publishing is the only authentication path. In the
-trusted publisher settings, authorise **npm publish** only: `npm dist-tag` is not used (a publish
-sets `latest` itself), and `npm stage publish` is for the staged workflow we do not use.
-
-### Troubleshooting the config
-
-A `vite.config.js` in a project without `"type": "module"` is bundled as CommonJS, and a CJS config
-cannot `require` an ESM-only package (`This package is ESM only but it was tried to load by
-require`). Name the file `vite.config.mjs` or add `"type": "module"` — every Svelte and SvelteKit
-template already does.
-
-## Read this first
-
-| Doc | What it answers |
-|---|---|
-| `docs/00-vision.md` | Who it is for, why it exists, how it differs from an inspector |
-| `docs/01-scope-mvp.md` | Exactly what v1 does, with acceptance criteria |
-| `docs/02-architecture.md` | Packages, data flow, dev-only boundaries |
-| `docs/03-instrumentation.md` | How component instances, props and state are observed |
-| `docs/04-element-inspection.md` | How a clicked node becomes a source location and a payload |
-| `docs/05-prompt-format.md` | The exact clipboard document |
-| `docs/06-toolbar-ux.md` | The floating control, picking, marks, panel, a11y |
-| `docs/07-delivery.md` | Virtual modules, SvelteKit injection, base path, config |
-| `docs/08-testing.md` | Unit / harness / browser / screenshot layers |
-| `docs/09-security-and-privacy.md` | What may leave the page, and what may not |
-| `docs/10-risks.md` | Internals coupling, version matrix, perf, maintenance |
-| `docs/11-roadmap.md` | Milestones and exit criteria |
-| `docs/learning/` | What was verified about Svelte, SvelteKit and Vite while building Sphere |
-| [`SECURITY.md`](SECURITY.md) | What the project promises and how to report a problem |
-| `docs/decisions/` | ADRs: the decisions already made, and why |
-| `docs/specs/` | Payload schema, location algorithm, a real clipboard example |
+The specs in `docs/` are normative; start with [`docs/README.md`](docs/README.md). Contribution
+conventions (docs first, conventional commits, tests with the behaviour) are in
+[`AGENTS.md`](AGENTS.md).
 
 ## Principles
 
