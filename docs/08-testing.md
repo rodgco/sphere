@@ -113,12 +113,15 @@ event never reached the app and that a passed-through one did.
 
 ## 7. Coverage and lint policy
 
-- Coverage thresholds are global and per critical module (`location`, `format`): ≥ 95 % branches,
-  ≥ 98 % lines. The overlay is excluded from coverage **only** if it is Svelte-only and covered by
-  e2e; the exclusion must carry that sentence as its justification.
+- Coverage is **not enforced in 0.1**: no coverage tool is installed and CI has no threshold.
+  The intended v1.1 bar remains ≥ 95 % branches / ≥ 98 % lines globally and per critical module
+  (`location`, `format`); the overlay may be excluded only when it is Svelte-only and covered by
+  e2e, with that sentence as the justification. Until then, the unit and harness suites are the
+  gate.
 - Lint/format/typecheck are blockers (`oxlint`, `oxfmt`, `tsc --noEmit`, `svelte-check` for the
   overlay; `npm run typecheck` runs both).
-- No test may assert wall-clock timings; performance lives in `perf/` and is reported, not gated.
+- No test may assert wall-clock timings. A `perf/` benchmark is planned, not present; performance
+  claims are budgets in the code, not a CI gate.
 
 ## 8. Flakiness rules
 

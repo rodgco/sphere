@@ -42,7 +42,7 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   | `Backspace` | remove the most recent pick |
   | `c` | copy the prompt (same as the button) |
   | `?` | show or hide the shortcut list |
-  | `Escape` | close the shortcut list, else the panel, else leave picking |
+  | `Escape` | close the shortcut list; otherwise close the panel and leave picking |
 
   The list is not folklore: `?` opens it inside the shadow root, and the panel header has a `?`
   button for the same dialog, so the keys are discoverable without reading the README.

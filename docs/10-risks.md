@@ -36,9 +36,10 @@ the matcher becomes a no-op.
 **What**: inspecting an element reads DOM metadata, walks the instance tree and clones values —
 all inside `pointerdown`.
 
-**Response**: hard budgets shared per inspection; no `textContent`/`outerHTML`; a benchmark that
-measures the *instrumentation* on/off and a benchmark that measures `inspectElement` on the
-largest fixture (`docs/08-testing.md` §7). A regression over the declared budget is a blocker.
+**Response**: hard budgets shared per inspection; no `textContent`/`outerHTML`. A `perf/`
+benchmark that measures instrumentation on/off and `inspectElement` on the largest fixture is the
+v1.1 gate (`docs/08-testing.md` §7); it does not exist in 0.1, so the budgets are the current
+protection, not a measured regression gate.
 
 ## 4. Scope creep into a devtools product
 

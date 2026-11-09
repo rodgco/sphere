@@ -28,7 +28,7 @@ export interface Inspected {
 }
 
 export interface PageInfo {
-  url: string        // full location.href; the formatter emits origin + pathname only
+  url: string        // origin + pathname; query, fragment and credentials are dropped
   path: string       // pathname
   title: string      // payload only: never emitted in the prompt
   viewport: string   // "1440×900"
@@ -39,7 +39,8 @@ export interface ElementInfo {
   tagName: string          // raw, matching (SVG camelCase)
   id: string
   classes: string[]        // authored only (no svelte-xxxx)
-  attrs: Record<string, string>   // ≤ 24 entries, values ≤ 120 chars; no class/style
+  attrs: Record<string, string>   // ≤ 24 entries, values ≤ 120 chars; no class/style,
+                                  // form value, or URL query/credentials
   markup: string           // skeleton, ≤ 600 chars, no text nodes
   size: string             // "144×40" (rounded CSS pixels)
   selector: string         // readable path, ≤ 6 levels

@@ -51,15 +51,15 @@ and makes the overlay maintainable. This mirrors how `vite-plugin-svelte` serves
 ```
 vite dev
   │
-  ├─ resolveId/load  virtual:sphere/runtime      → instrumentation + inspect, mounted on import
+  ├─ resolveId/load  virtual:sphere/runtime      → instrumentation module (seam / tests)
   ├─ resolveId/load  virtual:sphere/overlay      → overlay component (Svelte), compiled by host
   ├─ resolveId/load  virtual:sphere/config       → { root, base, version } for this server
-  └─ inject          <script type="module" src="/@id/__x00__virtual:sphere/runtime?...">
+  └─ inject          <script type="module" src="/@id/virtual:sphere/overlay">
                                     │
 browser page ───────────────────────┘
   runtime           wraps svelte/internal/client (only when enabled)
                     wires inspectElement/locateElement through the instrumentation accessors
-  overlay           imports runtime + config, mounts a shadow host, renders the Svelte UI
+  overlay           imports inspect + config, mounts a shadow host, renders the Svelte UI
   user              picks elements → panel → Copy prompt → clipboard
 ```
 
@@ -110,13 +110,13 @@ Options are validated once in `configResolved`; the browser receives `virtual:sp
 
 - `instrumentation.ts` knows about Svelte internals; `inspect.ts` knows about DOM and metadata;
   `format.ts` knows nothing about either.
-- The dependency runs one way: `instrumentation` installs the accessors and hands `inspect` the
-  instance/frame/readSignal functions
-  accessors it needs (`instanceOf`, `frameOf`). `inspect` never imports the registry, so the
-  module graph of the served sources stays acyclic.
-- The instrumentation is appended to the served client module **only when enabled**
-  (`docs/decisions/0002-opt-in-instrumentation.md`); `instrumentation` itself is imported by
-  `inspect.ts` through a single accessor (`getRuntime()`), so a disabled Sphere has no cost.
+- The dependency runs one way: `instrumentation` installs the accessors it owns (`instanceOf`,
+  `frameOf`, `readSignal`) into `inspect`. `inspect` never imports the registry, so the module
+  graph of the served sources stays acyclic.
+- The instrumentation is in the served client module **only when enabled and
+  `instrumentation` is on** (`docs/decisions/0002-opt-in-instrumentation.md`). With
+  `instrumentation: false` the client seam is not resolved at all: the overlay keeps element
+  identity, markup, DOM path and source location, and the prompt says the chain is unavailable.
 - The overlay never touches Svelte metadata directly: it asks `inspectElement(node)`.
 
 ## Compatibility target

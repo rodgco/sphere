@@ -106,7 +106,7 @@ One click is one inspection; the budget is shared by everything it reports:
 | Entries per object/array | 25 | enough to show shape |
 | String length inside a value | 320 | ids, labels, messages |
 | Chain depth | 32 | component trees are shallow |
-| State nodes per instance | 40 | ranking by name order, not importance |
+| State nodes per instance | 40 | creation order, not importance |
 
 The formatter then summarises — see `docs/04-element-inspection.md` §5 — so the prompt is far
 smaller than the payload budget.

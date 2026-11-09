@@ -37,7 +37,9 @@ quickstart, privacy summary), `SECURITY.md`, `CHANGELOG.md` and `THIRD_PARTY.md`
 6. [0006 — Single package](decisions/0006-single-package.md)
 7. [0007 — Overlay in Svelte](decisions/0007-overlay-in-svelte.md)
 8. [0008 — Package name](decisions/0008-package-name.md) *(superseded by 0009)*
-9. [0009 — SPHERE, the acronym, and `sphere-plugin`](decisions/0009-name-and-package.md)
+9. [0009 — SPHERE, the acronym, and `sphere-plugin`](decisions/0009-name-and-package.md) *(superseded in part by 0011)*
+10. [0010 — Prompt data policy](decisions/0010-prompt-data-policy.md)
+11. [0011 — No page-global API](decisions/0011-no-page-global-api.md)
 
 ## Learning (facts about the platform, with evidence)
 

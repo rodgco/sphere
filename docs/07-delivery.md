@@ -38,7 +38,7 @@ export default defineConfig({
 
 | Id | Contents | Consumer |
 |---|---|---|
-| `virtual:sphere/config` | `export default { root, base, options, version }` | runtime, overlay |
+| `virtual:sphere/config` | `export default { root, base, version }` | overlay |
 | `virtual:sphere/runtime` | the instrumentation module: wrappers, `inspectElement`/`locateElement`, wires the accessors | page |
 | `virtual:sphere/overlay` | the Svelte overlay entry: mounts the shadow host and renders `<Overlay />` | page |
 | `virtual:sphere/instrumentation` | resolved to `src/runtime/instrumentation.ts` (shipped source); the browser half of the client seam | generated client module |
@@ -73,12 +73,12 @@ through its own generated module). Two paths, in this order:
 The URL is Vite's id URL:
 
 ```
-/@id/virtual:sphere/runtime
+/@id/virtual:sphere/overlay
 ```
 
 **No `\0` in the id.** Vite encodes a `\0`-prefixed id as `__x00__`, but SvelteKit's dev
-middleware does not unwrap it: `/@id/__x00__virtual:sphere/runtime` answers Kit's own 404 page,
-while `/@id/virtual:sphere/runtime` is resolved like any other plugin id. Virtual ids that are
+middleware does not unwrap it: `/@id/__x00__virtual:sphere/overlay` answers Kit's own 404 page,
+while `/@id/virtual:sphere/overlay` is resolved like any other plugin id. Virtual ids that are
 *imported* (the client wrapper) keep the `\0`; ids that are *fetched as URLs* must be URL-safe.
 
 The base is added by whoever inserts the URL: a `transformIndexHtml` tag gets it from Vite's dev
@@ -89,11 +89,11 @@ SvelteKit-injected script: Vite does not rewrite the bare specifier there.
 
 ## 4. Configuration transport
 
-Root base and options travel in `virtual:sphere/config` — implemented: the plugin's `load` returns
+Root and base travel in `virtual:sphere/config` — implemented: the plugin's `load` returns
 `export default { root, base, version }`, and the overlay reads it once at import. Never in the
 injected URL and never in the app's HTML. Two reasons: the absolute project path would be visible in every page's markup,
 and a query string is a cache-busting hack we do not need (`Cache-Control` is Vite's business).
-The runtime reads the config module once at import.
+The overlay reads the config module once at import.
 
 ## 5. Reading source files
 
