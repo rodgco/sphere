@@ -39,9 +39,9 @@ export interface Inspected {
 }
 
 export interface PageInfo {
-  url: string        // absolute, e.g. http://localhost:3000/dashboard
-  path: string       // /dashboard
-  title: string
+  url: string        // full location.href; the formatter emits origin + pathname only
+  path: string       // pathname
+  title: string      // payload only: never emitted in the prompt
   viewport: string   // "1440×900"
 }
 
@@ -94,8 +94,12 @@ export interface StateNode {
 }
 ```
 
-A sensitive attribute (`token`, `secret`, `password`, `api-key`, `authorization`, and `value` on a
-password input) is dropped from `attrs` **and** from `markup` (`docs/09` §3).
+A sensitive attribute name (`token`, `secret`, `password`, `passwd`, `api-key`, `authorization`,
+`csrf`, `xsrf`, `session`, `cookie`, `access-key`, `private-key`) is dropped from `attrs` **and**
+from `markup`. The `value` attribute is dropped from every `input`, `textarea`, `select` and
+`option`; `href`/`src`/`action`/`formaction`/`poster` lose credentials, query and fragment. In
+props and state, sensitive and PII-shaped keys keep their name and report `"<redacted>"`. The
+rules are decided in `docs/decisions/0010-prompt-data-policy.md`.
 
 Three deliberate limits, because a payload that lies is worse than a payload that is small:
 

@@ -30,10 +30,14 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
 
 - The text the app renders (`textContent`): page copy can contain personal data, tokens in
   messages, or customer names — and it does not help locate the element.
-- Form **properties** (`input.value`, `textarea.value`, `select` state): attributes only. A
-  password typed into an input is a property, so it is never read; the `value` *attribute* is
-  additionally skipped for `input[type=password]`, and attribute names matching
-  `token|secret|password|api-key|authorization` are dropped entirely.
+- Form **properties** (`input.value`, `textarea.value`, `select` state): attributes only — and
+  the `value` *attribute* is dropped for every `input`, `textarea`, `select` and `option`, so a
+  prefilled email or hidden CSRF token is not copied. Attribute names and prop/state keys
+  matching `token|secret|password|passwd|api-key|authorization|csrf|xsrf|session|cookie|...`
+  are dropped or redacted, and PII-shaped keys are redacted
+  (`docs/decisions/0010-prompt-data-policy.md`).
+- URL query strings, fragments and credentials, on the page URL and on `href`/`src`/`action`/
+  `formaction`/`poster` attributes: stripped. The page title is not emitted.
 - Cookies, `localStorage`, `sessionStorage`, `indexedDB`, headers, network responses.
 - Computed styles and screenshots of the page (v1).
 
@@ -43,8 +47,8 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
   relativises them against the project root before the text reaches the clipboard.
 - The project root is never injected into the HTML, the URL or an attribute — it travels in a
   virtual module (`docs/07-delivery.md` §4).
-- Tests assert the clipboard output contains no match for `/home/`, `/Users/`, `[A-Z]:\\Users\\`
-  or the project root.
+- Unit and e2e tests assert the clipboard output contains no match for `/home/`, `/Users/`,
+  `[A-Z]:\\Users\\`, a URL query/fragment, or the project root.
 
 ## 5. Rendering safety (the overlay is a guest in someone's page)
 
@@ -61,10 +65,10 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
 - Selection text is bounded (budgets in `docs/03-instrumentation.md` §5), so a copied payload
   cannot be megabytes pasted into a remote model by accident.
 - Rendered text is excluded (§3), which also removes the most common source of sensitive content.
-- Attribute values are included (they are part of the markup); this is documented to the user in
-  the panel options ("props/state/source" toggles) and to the reader in `docs/05-prompt-format.md`.
-- v1.1 candidate: a `redact` option that drops attributes/props matching a configurable list —
-  see `docs/11-roadmap.md`.
+- Attribute values are included after the redaction rules above (they are part of the markup).
+  The source window and arbitrary string values are not content-scanned; the developer chose to
+  include them, and `docs/decisions/0010-prompt-data-policy.md` records that residual risk.
+- A configurable extra redact list remains a v1.1 candidate; the name-based floor ships now.
 
 ## 7. Threat model, briefly
 
@@ -77,5 +81,5 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
 
 ## 8. Reporting
 
-Security issues go to the repository's `SECURITY.md` (to be added at M1) with a private channel;
+Security issues go to the repository's `SECURITY.md` with a private channel;
 the plugin's dev-only nature does not make path disclosure or clipboard bugs non-issues.

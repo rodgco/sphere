@@ -72,8 +72,11 @@ Everything below is v1. "MUST" is a release blocker, "SHOULD" is expected, "MAY"
   then one block per selection), with a golden test.
 - **MUST** be written with `navigator.clipboard.writeText`, with a documented fallback for
   insecure contexts.
-- **MUST NOT** contain absolute machine paths, tokens, or the text the element renders.
-- **MUST** stay under a hard cap (60 000 characters) with an explicit truncation notice.
+- **MUST NOT** contain absolute machine paths, URL query strings or credentials, form values,
+  or the text the element renders. Sensitive attribute names and prop/state keys are dropped or
+  redacted; the source window and free-form values are still the developer's own text and may
+  contain secrets (`docs/decisions/0010-prompt-data-policy.md`).
+- **MUST** stay at or under a hard cap (60 000 characters) including the truncation notice.
 
 ## 7. Degradations (must not crash)
 
