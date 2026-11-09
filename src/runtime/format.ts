@@ -1,4 +1,13 @@
 import { relativeTo, type RelativePath } from '../shared/paths.js'
+import {
+  REDACTED,
+  isFormValueAttribute,
+  isRedactedKey,
+  isSensitiveName,
+  isUrlAttribute,
+  sanitizePageUrl,
+  sanitizeUrlValue,
+} from '../shared/redact.js'
 import type {
   ComponentInfo,
   ElementInfo,
@@ -108,12 +117,13 @@ function truncate(document: string): FormattedPrompt {
 
 function header(input: PromptInput): string {
   const { page } = input
-  const title = page.title === '' ? '' : ` (${page.title})`
 
   const lines = [
     '# UI context from the running app',
     '',
-    `Page: \`${page.url}\`${title}`,
+    // The title is deliberately absent: it routinely names a customer or account
+    // (`docs/decisions/0010-prompt-data-policy.md`).
+    `Page: \`${sanitizePageUrl(page.url)}\``,
     `Viewport: ${page.viewport}`,
   ]
 
@@ -217,10 +227,14 @@ function locationNote(source: SourceLocation | null, path: Path): string | null 
 }
 
 function attributesLine(element: ElementInfo): string | null {
-  const entries = Object.entries(element.attrs).slice(0, ATTRIBUTES_LIMIT)
+  const entries = Object.entries(element.attrs)
+    .filter(([name]) => !isSensitiveName(name) && !isFormValueAttribute(element.tag, name))
+    .slice(0, ATTRIBUTES_LIMIT)
   if (entries.length === 0) return null
 
-  return entries.map(([name, value]) => `${name}="${value}"`).join(' ')
+  return entries
+    .map(([name, value]) => `${name}="${isUrlAttribute(name) ? sanitizeUrlValue(value) : value}"`)
+    .join(' ')
 }
 
 function templateSection(frames: readonly TemplateFrame[], path: Path): string {
@@ -314,7 +328,7 @@ function role(index: number, definer: number): string {
 }
 
 function propsLine(json: string): string {
-  const value = parseJson(json)
+  const value = redactValue(parseJson(json))
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return ''
 
   const entries = Object.entries(value as Record<string, unknown>).filter(
@@ -340,7 +354,8 @@ function structureOf(value: unknown): string {
 
 function stateLine(node: StateNode): string {
   const kind = node.type === 'derived' ? '$derived' : '$state'
-  return `  - ${kind} ${node.name} = ${formatValue(node.value)}`
+  const value = isRedactedKey(node.name) ? JSON.stringify(REDACTED) : formatValue(node.value)
+  return `  - ${kind} ${node.name} = ${value}`
 }
 
 // ---------------------------------------------------------------------------------------
@@ -351,7 +366,20 @@ function stateLine(node: StateNode): string {
 const makePath = relativeTo
 
 export function formatValue(json: string): string {
-  return inline(parseJson(json))
+  return inline(redactValue(parseJson(json)))
+}
+
+/** Defence in depth: the runtime clones redact too, but a payload can arrive from anywhere. */
+function redactValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactValue)
+  if (typeof value === 'object' && value !== null) {
+    const out: Record<string, unknown> = {}
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      out[key] = isRedactedKey(key) ? REDACTED : redactValue(item)
+    }
+    return out
+  }
+  return value
 }
 
 function inline(value: unknown): string {

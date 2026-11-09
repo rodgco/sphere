@@ -1,4 +1,13 @@
 import { LIMITS, NOT_EVALUATED, cloneToJson, clip, createBudget } from './budgets.js'
+import {
+  REDACTED,
+  isFormValueAttribute,
+  isRedactedKey,
+  isSensitiveName,
+  isUrlAttribute,
+  sanitizePageUrl,
+  sanitizeUrlValue,
+} from '../shared/redact.js'
 import { VERSION } from '../shared/version.js'
 import type {
   ComponentInfo,
@@ -158,17 +167,12 @@ const VOID_ELEMENTS = new Set([
 const SVELTE_HASH = /^svelte-[a-z0-9]+$/i
 
 /**
- * Attribute names that never reach the payload, whatever their value
- * (`docs/09-security-and-privacy.md` §3). A token pasted into a data attribute is still a token.
+ * Attribute names and form-value attributes that never reach the payload
+ * (`docs/decisions/0010-prompt-data-policy.md`). A token pasted into a data attribute is still a
+ * token, and a prefilled input is a form value whether it is labelled `password` or not.
  */
-const SENSITIVE_ATTRIBUTE = /token|secret|password|api[-_]?key|authorization/i
-
-/** A password field's `value` attribute can carry the typed value after a submit. */
 function isSensitiveAttribute(element: Element, name: string): boolean {
-  if (SENSITIVE_ATTRIBUTE.test(name)) return true
-  return (
-    name === 'value' && element.localName === 'input' && element.getAttribute('type') === 'password'
-  )
+  return isSensitiveName(name) || isFormValueAttribute(element.localName, name)
 }
 
 function elementInfo(element: Element): ElementInfo {
@@ -198,7 +202,10 @@ function attributesOf(element: Element): Record<string, string> {
     // Already visible in `markup`, and the two big ones.
     if (attribute.name === 'class' || attribute.name === 'style') continue
     if (isSensitiveAttribute(element, attribute.name)) continue
-    attrs[attribute.name] = clip(attribute.value, LIMITS.attrLength)
+    const value = isUrlAttribute(attribute.name)
+      ? sanitizeUrlValue(attribute.value)
+      : attribute.value
+    attrs[attribute.name] = clip(value, LIMITS.attrLength)
     kept += 1
   }
 
@@ -232,7 +239,8 @@ function serializeAttributes(element: Element): string {
   for (const attribute of element.attributes) {
     if (attribute.name === 'style') continue
     if (isSensitiveAttribute(element, attribute.name)) continue
-    let value = clip(attribute.value, LIMITS.attrLength)
+    let value = isUrlAttribute(attribute.name) ? sanitizeUrlValue(attribute.value) : attribute.value
+    value = clip(value, LIMITS.attrLength)
     if (attribute.name === 'class') {
       const authored = value
         .split(/\s+/)
@@ -399,7 +407,7 @@ function stateOf(instance: InstanceLike, budget: ReturnType<typeof createBudget>
     nodes.push({
       name: entry.name,
       type: stateType(entry),
-      value: stateValue(entry, budget),
+      value: isRedactedKey(entry.name) ? JSON.stringify(REDACTED) : stateValue(entry, budget),
     })
   }
 
@@ -434,7 +442,9 @@ export function pageInfo(): PageInfo {
   }
 
   return {
-    url: window.location.href,
+    // The payload never carries the query string, fragment or credentials; the formatter can
+    // only show what it is given (`docs/decisions/0010-prompt-data-policy.md`).
+    url: sanitizePageUrl(window.location.href),
     path: window.location.pathname,
     title: typeof document === 'undefined' ? '' : document.title,
     viewport: `${window.innerWidth}×${window.innerHeight}`,

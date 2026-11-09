@@ -60,6 +60,20 @@ describe('cloneValue', () => {
     expect(cloneValue(deep)).toEqual({ a: { b: { c: { d: '…' } } } })
   })
 
+  it('keeps sensitive and PII key names but redacts their values', () => {
+    const cloned = cloneValue({
+      user: { id: 1, name: 'Rodrigo', email: 'r@example.test' },
+      apiToken: 'sk-live',
+      author: 'not PII',
+    })
+
+    expect(cloned).toEqual({
+      user: { id: 1, name: 'Rodrigo', email: '<redacted>' },
+      apiToken: '<redacted>',
+      author: 'not PII',
+    })
+  })
+
   it('marks cycles instead of looping', () => {
     const cycle: Record<string, unknown> = { name: 'cycle' }
     cycle.self = cycle

@@ -1,3 +1,5 @@
+import { REDACTED, isRedactedKey } from '../shared/redact.js'
+
 /**
  * The bounds every inspection shares (`docs/03-instrumentation.md` §Budgets).
  *
@@ -155,6 +157,14 @@ function cloneObject(
       ranOut = true
       break
     }
+
+    if (isRedactedKey(key)) {
+      spend(budget, key)
+      out[key] = spend(budget, REDACTED)
+      kept += 1
+      continue
+    }
+
     const item = cloneBounded(read(value, key), budget, depth + 1, seen)
     if (item === undefined) continue
     spend(budget, key)

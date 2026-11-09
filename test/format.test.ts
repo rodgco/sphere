@@ -58,6 +58,10 @@ describe('formatValue', () => {
     expect(formatValue('["a", "b"]')).toBe('["a", "b"]')
   })
 
+  it('redacts sensitive keys in values', () => {
+    expect(formatValue('{"email":"a@b.test","ok":1}')).toBe('{email: "<redacted>", ok: 1}')
+  })
+
   it('quotes keys that are not identifiers', () => {
     expect(formatValue('{"a-b":1,"ok":2}')).toBe('{"a-b": 1, ok: 2}')
   })
@@ -106,7 +110,7 @@ describe('formatPrompt', () => {
       [
         '# UI context from the running app',
         '',
-        'Page: `http://localhost:3000/dashboard` (Home · App)',
+        'Page: `http://localhost:3000/dashboard`',
         'Viewport: 1269×919',
         '',
         '## What I need',
@@ -117,14 +121,15 @@ describe('formatPrompt', () => {
     )
   })
 
-  it('omits an empty title and adds the collection line only when asked', () => {
+  it('never emits the document title, and adds the collection line only when asked', () => {
     const plain = formatPrompt({
-      page: { ...page, title: '' },
+      page,
       instructions: 'do it',
       options,
       selections: [],
     })
     expect(plain.text).toContain('Page: `http://localhost:3000/dashboard`\n')
+    expect(plain.text).not.toContain('Home · App')
     expect(plain.text).not.toContain('Collected with')
 
     const versioned = formatPrompt({
@@ -135,6 +140,22 @@ describe('formatPrompt', () => {
       version: '0.1.0',
     })
     expect(versioned.text).toContain('Collected with: sphere 0.1.0')
+  })
+
+  it('strips the query, fragment and credentials from the page URL', () => {
+    const { text } = formatPrompt({
+      page: {
+        ...page,
+        url: 'https://user:pass@example.test/dashboard?token=abc#section',
+      },
+      instructions: 'do it',
+      options,
+      selections: [],
+    })
+
+    expect(text).toContain('Page: `https://example.test/dashboard`\n')
+    expect(text).not.toContain('token=abc')
+    expect(text).not.toContain('user:pass')
   })
 
   it('formats one selection with identity, location, path, markup and chain', () => {
@@ -442,6 +463,8 @@ describe('formatPrompt', () => {
 
     // The line fits the 400-char budget, so values stay inline (clipped inside a string).
     expect(text).toContain('  - props: user={id: 1, name: "Rodrigo"')
+    expect(text).toContain('email: "<redacted>"')
+    expect(text).not.toContain('r@rodg.co')
     expect(text).toContain('active="overview"')
     expect(text).not.toContain('$$slots')
     expect(text).toContain('  - renders: 3')

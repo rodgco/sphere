@@ -1,6 +1,6 @@
 # UI context from the running app
 
-Page: `http://localhost:3000/dashboard` (Home · App)
+Page: `http://localhost:3000/dashboard`
 Viewport: 1269×919
 
 ## What I need
@@ -36,7 +36,7 @@ Component chain (innermost first):
 2. AppSidebar — `src/lib/components/AppSidebar.svelte`
   - rendered by `src/routes/dashboard/+page.svelte:44:2`
   - renders: 1
-  - props: user={id: 1, name: "Rodrigo", email: "r@rodg.co", role: "owner", createdAt: "2026-01-01"}, active="overview"
+  - props: user={id: 1, name: "Rodrigo", email: "<redacted>", role: "owner", createdAt: "2026-01-01"}, active="overview"
   - $derived initial = "R"
   - $state menuOpen = false
 3. +page — `src/routes/dashboard/+page.svelte`
