@@ -57,6 +57,7 @@
     "e2e:a11y": "node e2e/a11y.mjs",
     "e2e:picking": "node e2e/picking.mjs",
     "golden": "node scripts/golden.mjs",
+    "video": "node scripts/video/sphere.mjs",
     "docs:example": "node scripts/clipboard-example.mjs",
     "check:generated": "npm run golden && npm run docs:example && git diff --exit-code test/golden/prompt.md docs/specs/clipboard-example.md",
     "e2e:clipboard": "node e2e/clipboard.mjs",
