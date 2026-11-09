@@ -158,6 +158,47 @@ describe('formatPrompt', () => {
     expect(text).not.toContain('user:pass')
   })
 
+  it('uses a fence longer than any backtick run in the markup', () => {
+    const { text } = formatPrompt({
+      page,
+      instructions: '',
+      options,
+      selections: [
+        {
+          inspected: inspected({
+            element: element({ markup: '<div data-x="a\n````\nb"></div>' }),
+          }),
+        },
+      ],
+    })
+
+    expect(text).toMatch(/\n`````html\n/)
+    expect(text).toContain('\n`````\n')
+    expect(text).not.toMatch(/\n````html\n/)
+  })
+
+  it('keeps page-derived one-line fields on one line', () => {
+    const { text } = formatPrompt({
+      page,
+      instructions: '',
+      options,
+      selections: [
+        {
+          inspected: inspected({
+            element: element({
+              id: 'a`b',
+              attrs: { title: 'a\n```\nb' },
+              markup: '<div></div>',
+            }),
+          }),
+        },
+      ],
+    })
+
+    expect(text).toContain('### Selected element div#a&#96;b.connection-pill')
+    expect(text).toContain('- attributes: title="a &#96;&#96;&#96; b"')
+  })
+
   it('formats one selection with identity, location, path, markup and chain', () => {
     const { text } = formatPrompt({
       page,

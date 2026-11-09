@@ -123,7 +123,7 @@ function header(input: PromptInput): string {
     '',
     // The title is deliberately absent: it routinely names a customer or account
     // (`docs/decisions/0010-prompt-data-policy.md`).
-    `Page: \`${sanitizePageUrl(page.url)}\``,
+    `Page: ${inlineCode(sanitizePageUrl(page.url))}`,
     `Viewport: ${page.viewport}`,
   ]
 
@@ -154,7 +154,8 @@ export function formatSelection(
 
   const blocks: string[] = [heading(element), bullets(element, inspected.source, path).join('\n')]
 
-  blocks.push(['```html', element.markup, '```'].join('\n'))
+  const fence = fenceFor(element.markup)
+  blocks.push([`${fence}html`, element.markup, fence].join('\n'))
 
   if (options.template) {
     const template = templateSection(inspected.template, path)
@@ -173,7 +174,7 @@ export function formatSelection(
 }
 
 function selectionError(inspected: Inspected): string {
-  const reason = inspected.error ?? 'the element could not be inspected'
+  const reason = oneLine(inspected.error ?? 'the element could not be inspected')
   return `### Selected element <unknown>\n\nCould not inspect this element: ${reason}`
 }
 
@@ -182,7 +183,7 @@ function heading(element: ElementInfo): string {
     .map((name) => `.${name}`)
     .join('')}`
 
-  return `### Selected element ${identity}`
+  return `### Selected element ${oneLine(identity)}`
 }
 
 function bullets(element: ElementInfo, source: SourceLocation | null, path: Path): string[] {
@@ -194,7 +195,7 @@ function bullets(element: ElementInfo, source: SourceLocation | null, path: Path
   const note = locationNote(source, path)
   if (note !== null) lines.push(`- location note: ${note}`)
 
-  lines.push(`- DOM path: \`${element.domPath}\``)
+  lines.push(`- DOM path: ${inlineCode(element.domPath)}`)
   lines.push(`- size: ${element.size}`)
 
   const attributes = attributesLine(element)
@@ -210,7 +211,7 @@ function markupLine(source: SourceLocation | null, path: Path): string | null {
   const place = `${path(source.file)}:${source.line}`
   const withColumn =
     source.enclosing === true || source.column === null ? place : `${place}:${source.column}`
-  return `\`${withColumn}\``
+  return inlineCode(withColumn)
 }
 
 function locationNote(source: SourceLocation | null, path: Path): string | null {
@@ -218,12 +219,12 @@ function locationNote(source: SourceLocation | null, path: Path): string | null 
 
   if (typeof source.matched === 'string' && source.matched !== '') {
     const recorded = source.recorded ?? { file: source.file, line: null }
-    return `line matched by \`${source.matched}\`; Svelte recorded the enclosing element at \`${path(recorded.file)}:${recorded.line ?? ''}\``
+    return `line matched by ${inlineCode(oneLine(source.matched))}; Svelte recorded the enclosing element at ${inlineCode(`${path(recorded.file)}:${recorded.line ?? ''}`)}`
   }
 
   if (source.enclosing !== true) return null
 
-  return `\`${path(source.file)}:${source.line}\` is the enclosing element Svelte recorded; the element's own line was not found`
+  return `${inlineCode(`${path(source.file)}:${source.line}`)} is the enclosing element Svelte recorded; the element's own line was not found`
 }
 
 function attributesLine(element: ElementInfo): string | null {
@@ -233,7 +234,10 @@ function attributesLine(element: ElementInfo): string | null {
   if (entries.length === 0) return null
 
   return entries
-    .map(([name, value]) => `${name}="${isUrlAttribute(name) ? sanitizeUrlValue(value) : value}"`)
+    .map(([name, value]) => {
+      const shown = oneLine(isUrlAttribute(name) ? sanitizeUrlValue(value) : value)
+      return `${oneLine(name)}="${shown.replaceAll('"', '&quot;')}"`
+    })
     .join(' ')
 }
 
@@ -248,7 +252,7 @@ function templateSection(frames: readonly TemplateFrame[], path: Path): string {
     const where = [path(frame.file), frame.line, frame.column]
       .filter((part) => part !== null)
       .join(':')
-    return `- ${frameLabel(frame)} at \`${where}\``
+    return `- ${frameLabel(frame)} at ${inlineCode(where)}`
   })
 
   return ['Template context (innermost first):', ...lines].join('\n')
@@ -292,14 +296,14 @@ function chainSection(
 
   const entries = visible.map((component, index) => {
     const lines = [
-      `${index + 1}. ${component.name} — \`${path(component.file)}\`${role(index, definer)}`,
+      `${index + 1}. ${oneLine(component.name)} — ${inlineCode(path(component.file) ?? component.file)}${role(index, definer)}`,
     ]
 
     if (component.usage !== null && component.usage.file !== null) {
       const where = [path(component.usage.file), component.usage.line, component.usage.column]
         .filter((part) => part !== null)
         .join(':')
-      lines.push(`  - rendered by \`${where}\``)
+      lines.push(`  - rendered by ${inlineCode(where)}`)
     }
 
     if (component.renders > 0) lines.push(`  - renders: ${component.renders}`)
@@ -355,7 +359,7 @@ function structureOf(value: unknown): string {
 function stateLine(node: StateNode): string {
   const kind = node.type === 'derived' ? '$derived' : '$state'
   const value = isRedactedKey(node.name) ? JSON.stringify(REDACTED) : formatValue(node.value)
-  return `  - ${kind} ${node.name} = ${value}`
+  return `  - ${kind} ${oneLine(node.name)} = ${value}`
 }
 
 // ---------------------------------------------------------------------------------------
@@ -478,7 +482,40 @@ function sourceWindow(
   })
 
   const file = location.file ?? source.path
-  return [`Source of \`${path(file)}\`:`, `\`\`\`${languageOf(file)}`, ...body, '```'].join('\n')
+  const fence = fenceFor(body.join('\n'))
+  return [
+    `Source of ${inlineCode(path(file) ?? file)}:`,
+    `${fence}${languageOf(file)}`,
+    ...body,
+    fence,
+  ].join('\n')
+}
+
+function oneLine(value: string): string {
+  const clean = [...value]
+    .map((character) => {
+      const code = character.codePointAt(0) ?? 0
+      return code < 32 || code === 127 ? ' ' : character
+    })
+    .join('')
+
+  return clean.replaceAll('`', '&#96;').trim()
+}
+
+/** Inline code with a fence longer than any backtick run in the content. */
+function inlineCode(value: string): string {
+  const fence = '`'.repeat(Math.max(1, ...backtickRuns(value).map((run) => run.length + 1)))
+  const pad = value.startsWith('`') || value.endsWith('`') ? ' ' : ''
+  return `${fence}${pad}${value}${pad}${fence}`
+}
+
+/** A fenced block delimiter longer than every backtick run in the payload. */
+function fenceFor(value: string): string {
+  return '`'.repeat(Math.max(3, ...backtickRuns(value).map((run) => run.length + 1)))
+}
+
+function backtickRuns(value: string): string[] {
+  return value.match(/`+/g) ?? []
 }
 
 function languageOf(path: string): string {
