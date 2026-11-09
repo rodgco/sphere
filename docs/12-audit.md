@@ -379,10 +379,6 @@ The original table mixed real drift with spec-vs-spec conflicts. The corrected s
 - **CI is still not pinned.** `actions/checkout@v4`, `actions/setup-node@v4`,
   `changesets/action@v1` and `npm install --global npm@latest` remain mutable. This is open; pin
   to commit SHAs when the release process is next touched.
-- **`release.yml` still passes `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`.** The workflow
-  comment says it is a fallback and OIDC (`id-token: write`) is the primary path, so “either the
-  secret exists or the workflow is broken” was too strong. Removing the fallback or documenting
-  why it remains is still a cleanup.
 - **Browser-only claims are unverified in the default path.** `npm run e2e` needs Chromium and is
   not part of `npm test`. That is a deliberate split, but CI is the only place the browser layer
   is exercised.
@@ -436,7 +432,7 @@ Done, in commit order:
 14. `4888809` — quote prop/structure keys so a key cannot start a markdown line.
 15. `0a74b59` — cover the drag `pointercancel` cleanup.
 
-Still open, deliberately: CI action pinning, the NPM_TOKEN fallback, a real Windows CI job, a
+Still open, deliberately: CI action pinning, a real Windows CI job, a
 `perf/` benchmark, coverage thresholds, the capture-order limitation in §5.12, and two Svelte
 clients on one page (§8).
 

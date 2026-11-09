@@ -140,10 +140,9 @@ token):
    without this set stays green instead of failing on every push.
 3. `gh workflow run release.yml` (the job also runs on every push to `master`).
 
-`NPM_TOKEN` is only a fallback for the first release if trusted publishing is still being set up;
-with OIDC in place no token is needed and none should be stored. In the trusted publisher settings,
-authorise **npm publish** only: `npm dist-tag` is not used (a publish sets `latest` itself), and
-`npm stage publish` is for the staged workflow we do not use.
+No npm token is needed or stored: OIDC trusted publishing is the only authentication path. In the
+trusted publisher settings, authorise **npm publish** only: `npm dist-tag` is not used (a publish
+sets `latest` itself), and `npm stage publish` is for the staged workflow we do not use.
 
 ### Troubleshooting the config
 
