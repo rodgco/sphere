@@ -1,6 +1,6 @@
 {
   "name": "sphere-plugin",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Dev-only Vite plugin that turns a picked Svelte element into a precise markdown prompt for a coding agent.",
   "keywords": [
     "devtools",
