@@ -8,6 +8,7 @@ import {
   sanitizePageUrl,
   sanitizeUrlValue,
 } from '../shared/redact.js'
+import { baseName } from '../shared/paths.js'
 import { VERSION } from '../shared/version.js'
 import type {
   ComponentInfo,
@@ -393,8 +394,7 @@ function componentOf(
 }
 
 function componentName(instance: InstanceLike): string {
-  const file = instance.file ?? ''
-  const base = file.slice(file.lastIndexOf('/') + 1).replace(/\.svelte$/, '')
+  const base = baseName(instance.file ?? '').replace(/\.svelte$/, '')
   if (base !== '') return base
   return instance.name === '' ? '<anonymous>' : instance.name
 }

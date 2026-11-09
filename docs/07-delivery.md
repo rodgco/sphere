@@ -105,12 +105,14 @@ The browser reads a file with:
 
 - `?raw` returns `export default "<json string>"`; strip the wrapper and `JSON.parse` the literal.
 - The absolute path is built from `config.root` + the Svelte-reported path when the latter is
-  relative (Svelte reports both kinds).
+  relative (Svelte reports both kinds). Windows drive paths (`C:/…`) are already absolute; the
+  `/@fs` URL gains the leading slash the drive form lacks.
 - **The base prefix is mandatory** (`base: '/app/'` → a bare `/@fs/…` is a 404).
 - Vite's `server.fs.allow` must include the project root (default) — the same root Sphere uses, so
   no extra configuration is expected. A denied read degrades silently: no source window.
-- Reads are cached per file per page load (one fetch per file, not per selection)
-  (`src/runtime/source.ts`), and a failed read is remembered as “no source”, not retried per pick.
+- Reads are cached per file (one fetch per file, not per selection) and a failed read is
+  remembered as “no source”, not retried per pick (`src/runtime/source.ts`). Vite's
+  `vite:afterUpdate` HMR event clears the cache, so an edit is reflected on the next pick.
 
 ## 6. Production
 

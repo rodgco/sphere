@@ -7,6 +7,8 @@
  * "no source window", never to an error (`docs/07-delivery.md` §5).
  */
 
+import { isAbsolutePath, normalizePath } from '../shared/paths.js'
+
 export interface SourceConfig {
   /** Absolute project root, used to resolve Svelte's root-relative file names. */
   root: string
@@ -17,9 +19,14 @@ export interface SourceConfig {
 /** `<base>@fs<absolute path>?raw`, with a single slash between the pieces. */
 export function sourceUrl(file: string, config: Pick<SourceConfig, 'root' | 'base'>): string {
   const base = config.base.endsWith('/') ? config.base : `${config.base}/`
-  const absolute = file.startsWith('/') ? file : `${config.root.replace(/\/$/, '')}/${file}`
+  const normalized = normalizePath(file)
+  const absolute = isAbsolutePath(normalized)
+    ? normalized
+    : `${normalizePath(config.root).replace(/\/+$/, '')}/${normalized}`
+  // Vite's `/@fs` path must start with a slash; a Windows drive (`C:/…`) does not.
+  const urlPath = absolute.startsWith('/') ? absolute : `/${absolute}`
 
-  return `${base}@fs${absolute}?raw`
+  return `${base}@fs${urlPath}?raw`
 }
 
 /** `export default "<text>";` → `<text>`; anything else is returned unchanged. */
@@ -41,6 +48,13 @@ export type SourceLoader = (file: string) => Promise<string | null>
 export function createSourceLoader(config: SourceConfig): SourceLoader {
   const cache = new Map<string, Promise<string | null>>()
   const fetcher = config.fetcher ?? ((url: string) => fetch(url))
+
+  // A dev page hot-reloads constantly; a file cached for the page lifetime would silently
+  // quote the pre-edit source on the next pick (`docs/07-delivery.md` §5).
+  const hot = (
+    import.meta as ImportMeta & { hot?: { on(event: string, callback: () => void): void } }
+  ).hot
+  hot?.on('vite:afterUpdate', () => cache.clear())
 
   return (file) => {
     const cached = cache.get(file)

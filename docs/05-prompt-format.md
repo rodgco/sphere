@@ -127,7 +127,8 @@ lines are not optional: without them the prompt is guesswork.
 
 - No JSON/YAML variants in v1 (a tool could parse the payload later via the MCP surface).
 - No screenshots, no base64, no images.
-- No absolute paths, no `node_modules` frames, no environment values.
+- No absolute paths, no `node_modules` frames, no environment values. A file outside the
+  project root (a symlink or a linked package) prints as `external/<basename>`.
 - Fields outside a fenced block are reduced to one line; a newline in a page-derived value
   cannot start a new markdown block or a later fence.
 

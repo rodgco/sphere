@@ -324,6 +324,43 @@ describe('formatPrompt', () => {
     expect(text).not.toContain('/home/me/app')
   })
 
+  it('names and relativises Windows paths without leaking the machine path', () => {
+    const { text } = formatPrompt({
+      page,
+      instructions: '',
+      options,
+      root: 'C:\\Users\\me\\app',
+      selections: [
+        {
+          inspected: inspected({
+            source: {
+              file: 'C:\\Users\\me\\app\\src\\Chip.svelte',
+              line: 4,
+              column: 2,
+              enclosing: false,
+            },
+            components: [
+              {
+                id: 1,
+                name: 'Chip',
+                file: 'C:\\Users\\me\\app\\src\\Chip.svelte',
+                usage: null,
+                props: '{}',
+                state: [],
+                renders: 0,
+              },
+            ],
+          }),
+        },
+      ],
+    })
+
+    expect(text).toContain('1. Chip — `src/Chip.svelte`')
+    expect(text).toContain('- markup: `src/Chip.svelte:4:2`')
+    expect(text).not.toContain('Users')
+    expect(text).not.toContain('C:')
+  })
+
   it('omits the markup line when nothing reliable was recorded', () => {
     const { text } = formatPrompt({
       page,

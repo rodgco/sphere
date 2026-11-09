@@ -217,6 +217,15 @@ describe('source loader', () => {
     )
   })
 
+  it('keeps Windows drive paths absolute and leading-slash free', () => {
+    expect(sourceUrl('C:\\app\\src\\App.svelte', { root: 'C:\\app', base: '/' })).toBe(
+      '/@fs/C:/app/src/App.svelte?raw',
+    )
+    expect(sourceUrl('src\\App.svelte', { root: 'C:\\app', base: '/' })).toBe(
+      '/@fs/C:/app/src/App.svelte?raw',
+    )
+  })
+
   it('unwraps the raw module the dev server returns', () => {
     expect(readRawModule('export default "hello\\nworld";')).toBe('hello\nworld')
     expect(readRawModule('export default "a \\"quoted\\" line";')).toBe('a "quoted" line')

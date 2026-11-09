@@ -1,4 +1,4 @@
-import { isAbsolute, relative, sep } from 'node:path'
+import { isAbsolute, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /**
@@ -54,7 +54,8 @@ export function isAppModule(importer: string | undefined, root: string): boolean
 
   const id = importer.split('?')[0] ?? ''
   if (!isAbsolute(id)) return false
-  if (id.split(sep).includes('node_modules')) return false
+  // Vite ids are usually `/`-separated even on Windows, so `path.sep` alone is not enough.
+  if (id.split(/[\\/]/).includes('node_modules')) return false
 
   const rel = relative(root, id)
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel)
