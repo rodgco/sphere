@@ -9,7 +9,6 @@ import {
   sanitizeUrlValue,
 } from '../shared/redact.js'
 import { baseName } from '../shared/paths.js'
-import { VERSION } from '../shared/version.js'
 import type {
   ComponentInfo,
   ElementInfo,
@@ -17,7 +16,6 @@ import type {
   Located,
   PageInfo,
   SourceLocation,
-  SphereApi,
   StateNode,
   TemplateFrame,
 } from '../shared/payload.js'
@@ -83,22 +81,12 @@ interface DevFrame {
 let access: InspectorAccess = { instanceOf: () => null, frameOf: () => null }
 
 /**
- * Installs `window.__SPHERE__` once. Called from the instrumentation module, so the API exists
- * exactly when Sphere is in the graph; with no stamps (Svelte too new) it still answers with
- * element identity.
+ * Wires the instrumentation accessors. Deliberately not a page global: a same-page script or
+ * extension must need a user gesture before it can read props or state
+ * (`docs/decisions/0011-no-page-global-api.md`).
  */
-export function installSphereApi(inspector: InspectorAccess): SphereApi {
+export function installInspector(inspector: InspectorAccess): void {
   access = inspector
-
-  const api: SphereApi = {
-    version: VERSION,
-    inspectElement,
-    locateElement,
-  }
-
-  if (typeof window !== 'undefined' && !window.__SPHERE__) window.__SPHERE__ = api
-
-  return api
 }
 
 export function inspectElement(node: Node | null): Inspected {

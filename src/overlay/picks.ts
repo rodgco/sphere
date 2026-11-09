@@ -4,6 +4,7 @@
  * without a browser.
  */
 
+import { locateElement } from '../runtime/inspect.js'
 import { relativeTo } from '../shared/paths.js'
 
 export const PICK_CAP = 10
@@ -57,8 +58,7 @@ export function pickLabel(element: Element): string {
  * project-relative: a machine path must not reach the panel either.
  */
 export function pickWhere(element: Element, root = ''): string {
-  const api = typeof window === 'undefined' ? undefined : window.__SPHERE__
-  const source = api?.locateElement(element).source
+  const source = locateElement(element).source
   if (!source?.line) return ''
 
   const file = relativeTo(root)(source.file) ?? ''

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 // The module installs the inspection API; nothing else is needed for element identity.
 import '../../src/runtime/instrumentation.js'
+import { inspectElement } from '../../src/runtime/inspect.js'
 import Sensitive from '../../fixtures/harness/Sensitive.svelte'
 import { render } from './lib.js'
 
-const inspect = (node: Node) => window.__SPHERE__!.inspectElement(node)
+const inspect = (node: Node) => inspectElement(node)
 
 function element(html: string): Element {
   const holder = document.createElement('div')

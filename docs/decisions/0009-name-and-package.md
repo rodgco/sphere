@@ -1,5 +1,8 @@
 # 0009 — SPHERE is an acronym; the package is `sphere-plugin`
 
+> **Superseded in part by [0011](0011-no-page-global-api.md)** on the page-global API. The name,
+> package and plugin factory below are unchanged.
+
 ## Context
 
 `docs/decisions/0008-package-name.md` chose `svelte-sphere` on availability grounds and treated

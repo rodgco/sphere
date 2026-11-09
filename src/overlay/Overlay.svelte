@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { formatPrompt, type PromptSelection } from '../runtime/format.js'
-  import { pageInfo } from '../runtime/inspect.js'
+  import { inspectElement, pageInfo } from '../runtime/inspect.js'
   import { resolveElementSource } from '../runtime/location.js'
   import { relativeTo } from '../shared/paths.js'
   import { createSourceLoader } from '../runtime/source.js'
@@ -382,10 +382,7 @@
    * the prompt's source window, not the honesty of the line).
    */
   async function refreshPickLocation(entry: PickEntry) {
-    const api = typeof window === 'undefined' ? undefined : window.__SPHERE__
-    if (api === undefined) return
-
-    const inspected = api.inspectElement(entry.element)
+    const inspected = inspectElement(entry.element)
     const file = inspected.source?.file ?? inspected.components[0]?.file ?? null
     const text = file === null ? null : await loadSource(file)
     const source = resolveElementSource({
@@ -406,25 +403,10 @@
   }
 
   async function copyPrompt() {
-    const api = typeof window === 'undefined' ? undefined : window.__SPHERE__
     const fallbackPage = pageInfo()
 
     const selections: PromptSelection[] = await Promise.all(
-      picks.map(async (pick) => {
-        if (api === undefined) {
-          return {
-            inspected: {
-              page: fallbackPage,
-              element: null,
-              source: null,
-              template: [],
-              components: [],
-            } satisfies Inspected,
-          }
-        }
-
-        return resolveSelection(api.inspectElement(pick.element))
-      }),
+      picks.map(async (pick) => resolveSelection(inspectElement(pick.element))),
     )
 
     const prompt = formatPrompt({
@@ -433,7 +415,7 @@
       options,
       selections,
       root: sphereConfig.root,
-      ...(api === undefined ? {} : { version: api.version }),
+      version: sphereConfig.version,
     })
 
     if (!(await writeClipboard(prompt.text))) {

@@ -1,5 +1,5 @@
 /**
- * The `__SPHERE__` contract — the only types both sides share.
+ * The inspection contract — the only types both sides share.
  *
  * `docs/specs/payload-schema.md` is the normative description; this file is the same thing in
  * TypeScript so the runtime and (from M2) the overlay cannot drift. Values that cross the
@@ -107,16 +107,4 @@ export interface ChainSummary {
   file: string | null
   /** How many instances are above it, the instance itself included. */
   depth: number
-}
-
-export interface SphereApi {
-  version: string
-  inspectElement(node: Node | null): Inspected
-  locateElement(node: Node | null): Located
-}
-
-declare global {
-  interface Window {
-    __SPHERE__?: SphereApi
-  }
 }

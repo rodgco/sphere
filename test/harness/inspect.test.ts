@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { VERSION } from '../../src/shared/version.js'
+import { inspectElement, locateElement } from '../../src/runtime/inspect.js'
 import BigState from '../../fixtures/harness/BigState.svelte'
 import Child from '../../fixtures/harness/Child.svelte'
 import Each from '../../fixtures/harness/Each.svelte'
@@ -9,16 +9,16 @@ import Single from '../../fixtures/harness/Single.svelte'
 import Styled from '../../fixtures/harness/Styled.svelte'
 import { render } from './lib.js'
 
-const inspect = (node: Node | null) => window.__SPHERE__!.inspectElement(node)
-const locate = (node: Node | null) => window.__SPHERE__!.locateElement(node)
+const inspect = (node: Node | null) => inspectElement(node)
+const locate = (node: Node | null) => locateElement(node)
 
 const jsonOf = (text: string | null) => (text === null ? null : JSON.parse(text))
 
-describe('window.__SPHERE__', () => {
-  it('is installed with the version and both entry points', () => {
-    expect(window.__SPHERE__?.version).toBe(VERSION)
-    expect(typeof window.__SPHERE__?.inspectElement).toBe('function')
-    expect(typeof window.__SPHERE__?.locateElement).toBe('function')
+describe('inspection API', () => {
+  it('exposes both entry points without a page global', () => {
+    expect(typeof inspectElement).toBe('function')
+    expect(typeof locateElement).toBe('function')
+    expect('__SPHERE__' in window).toBe(false)
   })
 })
 

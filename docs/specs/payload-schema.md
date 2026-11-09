@@ -1,26 +1,15 @@
 # Spec — payload schema
 
-The runtime's public surface (consumed by the overlay, and testable from the page):
+The runtime's inspection surface (imported by the overlay, and testable from the page):
 
 ```ts
-window.__SPHERE__: {
-  version: string
-  inspectElement(node: Node | null): Inspected
-  locateElement(node: Node | null): Located
-}
-
-export interface Located {
-  source: SourceLocation | null
-  component: ChainSummary | null
-}
-
-/** What the hover tooltip needs: the innermost instance and how deep the chain is. */
-export interface ChainSummary {
-  name: string          // instance name (file basename)
-  file: string | null
-  depth: number         // instances counted, the innermost included
-}
+// src/runtime/inspect.ts
+inspectElement(node: Node | null): Inspected
+locateElement(node: Node | null): Located
 ```
+
+There is no page global (`docs/decisions/0011-no-page-global-api.md`): a script must be the overlay
+itself, or already have module access, to call these.
 
 `inspectElement` never throws; failures come back as `{ error }`. Types below are the contract —
 they live in `src/shared/payload.ts` and are imported by both sides.

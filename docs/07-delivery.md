@@ -39,7 +39,7 @@ export default defineConfig({
 | Id | Contents | Consumer |
 |---|---|---|
 | `virtual:sphere/config` | `export default { root, base, options, version }` | runtime, overlay |
-| `virtual:sphere/runtime` | the instrumentation module: wrappers, `inspectElement`/`locateElement`, installs `window.__SPHERE__` | page |
+| `virtual:sphere/runtime` | the instrumentation module: wrappers, `inspectElement`/`locateElement`, wires the accessors | page |
 | `virtual:sphere/overlay` | the Svelte overlay entry: mounts the shadow host and renders `<Overlay />` | page |
 | `virtual:sphere/instrumentation` | resolved to `src/runtime/instrumentation.ts` (shipped source); the browser half of the client seam | generated client module |
 | `virtual:sphere/svelte-client` | generated wrapper for `svelte/internal/client`; reached through the bare specifier from app modules only, and only generated when enabled | compiled components |
@@ -51,8 +51,8 @@ export default defineConfig({
   typechecking and coverage for free.
 - The overlay is written in Svelte and compiled by the **host's** `svelte` version; `svelte` is a
   peer dependency. No bundling step in this repository.
-- A single mount guard (`if (window.__SPHERE__) return`) keeps HMR from double-mounting the
-  overlay or re-installing the runtime.
+- A single mount guard (`document.getElementById(HOST_ID)`) keeps HMR from double-mounting the
+  overlay; the instrumentation memoises its wrappers per upstream namespace.
 
 ## 3. Getting the tag into the page
 

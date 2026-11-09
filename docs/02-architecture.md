@@ -17,7 +17,7 @@ sphere/
     runtime/                browser side, served as shipped source
       instrumentation.ts    wraps svelte/internal/client, instance registry, element stamps
       inspect.ts            element → payload (the only place that reads __svelte_meta);
-                            installs window.__SPHERE__
+                            installs the instrumentation accessors
       location.ts           the conservative matcher: verified / matched / enclosing
       source.ts             `/@fs` reads, cached per page, silent on failure
       budgets.ts            shared bounds + bounded, always-valid JSON clone
@@ -36,7 +36,7 @@ sphere/
       storage.ts            the two `localStorage` keys, validated
       styles.ts             the overlay stylesheet (shadow-root scoped)
     shared/                 shared by both sides
-      payload.ts            the __SPHERE__ contract, in types
+      payload.ts            the inspection contract, in types
       paths.ts              project-relative paths, for the panel and the prompt
       version.ts            reported by the API and by `virtual:sphere/config`
 ```
@@ -58,7 +58,7 @@ vite dev
                                     │
 browser page ───────────────────────┘
   runtime           wraps svelte/internal/client (only when enabled)
-                    installs window.__SPHERE__ = { inspectElement, locateElement, version }
+                    wires inspectElement/locateElement through the instrumentation accessors
   overlay           imports runtime + config, mounts a shadow host, renders the Svelte UI
   user              picks elements → panel → Copy prompt → clipboard
 ```
@@ -73,7 +73,7 @@ instrumentation.
 |---|---|
 | Production build | The plugin is `apply: 'serve'`. Nothing may reference it from `src/`. |
 | SSR | The instrumentation is client-only (`applyToEnvironment`). The Kit plugin transforms one SSR module (the generated app template) and instruments nothing. |
-| App code | Sphere never imports from the app, and never patches globals other than `__SPHERE__`. |
+| App code | Sphere never imports from the app and never patches a page global. |
 | Host config | Sphere reads only `config.root`, `config.base` and its own option. |
 | Filesystem | Reads via Vite's `/@fs` from the browser; no server-side file reading at all. |
 | Network | None. The clipboard is the only exit. |

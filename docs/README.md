@@ -18,10 +18,11 @@ quickstart, privacy summary), `SECURITY.md`, `CHANGELOG.md` and `THIRD_PARTY.md`
 | 09 | [Security & privacy](09-security-and-privacy.md) | what may leave the page |
 | 10 | [Risks](10-risks.md) | coupling, perf, pivots |
 | 11 | [Roadmap](11-roadmap.md) | M0–M5, v2 candidates |
+| 12 | [Audit](12-audit.md) | security, correctness, and contract review (2026-11-08) |
 
 ## Specs
 
-- [Payload schema](specs/payload-schema.md) — the `__SPHERE__` contract and its invariants.
+- [Payload schema](specs/payload-schema.md) — the inspection contract and its invariants.
 - [Location resolution](specs/location-resolution.md) — verified / matched / enclosing, with the test matrix.
 - [Event matrix](specs/event-matrix.md) — what picking swallows, exactly.
 - [Clipboard example](specs/clipboard-example.md) — three real payloads in the v1 format (golden shape).

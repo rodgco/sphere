@@ -25,8 +25,8 @@ is `docs/decisions/0009-name-and-package.md`.
 ## M1 — Instrumentation and inspection (no UI)
 
 **Status:** done — the seam and its `enabled: false` proof, the wrappers (instance registry,
-element stamps, block-callback ownership, `tag`/`tag_proxy`), `window.__SPHERE__` with
-`inspectElement`/`locateElement` and the budgets, the runtime harness, and delivery into a real
+element stamps, block-callback ownership, `tag`/`tag_proxy`), `inspectElement`/`locateElement`
+and the budgets, the runtime harness, and delivery into a real
 SvelteKit 3 dev server (`fixtures/kit`). Kit 2's transform shape is unit-tested; a real Kit 2 app
 runs in the M5 matrix.
 
@@ -34,7 +34,7 @@ runs in the M5 matrix.
 
 - Wrapper module generated with/without the element stamps; upstream module byte-identical when
   off (test).
-- `window.__SPHERE__.inspectElement` / `locateElement` implemented with the payload schema and
+- `inspectElement` / `locateElement` implemented with the payload schema and
   budgets; valid-JSON invariant tested.
 - Runtime harness: real Svelte fixtures for single root, multi-root with a child in between,
   `{#if}`, `{#each}`, snippets, props, derived state, big state.
