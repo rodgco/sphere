@@ -1,5 +1,11 @@
 # sphere-plugin
 
+## 0.2.1
+
+### Patch Changes
+
+- Refresh the published README for the trimmed install/use/contribute guide, and update the CI action runtimes to Node 24.
+
 ## 0.2.0
 
 ### Minor Changes
