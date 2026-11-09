@@ -84,6 +84,8 @@ instrumentation.
 export interface SphereOptions {
   /** Master switch. Default: true when the plugin is in the array at all. */
   enabled?: boolean
+  /** Keep the overlay and element location but do not wrap `svelte/internal/client`. */
+  instrumentation?: boolean
   /** Maximum simultaneous selections. Default: 10. */
   maxSelections?: number
   /** Which parts are collected by default; the user can toggle them in the panel. */
@@ -95,7 +97,8 @@ export interface SphereOptions {
 }
 ```
 
-Only `enabled` is implemented today. `maxSelections`, `include`, `startPosition` and
+Only `enabled` and `instrumentation` are implemented today. `maxSelections`, `include`,
+`startPosition` and
 `matchAttributes` are the specified v1 surface and are **not** accepted yet: passing one fails the
 option validation loudly (`sphere: unknown option "…"`), which is the honest state while the
 defaults are still hard-coded (`PICK_CAP`, the four panel toggles).
@@ -107,7 +110,8 @@ Options are validated once in `configResolved`; the browser receives `virtual:sp
 
 - `instrumentation.ts` knows about Svelte internals; `inspect.ts` knows about DOM and metadata;
   `format.ts` knows nothing about either.
-- The dependency runs one way: `instrumentation` installs the API and hands `inspect` the two
+- The dependency runs one way: `instrumentation` installs the accessors and hands `inspect` the
+  instance/frame/readSignal functions
   accessors it needs (`instanceOf`, `frameOf`). `inspect` never imports the registry, so the
   module graph of the served sources stays acyclic.
 - The instrumentation is appended to the served client module **only when enabled**

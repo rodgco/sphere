@@ -93,7 +93,9 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
 
       if (id === CONFIG_ID || id === `\0${CONFIG_ID}`) return `\0${CONFIG_ID}`
 
-      if (id !== CLIENT_SPECIFIER || !isAppModule(importer, root)) return null
+      if (id !== CLIENT_SPECIFIER || !resolved.instrumentation || !isAppModule(importer, root)) {
+        return null
+      }
 
       // Ask the rest of the pipeline where this Svelte's client entry actually is;
       // `skipSelf` keeps the answer from being this hook again.

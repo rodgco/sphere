@@ -30,6 +30,17 @@ describe('the svelte/internal/client seam', () => {
     expect(wrapper).toContain('installInstrumentation')
   })
 
+  it('leaves the upstream module alone when instrumentation is off', async () => {
+    const { server } = await boot({
+      configFile: false,
+      plugins: [sphere({ instrumentation: false }), svelte()],
+    })
+
+    const app = await transform(server, '/src/App.svelte')
+    expect(app).toMatch(svelteModule)
+    expect(app).not.toContain('svelte-client')
+  })
+
   it('leaves the upstream module alone when disabled', async () => {
     const { server, origin } = await boot({
       configFile: false,
