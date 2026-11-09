@@ -184,6 +184,43 @@ describe('resolveElementSource', () => {
     })
   })
 
+  it('verifies a tag that wraps across lines', () => {
+    const multiline = file('<a', '  class="button button-quiet"', '  href="/files">open</a>')
+
+    const resolution = resolveElementSource({
+      recorded: recorded(1),
+      chainFile: null,
+      element: element(),
+      fileText: multiline,
+    })
+
+    expect(resolution).toMatchObject({ line: 1, column: 4, enclosing: false, matched: null })
+  })
+
+  it('does not treat markup inside a script block as a source match', () => {
+    const scripted = file(
+      '<script>',
+      '  const html = `<a class="button button-quiet" href="/files">`',
+      '</script>',
+      '<a class="button button-quiet" href="/files">real</a>',
+    )
+
+    expect(matchSourceLine(scripted.split('\n'), element(), 1)).toEqual({
+      line: 4,
+      basis: 'class="button button-quiet"',
+    })
+  })
+
+  it('matches an exact attribute, not a substring of another attribute', () => {
+    const lines = file('<div data-id="target"></div>', '<div id="target"></div>')
+    const target = element({ tag: 'div', classes: [], id: 'target', attrs: {} })
+
+    expect(matchSourceLine(lines.split('\n'), target, 1)).toEqual({
+      line: 2,
+      basis: 'id="target"',
+    })
+  })
+
   it('says nothing when there is neither a recorded location nor a chain file', () => {
     expect(
       resolveElementSource({ recorded: null, chainFile: null, element: element(), fileText: PAGE }),
@@ -199,10 +236,25 @@ describe('opensElement', () => {
     expect(opensElement('<a class="button button-quiet-more">', element())).toBe(false)
   })
 
-  it('accepts a classless element by its tag alone', () => {
-    expect(opensElement('<button type="submit">', element({ tag: 'button', classes: [] }))).toBe(
-      true,
-    )
+  it('requires an identifying attribute for a classless element', () => {
+    expect(
+      opensElement(
+        '<button type="submit">',
+        element({ tag: 'button', classes: [], attrs: { type: 'submit' } }),
+      ),
+    ).toBe(true)
+    expect(
+      opensElement('<button type="submit">', element({ tag: 'button', classes: [], attrs: {} })),
+    ).toBe(false)
+  })
+
+  it('does not confuse data-id with id', () => {
+    expect(
+      opensElement(
+        '<div data-id="target">',
+        element({ tag: 'div', classes: [], id: 'target', attrs: {} }),
+      ),
+    ).toBe(false)
   })
 })
 

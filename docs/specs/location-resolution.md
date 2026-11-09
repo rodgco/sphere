@@ -59,11 +59,13 @@ Candidates are tried in this order; the first with hits wins:
 
 A hit requires the line to *open the element's tag* (`<tag` followed by space, `>`, `/` or end
 of tag name), compared case-insensitively so SVG's `foreignObject` matches, and without
-building a `RegExp` from page-derived text. Among several hits, the line closest to the
+building a `RegExp` from page-derived text. The attribute match is exact: `data-id="x"` is not
+`id="x"`, and `class="button primary"` is not `class="button"`. The tag may wrap across lines;
+the block is joined up to the first unquoted `>`. Among several hits, the line closest to the
 compiler's hint wins (elements repeat; proximity is the best available disambiguator).
 
-`lineOpensElement` (the verification used before matching) requires the tag **and** at least one
-authored class on that line (or just the tag, when the element has no classes).
+`lineOpensElement` (the verification used before matching) requires the tag **and** an exact
+authored class list, or — when the element has no classes — an exact identifying attribute.
 
 ## What the reader sees
 
@@ -98,5 +100,9 @@ stops being needed (it is only consulted when verification fails).
 | Tag prefix (`<a` vs `<aside>`) | no false match |
 | CamelCase SVG tag in source | matches case-insensitively |
 | Element absent from the file | enclosing |
+| Classless element, same tag, no identifying attribute | enclosing |
+| `data-id="x"` on the line, element id `x` | no match (exact attribute boundary) |
+| Tag and class split across lines | verified on the opening line |
+| Same markup inside `<script>` | not a candidate; the real line matches |
 | No file text | recorded line, `enclosing` flag preserved, no note |
 | `__svelte_meta` missing entirely | chain file + matched line, `~` |

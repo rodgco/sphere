@@ -50,7 +50,8 @@ walks the *existing* DOM, so a child component's markup can shift the mapping
 (`docs/learning/svelte-internals.md` §3). Therefore:
 
 - The compiler's line is used **as-is only if it verifies**: the line opens the element's tag
-  and contains its authored class list (or, for classless elements, its identifying attribute).
+  and contains its exact authored class list (or, for classless elements, an exact identifying
+  attribute). Tags may wrap across lines; `<script>`/`<style>` content is not a candidate.
   `inspectElement` itself cannot verify anything — it is synchronous and reads no files — so every
   recorded line leaves it marked `enclosing`. The overlay resolves it against the file
   (`src/runtime/location.ts` via `src/runtime/source.ts`) before the chip or the prompt use it; the

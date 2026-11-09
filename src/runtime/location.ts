@@ -75,13 +75,13 @@ export function resolveElementSource(input: ResolutionInput): Resolution | null 
 
   const lines = input.fileText.split(/\r?\n/)
   const hint = result.line
+  const ignored = ignoredLines(lines)
+  const hintBlock =
+    hint !== null && hint >= 1 && hint <= lines.length && ignored[hint - 1] !== true
+      ? tagBlockAt(lines, hint - 1)
+      : null
 
-  if (
-    hint !== null &&
-    hint >= 1 &&
-    hint <= lines.length &&
-    opensElement(lines[hint - 1] ?? '', input.element)
-  ) {
+  if (hintBlock !== null && opensElementBlock(hintBlock, input.element)) {
     result.enclosing = false
     return result
   }
@@ -104,13 +104,20 @@ export function resolveElementSource(input: ResolutionInput): Resolution | null 
   return result
 }
 
-/** Whether `line` opens this element's tag and carries its authored class list. */
+/** Whether `line` opens this element's tag and carries its identity. */
 export function opensElement(line: string, element: LocatedElement): boolean {
-  const trimmed = line.trimStart()
-  if (!opensTag(trimmed, element.tag)) return false
-  if (element.classes.length === 0) return true
+  return opensElementBlock(line, element)
+}
 
-  return trimmed.includes(`class="${element.classes.join(' ')}"`)
+/**
+ * The same check on a tag that may span lines. A classless element needs an identifying
+ * attribute — a bare same-tag line is not enough to call the compiler's line verified.
+ */
+export function opensElementBlock(block: string, element: LocatedElement): boolean {
+  if (!opensTag(block.trimStart(), element.tag)) return false
+  if (element.classes.length > 0) return hasAttribute(block, 'class', element.classes.join(' '))
+
+  return identifiersFor(element).some((needle) => hasNeedle(block, needle))
 }
 
 /**
@@ -143,13 +150,18 @@ export function matchSourceLine(
   element: LocatedElement,
   hint: number | null,
 ): LineMatch | null {
+  const ignored = ignoredLines(lines)
+
   for (const needle of identifiersFor(element)) {
     const hits: number[] = []
 
     for (const [index, line] of lines.entries()) {
+      if (ignored[index] === true) continue
       const trimmed = line.trimStart()
       if (!opensTag(trimmed, element.tag)) continue
-      if (!line.includes(needle)) continue
+
+      const block = tagBlockAt(lines, index)
+      if (block === null || !hasNeedle(block, needle)) continue
       hits.push(index + 1)
     }
 
@@ -167,6 +179,98 @@ export function matchSourceLine(
   }
 
   return null
+}
+
+/** A tag can wrap across lines; join until the first unquoted `>`, bounded. */
+function tagBlockAt(lines: readonly string[], index: number): string | null {
+  const first = lines[index] ?? ''
+  if (!/^\s*<[A-Za-z]/.test(first)) return null
+
+  let block = ''
+  let quote: string | null = null
+
+  for (let cursor = index; cursor < lines.length && cursor < index + 12; cursor += 1) {
+    const line = lines[cursor] ?? ''
+    block += cursor === index ? line : `\n${line}`
+
+    for (const character of line) {
+      if (quote !== null) {
+        if (character === quote) quote = null
+        continue
+      }
+      if (character === '"' || character === "'") {
+        quote = character
+        continue
+      }
+      if (character === '>') return block
+    }
+  }
+
+  return block
+}
+
+/** Lines inside `<script>`/`<style>` look like markup to a line scanner; they are not. */
+function ignoredLines(lines: readonly string[]): boolean[] {
+  const ignored: boolean[] = []
+  let raw: 'script' | 'style' | null = null
+
+  for (const [index, line] of lines.entries()) {
+    if (raw !== null) {
+      ignored[index] = true
+      if (line.toLowerCase().includes(`</${raw}`)) raw = null
+      continue
+    }
+
+    const open = /<\s*(script|style)\b/i.exec(line)
+    if (open === null) continue
+
+    ignored[index] = true
+    const name = open[1]?.toLowerCase() === 'style' ? 'style' : 'script'
+    if (!line.toLowerCase().includes(`</${name}`)) raw = name
+  }
+
+  return ignored
+}
+
+/** An exact `name="value"` (or single-quoted) attribute, with a real name boundary. */
+function hasNeedle(block: string, needle: string): boolean {
+  const equals = needle.indexOf('="')
+  if (equals === -1) return false
+
+  const name = needle.slice(0, equals)
+  const value = needle.slice(equals + 2, -1)
+  return hasAttribute(block, name, value)
+}
+
+function hasAttribute(block: string, name: string, value: string): boolean {
+  const lower = block.toLowerCase()
+  const wanted = name.toLowerCase()
+  let from = 0
+
+  while (from < lower.length) {
+    const index = lower.indexOf(wanted, from)
+    if (index === -1) return false
+    from = index + wanted.length
+
+    if (index > 0 && !/[\s<]/.test(block[index - 1] ?? '')) continue
+
+    let cursor = from
+    while (/\s/.test(block[cursor] ?? '')) cursor += 1
+    if (block[cursor] !== '=') continue
+
+    cursor += 1
+    while (/\s/.test(block[cursor] ?? '')) cursor += 1
+
+    const quote = block[cursor]
+    if (quote !== '"' && quote !== "'") continue
+
+    const start = cursor + 1
+    const end = block.indexOf(quote, start)
+    if (end === -1) continue
+    if (block.slice(start, end) === value) return true
+  }
+
+  return false
 }
 
 /** `<tag` followed by a space, `>`, `/` or the end of the tag name; case-insensitive for SVG. */
