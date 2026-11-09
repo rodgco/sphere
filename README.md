@@ -10,7 +10,7 @@ and a numbered source window — plus the instructions you typed.
 
 Nothing leaves the browser: the payload goes to your clipboard.
 
-> **Status: 0.1.0, not yet published.** Everything the docs describe exists and is tested:
+> **Status: 0.2.0.** Everything the docs describe exists and is tested:
 > instrumentation, `inspectElement`, the shadow-root overlay with picking, marks and the panel, the
 > prompt with verified source locations and the numbered source window, the browser tests, and the
 > release pipeline. The specs in `docs/` are normative — when behaviour and a spec disagree, one of

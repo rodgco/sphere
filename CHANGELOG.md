@@ -1,5 +1,11 @@
 # sphere-plugin
 
+## 0.2.0
+
+### Minor Changes
+
+- Security and correctness pass from the audit: redact form values, URL credentials/query strings and sensitive/PII props and state, stop emitting the page title, escape prompt fences and one-line fields, make the 60 000-character cap hard, keep the generated client seam callable when instrumentation degrades, remove the `/tmp` debug write and the page-global inspection API, handle POSIX/Windows paths and source URLs, invalidate the source cache on HMR, require identity before verifying a location, and clean up overlay storage, drag and copy handling. Adds `sphere({ instrumentation: false })` and removes `window.__SPHERE__`.
+
 ## 0.1.0
 
 ### Minor Changes
