@@ -17,7 +17,8 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
 - **Dev only.** `apply: 'serve'`, client-only environment, and a CI grep of the production build.
   Neither the overlay nor the runtime may exist in a build artefact.
 - **No network.** The runtime, overlay and formatter perform no `fetch` except Vite's `/@fs` for
-  source files, which is same-origin and dev-server-only. No telemetry, no CDN, no remote fonts.
+  source files, which is same-origin and dev-server-only. No telemetry, no CDN, no remote fonts;
+  theme values reject `url()` and `@import` (`docs/13-theming.md` §4).
 - **No server-side file reading.** Sphere has no HTTP endpoint of its own; it does not read files
   with `fs`. Everything the prompt contains was read by the browser from `/@fs` (allow-listed by
   Vite) or came from the page.
@@ -59,6 +60,15 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
   `<style>` while picking, removed when picking stops).
 - Event handlers are added/removed with the picking mode; no listener survives it.
 - The overlay never calls `eval`, `new Function`, or injects a `<script>`.
+- The theme bridge is a value channel, not a style channel
+  (`docs/decisions/0012-design-system-tokens.md`): only the `--sphere-theme-*` names in
+  `docs/13-theming.md` §2 are accepted, each value is a bounded string without control
+  characters, `;`, `{}`, `<>`, `\`, `url(`, `@import` or `expression(`, and it is applied with
+  `CSSStyleDeclaration.setProperty` on the host — never concatenated into a `<style>` element.
+  `url()` is rejected so an option value cannot add a network load; a `var()` reference resolves
+  against the page's own stylesheet, which is already same-origin and the page's own
+  responsibility. The CSSOM confines whatever the value resolves to (including a `var()` chain) to
+  the shadow root.
 
 ## 6. Prompt-content hygiene
 
@@ -77,7 +87,7 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
 | Another device on the LAN opens the app page during dev | Sphere is off unless enabled in the config; when enabled, the overlay is inert until clicked; nothing is served that reveals more than the page itself already does |
 | A malicious page in another origin reads the clipboard | Browser permission model; Sphere only writes on a user gesture |
 | The prompt is pasted into a third-party model with secrets | Text/markup exclusions, budget caps, and documented rules (§3, §6) |
-| Supply chain | One package, dev-only install, no runtime dependencies if avoidable, lockfile committed |
+| Supply chain | One package, dev-only install, no runtime dependencies if avoidable, lockfile committed; a compromised `theme` option can only restyle the overlay, cannot load remote CSS, and cannot reach the page |
 
 ## 8. Reporting
 

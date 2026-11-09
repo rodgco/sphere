@@ -103,9 +103,15 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 
 ## 6. Theme
 
-- Dark and light palettes follow `prefers-color-scheme`, using CSS variables on the host. The
-  page's own theme does not affect the overlay.
-- Marks and hover outlines keep their colours in both themes (green = picked, blue = hover).
+- Dark and light palettes follow `prefers-color-scheme` by default; `sphere({ theme: { mode } })`
+  can force `light` or `dark` (`docs/13-theming.md` §5).
+- The palette is a small, stable token vocabulary read from `--sphere-theme-*` custom properties,
+  with built-in fallbacks. A project can map its design system's variables without importing its
+  CSS; `sphere({ theme: { tokens } })` does the same from `vite.config.ts`
+  (`docs/13-theming.md`, ADR 0012).
+- Precedence is built-in defaults < page CSS inherited into the host < the plugin option.
+- Marks and hover outlines default to green = picked and blue = hover in both modes; both are
+  tokens (`picked`, `hover`) and are expected to stay recognisable in a mapped theme.
 
 ## 7. Isolation
 
@@ -114,6 +120,11 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 - Styles are scoped; the host sets `:host { all: initial }` and then declares everything it
   needs, including `pointer-events: auto` on interactive children (it is inherited, and the
   host's `none` must not leak into the panel).
+- The only values that cross the shadow boundary from the page are the `--sphere-theme-*` custom
+  properties listed in `docs/13-theming.md` §2. They are values, not rules: no page stylesheet,
+  font, reset or class reaches the overlay, and a variable the vocabulary does not name is
+  ignored. `--sphere-theme-*` is set on the host's inline style by the plugin option, so it also
+  beats page CSS.
 - The overlay must not use the app's CSS, fonts or classes, and must not add classes to the
   app's DOM (marks are drawn by the overlay, not by styling the element). The one exception is the
   crosshair cursor while picking: a single `<style>` element is appended to the page with
@@ -142,7 +153,10 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 | Control height | 36 px, radius 999 px, padding 0 12 px |
 | Control font | 13 px, 600 for the label |
 | Panel width / max-height | 420 px / `min(70vh, 620px)` |
-| Panel radius / border | 14 px / 1 px |
+| Panel radius / border | `--sphere-theme-radius` (14 px) / 1 px |
+| Control radius | 999 px (pill; not a theme token) |
+| Button/close radius | `--sphere-theme-radius-sm` (8 px) |
+| Instruction box radius | `--sphere-theme-radius-input` (10 px) |
 | Chip font | 12 px, mono for tag/location |
 | Mark border / badge | 2 px solid #22c55e / 18 px pill, 11 px bold |
 | Hover outline | 2 px solid #3b82f6, 14 % fill |
@@ -156,4 +170,4 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 | `sphere:options` | `{ state, props, source, template }` |
 
 Nothing else is stored. Picks, instructions and the prompt are session-only by design: closing
-the tab clears them.
+the tab clears them. The theme is configuration (`docs/13-theming.md`), not a stored UI preference.

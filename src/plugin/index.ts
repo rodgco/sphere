@@ -22,6 +22,13 @@ import {
 import { VERSION } from '../shared/version.js'
 
 export type { ResolvedOptions, SphereOptions } from './options.js'
+export type {
+  ResolvedTheme,
+  ThemeMode,
+  ThemeOptions,
+  ThemeToken,
+  ThemeTokens,
+} from '../shared/theme.js'
 
 /**
  * The dev-only plugin.
@@ -110,7 +117,7 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
       if (id === `\0${CONFIG_ID}`) {
         // Never in the page's HTML and never in a URL: the absolute project path stays here
         // (docs/07 §4), and the overlay reads it once at import.
-        return `export default ${JSON.stringify({ root, base, version: VERSION })}\n`
+        return `export default ${JSON.stringify({ root, base, version: VERSION, theme: resolved.theme })}\n`
       }
 
       if (id !== WRAPPER_ID || upstreamId === null) return null

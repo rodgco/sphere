@@ -4,18 +4,28 @@ import { resolveOptions } from '../src/plugin/options.js'
 
 describe('resolveOptions', () => {
   it('enables the plugin when no option is given', () => {
-    expect(resolveOptions(undefined)).toEqual({ enabled: true, instrumentation: true })
-    expect(resolveOptions({})).toEqual({ enabled: true, instrumentation: true })
+    expect(resolveOptions(undefined)).toEqual({
+      enabled: true,
+      instrumentation: true,
+      theme: { mode: 'auto', tokens: {} },
+    })
+    expect(resolveOptions({})).toEqual({
+      enabled: true,
+      instrumentation: true,
+      theme: { mode: 'auto', tokens: {} },
+    })
   })
 
   it('honours an explicit switch', () => {
     expect(resolveOptions({ enabled: false })).toEqual({
       enabled: false,
       instrumentation: true,
+      theme: { mode: 'auto', tokens: {} },
     })
     expect(resolveOptions({ instrumentation: false })).toEqual({
       enabled: true,
       instrumentation: false,
+      theme: { mode: 'auto', tokens: {} },
     })
   })
 

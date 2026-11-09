@@ -34,6 +34,7 @@ export default function setup(): void {
       root: resolve(generatedDir, '../../..'),
       base: '/',
       version: VERSION,
+      theme: { mode: 'auto', tokens: {} },
     })}\n`,
   )
 }

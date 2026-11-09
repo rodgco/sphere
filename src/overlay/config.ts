@@ -1,4 +1,5 @@
 import config from 'virtual:sphere/config'
+import type { ResolvedTheme } from '../shared/theme.js'
 
 /**
  * The project's root and base, as the dev server sees them (`docs/07-delivery.md` §4).
@@ -6,11 +7,13 @@ import config from 'virtual:sphere/config'
  * They travel in a module rather than the page's HTML, because the absolute project path would
  * otherwise be readable in every page's markup. The overlay needs them for two things: reading
  * source files (`/@fs`, which needs the base) and printing paths relative to the project.
+ * `theme` is the design-system bridge (`docs/13-theming.md` §4).
  */
 export interface SphereConfig {
   root: string
   base: string
   version: string
+  theme: ResolvedTheme
 }
 
 export const sphereConfig: SphereConfig = config

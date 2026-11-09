@@ -15,32 +15,68 @@ export const OVERLAY_CSS = `
   z-index: 2147483000;
   pointer-events: none;
   contain: layout style;
-  font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: light dark;
+  font-family: var(--sphere-font);
+  font-size: 13px;
+  line-height: 1.45;
 
-  --sphere-bg: #ffffff;
-  --sphere-fg: #111827;
-  --sphere-muted: #6b7280;
-  --sphere-border: #e5e7eb;
-  --sphere-raised: #f9fafb;
-  --sphere-accent: #2563eb;
-  --sphere-picked: #22c55e;
-  --sphere-hover: #3b82f6;
-  --sphere-danger: #dc2626;
-  --sphere-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+  /* Public token -> private token. A page declaration of --sphere-theme-* reaches the host by
+     inheritance; the plugin's values are written to the host's inline style and win. The built-in
+     value is only a fallback (docs/13-theming.md §3). */
+  --sphere-font: var(--sphere-theme-font, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --sphere-mono: var(--sphere-theme-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  --sphere-radius: var(--sphere-theme-radius, 14px);
+  --sphere-radius-sm: var(--sphere-theme-radius-sm, 8px);
+  --sphere-radius-input: var(--sphere-theme-radius-input, 10px);
+  --sphere-on-accent: var(--sphere-theme-on-accent, #ffffff);
+  --sphere-on-picked: var(--sphere-theme-on-picked, #052e16);
+  --sphere-picked: var(--sphere-theme-picked, #22c55e);
+  --sphere-hover: var(--sphere-theme-hover, #3b82f6);
+  --sphere-bg: var(--sphere-theme-bg, #ffffff);
+  --sphere-fg: var(--sphere-theme-fg, #111827);
+  --sphere-muted: var(--sphere-theme-muted, #6b7280);
+  --sphere-border: var(--sphere-theme-border, #e5e7eb);
+  --sphere-raised: var(--sphere-theme-raised, #f9fafb);
+  --sphere-accent: var(--sphere-theme-accent, #2563eb);
+  --sphere-danger: var(--sphere-theme-danger, #dc2626);
+  --sphere-shadow: var(--sphere-theme-shadow, 0 12px 32px rgba(15, 23, 42, 0.18));
 }
 
+/* Only the mode-sensitive tokens are redeclared: the rest are mode-independent.
+   theme.mode puts data-sphere-mode on the host; its attribute selector outranks this query. */
 @media (prefers-color-scheme: dark) {
   :host {
-    --sphere-bg: #111827;
-    --sphere-fg: #f9fafb;
-    --sphere-muted: #9ca3af;
-    --sphere-border: #374151;
-    --sphere-raised: #1f2937;
-    --sphere-accent: #60a5fa;
-    --sphere-danger: #f87171;
-    --sphere-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    --sphere-bg: var(--sphere-theme-bg, #111827);
+    --sphere-fg: var(--sphere-theme-fg, #f9fafb);
+    --sphere-muted: var(--sphere-theme-muted, #9ca3af);
+    --sphere-border: var(--sphere-theme-border, #374151);
+    --sphere-raised: var(--sphere-theme-raised, #1f2937);
+    --sphere-accent: var(--sphere-theme-accent, #60a5fa);
+    --sphere-danger: var(--sphere-theme-danger, #f87171);
+    --sphere-shadow: var(--sphere-theme-shadow, 0 12px 32px rgba(0, 0, 0, 0.55));
   }
+}
+
+:host([data-sphere-mode='light']) {
+  --sphere-bg: var(--sphere-theme-bg, #ffffff);
+  --sphere-fg: var(--sphere-theme-fg, #111827);
+  --sphere-muted: var(--sphere-theme-muted, #6b7280);
+  --sphere-border: var(--sphere-theme-border, #e5e7eb);
+  --sphere-raised: var(--sphere-theme-raised, #f9fafb);
+  --sphere-accent: var(--sphere-theme-accent, #2563eb);
+  --sphere-danger: var(--sphere-theme-danger, #dc2626);
+  --sphere-shadow: var(--sphere-theme-shadow, 0 12px 32px rgba(15, 23, 42, 0.18));
+}
+
+:host([data-sphere-mode='dark']) {
+  --sphere-bg: var(--sphere-theme-bg, #111827);
+  --sphere-fg: var(--sphere-theme-fg, #f9fafb);
+  --sphere-muted: var(--sphere-theme-muted, #9ca3af);
+  --sphere-border: var(--sphere-theme-border, #374151);
+  --sphere-raised: var(--sphere-theme-raised, #1f2937);
+  --sphere-accent: var(--sphere-theme-accent, #60a5fa);
+  --sphere-danger: var(--sphere-theme-danger, #f87171);
+  --sphere-shadow: var(--sphere-theme-shadow, 0 12px 32px rgba(0, 0, 0, 0.55));
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -132,7 +168,7 @@ button {
   max-height: min(70vh, 620px);
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
+  border-radius: var(--sphere-radius);
   border: 1px solid var(--sphere-border);
   background: var(--sphere-bg);
   color: var(--sphere-fg);
@@ -150,7 +186,7 @@ button {
 }
 .panel-header h2 { margin: 0; font-size: 13px; font-weight: 600; }
 .panel-header .hint { margin: 0; color: var(--sphere-muted); font-size: 12px; }
-.panel-close { margin-left: auto; padding: 2px 6px; border-radius: 8px; color: var(--sphere-muted); }
+.panel-close { margin-left: auto; padding: 2px 6px; border-radius: var(--sphere-radius-sm); color: var(--sphere-muted); }
 .panel-close:hover { background: var(--sphere-raised); color: var(--sphere-fg); }
 
 .panel-body { padding: 10px 14px; overflow-y: auto; }
@@ -159,7 +195,7 @@ button {
   width: 100%;
   min-height: 58px;
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: var(--sphere-radius-input);
   border: 1px solid var(--sphere-border);
   background: var(--sphere-raised);
   color: var(--sphere-fg);
@@ -178,16 +214,16 @@ button {
 .panel-footer .primary {
   height: 30px;
   padding: 0 12px;
-  border-radius: 8px;
+  border-radius: var(--sphere-radius-sm);
   background: var(--sphere-accent);
-  color: #ffffff;
+  color: var(--sphere-on-accent);
   font-weight: 600;
 }
 .panel-footer .primary:disabled { opacity: 0.55; cursor: not-allowed; }
 .panel-footer button:not(.primary) {
   height: 30px;
   padding: 0 10px;
-  border-radius: 8px;
+  border-radius: var(--sphere-radius-sm);
   border: 1px solid var(--sphere-border);
 }
 .panel-footer button:not(.primary):hover { background: var(--sphere-raised); }
@@ -201,15 +237,15 @@ button {
   padding: 0 4px;
   border-radius: 999px;
   background: var(--sphere-picked);
-  color: #052e16;
+  color: var(--sphere-on-picked);
   font-size: 11px;
   font-weight: 700;
   text-align: center;
   line-height: 18px;
 }
-.pick .name { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick .name { font-family: var(--sphere-mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pick .where { color: var(--sphere-muted); font-size: 12px; white-space: nowrap; }
-.pick .remove { margin-left: auto; padding: 2px 6px; border-radius: 8px; color: var(--sphere-muted); }
+.pick .remove { margin-left: auto; padding: 2px 6px; border-radius: var(--sphere-radius-sm); color: var(--sphere-muted); }
 .pick .remove:hover { background: var(--sphere-raised); color: var(--sphere-fg); }
 
 .empty { margin: 0 0 10px; color: var(--sphere-muted); }
@@ -226,7 +262,7 @@ button {
   max-height: min(70vh, 520px);
   overflow-y: auto;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: var(--sphere-radius);
   border: 1px solid var(--sphere-border);
   background: var(--sphere-bg);
   color: var(--sphere-fg);
@@ -246,7 +282,7 @@ button {
   border-radius: 5px;
   border: 1px solid var(--sphere-border);
   background: var(--sphere-raised);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--sphere-mono);
   font-size: 11px;
   text-align: center;
 }
@@ -268,7 +304,7 @@ button {
   padding: 0 4px;
   border-radius: 999px;
   background: var(--sphere-picked);
-  color: #052e16;
+  color: var(--sphere-on-picked);
   font-size: 11px;
   font-weight: 700;
   text-align: center;
@@ -292,7 +328,7 @@ button {
   border-radius: 6px;
   background: #111827;
   color: #f9fafb;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--sphere-mono);
   font-size: 12px;
   pointer-events: none;
   white-space: nowrap;

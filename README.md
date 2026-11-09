@@ -38,6 +38,30 @@ Kit 2's template shape is covered by the transform's tests).
 `Escape` leaves picking, the count chip opens and closes the panel, and the pill remembers where
 you dragged it.
 
+### Match your design system
+
+The overlay is self-contained by default. To make it follow the site — Carbon, Tailwind, or your
+own tokens — map values, with no framework dependency and no CSS import:
+
+```css
+/* in the app's global styles */
+:root {
+  --sphere-theme-bg: var(--cds-background);
+  --sphere-theme-fg: var(--cds-text-primary);
+  --sphere-theme-accent: var(--cds-link-primary);
+}
+```
+
+Or from the plugin when the page exposes nothing reusable:
+
+```ts
+sphere({ theme: { mode: 'auto', tokens: { accent: 'var(--color-brand)', radius: '4px' } } })
+```
+
+Only `--sphere-theme-*` values cross the shadow boundary, so the page cannot restyle the tool and
+the tool cannot restyle the page. `mode: 'auto'` follows the OS, `light`/`dark` force the built-in
+palette. Token table and Tailwind/Carbon recipes: [`docs/13-theming.md`](docs/13-theming.md).
+
 While picking, keys work too — the answer to "the thing I want is behind this element":
 `w`/`↑` parent, `s`/`↓` first child, `a`/`←` previous sibling, `d`/`→` next sibling, `Enter` or
 `Space` to pick the outlined element, `Shift+Enter` to pick it and stop, `p` to pin the outline while

@@ -1,7 +1,9 @@
 import { mount } from 'svelte'
 import Overlay from './Overlay.svelte'
+import { sphereConfig } from './config.js'
 import { HOST_ID } from './host.js'
 import { OVERLAY_CSS } from './styles.js'
+import { applyTheme } from './theme.js'
 
 /**
  * The overlay is the only thing Sphere puts in the page: one host element with a shadow root, so
@@ -16,6 +18,9 @@ export function mountOverlay(): HTMLElement | null {
 
   const host = document.createElement('div')
   host.id = HOST_ID
+  // Theme first: the host carries the tokens and the forced mode, and the stylesheet reads them
+  // as soon as the component mounts (`docs/13-theming.md` §3).
+  applyTheme(host, sphereConfig.theme)
 
   const shadow = host.attachShadow({ mode: 'open' })
   const style = document.createElement('style')

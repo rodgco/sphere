@@ -19,6 +19,7 @@ quickstart, privacy summary), `SECURITY.md`, `CHANGELOG.md` and `THIRD_PARTY.md`
 | 10 | [Risks](10-risks.md) | coupling, perf, pivots |
 | 11 | [Roadmap](11-roadmap.md) | M0–M5, v2 candidates |
 | 12 | [Audit](12-audit.md) | security, correctness, and contract review (2026-11-08) |
+| 13 | [Theming and design systems](13-theming.md) | the token contract, precedence, recipes |
 
 ## Specs
 
@@ -40,6 +41,7 @@ quickstart, privacy summary), `SECURITY.md`, `CHANGELOG.md` and `THIRD_PARTY.md`
 9. [0009 — SPHERE, the acronym, and `sphere-plugin`](decisions/0009-name-and-package.md) *(superseded in part by 0011)*
 10. [0010 — Prompt data policy](decisions/0010-prompt-data-policy.md)
 11. [0011 — No page-global API](decisions/0011-no-page-global-api.md)
+12. [0012 — Design-system integration is a token contract](decisions/0012-design-system-tokens.md)
 
 ## Learning (facts about the platform, with evidence)
 

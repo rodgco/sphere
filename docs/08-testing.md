@@ -10,7 +10,7 @@ swallowing — cannot be proven in jsdom. Each layer answers a question the one 
 | **Unit** | location algorithm, value summaries, prompt format, option handling, budgets | vitest, no DOM |
 | **Golden** | the clipboard document is byte-stable | vitest + fixture + expected `.md` |
 | **Runtime harness** | real compiled Svelte components through the wrapper: element → instance → props/state, multi-root templates, snippets | vitest project with the Svelte plugin and `dev: true` |
-| **Browser e2e** | picking, event swallowing, marks, panel, clipboard, hydration, base path | Playwright against a real dev server |
+| **Browser e2e** | picking, event swallowing, marks, panel, clipboard, hydration, base path, theme inheritance | Playwright against a real dev server |
 | **Screenshots** | the UI is not broken, dark and light | Playwright + privacy scan |
 | **Matrix** | supported Svelte/SvelteKit versions | CI jobs |
 
@@ -22,6 +22,9 @@ swallowing — cannot be proven in jsdom. Each layer answers a question the one 
 - Value formatting: inline budget boundaries (exactly at, one over), key quoting, nested limits,
   truncation markers, valid-JSON invariant for every runtime-produced value.
 - Options: unknown keys rejected, defaults applied, `include` partial.
+- Theme: the public token vocabulary and its value rules, the resolved theme in
+  `virtual:sphere/config`, and `applyTheme` dropping an unknown token or unsafe value
+  (`docs/13-theming.md` §8).
 
 ## 3. Runtime harness
 

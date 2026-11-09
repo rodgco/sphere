@@ -21,7 +21,15 @@ declare module '*.svelte' {
  * because it is a virtual module and `tsc` cannot see what the plugin returns.
  */
 declare module 'virtual:sphere/config' {
-  const config: { root: string; base: string; version: string }
+  const config: {
+    root: string
+    base: string
+    version: string
+    theme: {
+      mode: 'auto' | 'light' | 'dark'
+      tokens: Record<string, string | undefined>
+    }
+  }
   export default config
 }
 

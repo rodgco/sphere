@@ -35,8 +35,10 @@ sphere/
       position.ts           clamping, panel placement, clipping
       storage.ts            the two `localStorage` keys, validated
       styles.ts             the overlay stylesheet (shadow-root scoped)
+      theme.ts              applies `--sphere-theme-*` tokens to the host
     shared/                 shared by both sides
       payload.ts            the inspection contract, in types
+      theme.ts              the token vocabulary and its validation (both sides)
       paths.ts              project-relative paths, for the panel and the prompt
       version.ts            reported by the API and by `virtual:sphere/config`
 ```
@@ -53,7 +55,7 @@ vite dev
   │
   ├─ resolveId/load  virtual:sphere/runtime      → instrumentation module (seam / tests)
   ├─ resolveId/load  virtual:sphere/overlay      → overlay component (Svelte), compiled by host
-  ├─ resolveId/load  virtual:sphere/config       → { root, base, version } for this server
+  ├─ resolveId/load  virtual:sphere/config       → { root, base, version, theme } for this server
   └─ inject          <script type="module" src="/@id/virtual:sphere/overlay">
                                     │
 browser page ───────────────────────┘
@@ -94,17 +96,22 @@ export interface SphereOptions {
   startPosition?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
   /** Extra attribute names that may identify an element in its source. */
   matchAttributes?: string[]
+  /** Design-system bridge: `--sphere-theme-*` values and the built-in mode (`docs/13-theming.md`). */
+  theme?: {
+    mode?: 'auto' | 'light' | 'dark'
+    tokens?: Partial<Record<ThemeToken, string>>
+  }
 }
 ```
 
-Only `enabled` and `instrumentation` are implemented today. `maxSelections`, `include`,
+Only `enabled`, `instrumentation` and `theme` are implemented today. `maxSelections`, `include`,
 `startPosition` and
 `matchAttributes` are the specified v1 surface and are **not** accepted yet: passing one fails the
 option validation loudly (`sphere: unknown option "…"`), which is the honest state while the
 defaults are still hard-coded (`PICK_CAP`, the four panel toggles).
 
 Options are validated once in `configResolved`; the browser receives `virtual:sphere/config` —
-`{ root, base, version }` — never through the page URL and never in the app's HTML.
+`{ root, base, version, theme }` — never through the page URL and never in the app's HTML.
 
 ## Instrumentation is a separate concern from the overlay
 

@@ -1,7 +1,7 @@
 # 11 — Roadmap
 
 Milestones are sized so each ends with something demonstrable: M0–M2 build the runtime and the
-UI, M3–M5 make it a product.
+UI, M3–M5 make it a product, and M6 adds the design-system bridge.
 
 ## M0 — Repository and scaffold
 
@@ -101,6 +101,22 @@ fixture job (the transform is unit-tested) and the bundle-size budget.
 - README with the two screenshots, a 60-second quickstart, and the security/privacy summary.
 - `publint`/attw clean, changesets configured, `SECURITY.md`.
 - First release: `0.1.0`, with the format documented as unstable until `1.0`.
+
+## M6 — Theming and design systems
+
+**Status:** done — the public `--sphere-theme-*` token vocabulary with built-in fallbacks
+(`docs/13-theming.md`), the `theme` plugin option validated at server start and carried in
+`virtual:sphere/config`, runtime application through the CSSOM on the host, and a `data-sphere-mode`
+attribute for forcing the built-in palette. Proven by `test/theme.test.ts` and `e2e/theme.mjs`
+(page-variable inheritance, plugin precedence, forced mode). Decision:
+`docs/decisions/0012-design-system-tokens.md`.
+
+**Done when**
+
+- A project can map Tailwind/Carbon/own tokens by value, with no dependency or CSS import.
+- Default look is unchanged with no option; precedence is defaults < page CSS < option.
+- Unknown tokens, modes and unsafe values fail at server start naming the input.
+- e2e proves inheritance through the shadow boundary and inline precedence in Chromium.
 
 ## v2 candidates (not committed)
 
