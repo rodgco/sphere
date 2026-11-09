@@ -434,6 +434,7 @@ Done, in commit order:
 12. Documentation reconciliation and this corrected audit.
 13. `88b8f6e` — filesystem-root relative paths and guarded focus restoration.
 14. `4888809` — quote prop/structure keys so a key cannot start a markdown line.
+15. `0a74b59` — cover the drag `pointercancel` cleanup.
 
 Still open, deliberately: CI action pinning, the NPM_TOKEN fallback, a real Windows CI job, a
 `perf/` benchmark, coverage thresholds, the capture-order limitation in §5.12, and two Svelte
