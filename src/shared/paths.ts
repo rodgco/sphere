@@ -46,7 +46,7 @@ export function relativeTo(root: string | undefined): RelativePath {
     const normalized = stripQuery(normalizePath(path))
     if (!isAbsolutePath(normalized)) return normalized.replace(/^\.\//, '')
 
-    const prefix = `${normalizedRoot}/`
+    const prefix = normalizedRoot === '/' ? '/' : `${normalizedRoot}/`
     const haystack = caseInsensitive ? normalized.toLowerCase() : normalized
     const needle = caseInsensitive ? prefix.toLowerCase() : prefix
     const exact = caseInsensitive ? normalizedRoot.toLowerCase() : normalizedRoot

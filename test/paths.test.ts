@@ -22,6 +22,7 @@ describe('relativeTo', () => {
     expect(relativeTo('/app')('/app/src/App.svelte')).toBe('src/App.svelte')
     expect(relativeTo('/app/')('/app/src/App.svelte')).toBe('src/App.svelte')
     expect(relativeTo('/app')('src/App.svelte')).toBe('src/App.svelte')
+    expect(relativeTo('/')('/app/src/App.svelte')).toBe('app/src/App.svelte')
   })
 
   it('relativises Windows paths case-insensitively on the drive', () => {

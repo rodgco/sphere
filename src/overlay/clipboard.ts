@@ -46,11 +46,20 @@ export function legacyCopy(text: string): boolean {
     return false
   } finally {
     area.remove()
-    // Copying a prompt must not move the developer's caret or focus in the app.
-    active?.focus({ preventScroll: true })
-    if (selection !== null) {
-      selection.removeAllRanges()
-      for (const range of ranges) selection.addRange(range)
+    // Copying a prompt must not move the developer's caret or focus in the app. A detached
+    // range or a focus target that disappeared must not turn a successful copy into a throw.
+    try {
+      active?.focus({ preventScroll: true })
+    } catch {
+      // best-effort
+    }
+    try {
+      if (selection !== null) {
+        selection.removeAllRanges()
+        for (const range of ranges) selection.addRange(range)
+      }
+    } catch {
+      // best-effort
     }
   }
 }
