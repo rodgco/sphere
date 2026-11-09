@@ -577,6 +577,34 @@ describe('formatPrompt', () => {
     expect(text).toMatch(/\n---\n\n### Selected element div\.second/)
   })
 
+  it('never splits a surrogate pair at the cut', () => {
+    const instructions = `${'x'.repeat(PROMPT_LIMIT - 500)}${'😀'.repeat(1_000)}`
+
+    const result = formatPrompt({ page, instructions, options, selections: [] })
+
+    expect(result.truncated).toBe(true)
+    expect(result.text.length).toBeLessThanOrEqual(PROMPT_LIMIT)
+    expect(result.text).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/)
+    expect(result.text).not.toMatch(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/)
+  })
+
+  it('closes a code fence that the cut entered', () => {
+    const markup = `\`\`\`html\n${'line\n'.repeat(20_000)}\`\`\``
+    const result = formatPrompt({
+      page,
+      instructions: '',
+      options: { state: false, props: false, source: false, template: false },
+      selections: [{ inspected: inspected({ element: element({ markup }), components: [] }) }],
+    })
+
+    expect(result.truncated).toBe(true)
+    expect(result.text.length).toBeLessThanOrEqual(PROMPT_LIMIT)
+
+    const body = result.text.slice(0, result.text.indexOf('\n\n(prompt truncated:'))
+    expect((body.match(/^`{4,}html$/gm) ?? []).length).toBe(1)
+    expect((body.match(/^`{4,}$/gm) ?? []).length).toBe(1)
+  })
+
   it('truncates at the limit and says how long the original was', () => {
     const long = Array.from({ length: 150 }, () => ({
       inspected: inspected(),
@@ -586,7 +614,7 @@ describe('formatPrompt', () => {
 
     expect(result.truncated).toBe(true)
     expect(result.originalLength).toBeGreaterThan(PROMPT_LIMIT)
-    expect(result.text.length).toBeGreaterThan(PROMPT_LIMIT)
+    expect(result.text.length).toBeLessThanOrEqual(PROMPT_LIMIT)
     expect(result.text.endsWith(`(prompt truncated: ${result.originalLength} chars)`)).toBe(true)
   })
 })

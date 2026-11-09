@@ -108,11 +108,77 @@ function truncate(document: string): FormattedPrompt {
   }
 
   const notice = `\n\n(prompt truncated: ${document.length} chars)`
+  const budget = PROMPT_LIMIT - notice.length
+  const head = sliceToBudget(document, budget)
+
   return {
-    text: `${document.slice(0, PROMPT_LIMIT)}${notice}`,
+    text: `${head}${notice}`,
     truncated: true,
     originalLength: document.length,
   }
+}
+
+/**
+ * The longest prefix that fits `budget`, without splitting a surrogate pair and with any code
+ * fence the slice entered closed again. The loop runs at most twice: closing a fence can only
+ * shorten the slice, never open a different one.
+ */
+function sliceToBudget(document: string, budget: number): string {
+  let cut = Math.min(document.length, budget)
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    cut = avoidSurrogateSplit(document, cut)
+    let head = document.slice(0, cut).replace(/[ \t]+$/, '')
+    const fence = openFence(head)
+
+    if (fence === null) return head
+
+    const closing = `\n${fence}`
+    if (head.length + closing.length <= budget) return `${head}${closing}`
+    cut -= head.length + closing.length - budget
+  }
+
+  return document.slice(0, Math.max(0, budget)).replace(/[ \t]+$/, '')
+}
+
+function avoidSurrogateSplit(document: string, cut: number): number {
+  if (cut <= 0 || cut >= document.length) return cut
+
+  const before = document.charCodeAt(cut - 1)
+  const after = document.charCodeAt(cut)
+  if (isHighSurrogate(before) && isLowSurrogate(after)) return cut - 1
+  return cut
+}
+
+function isHighSurrogate(code: number): boolean {
+  return code >= 0xd800 && code <= 0xdbff
+}
+
+function isLowSurrogate(code: number): boolean {
+  return code >= 0xdc00 && code <= 0xdfff
+}
+
+/** The delimiter of a fenced code block left open at the end of `text`, if any. */
+function openFence(text: string): string | null {
+  const fence = /^ {0,3}(`{3,}|~{3,})(.*)$/
+  let open: { character: string; length: number } | null = null
+
+  for (const line of text.split('\n')) {
+    const match = fence.exec(line)
+    if (match === null) continue
+
+    const marker = match[1] ?? ''
+    const rest = match[2] ?? ''
+    const character = marker[0] ?? '`'
+
+    if (open === null) {
+      open = { character, length: marker.length }
+    } else if (character === open.character && marker.length >= open.length && rest.trim() === '') {
+      open = null
+    }
+  }
+
+  return open === null ? null : open.character.repeat(open.length)
 }
 
 function header(input: PromptInput): string {
