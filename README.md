@@ -128,8 +128,10 @@ change, and `CHANGELOG.md` plus the version follow. The prompt format is documen
 until `1.0`**, so a minor release may change the clipboard document — `docs/05-prompt-format.md`
 and the golden test are what make that visible.
 
-Publishing runs from `master` (`.github/workflows/release.yml`) with `changesets/action` and
-`--provenance`, authenticated by **trusted publishing** (OIDC, no long-lived token):
+Publishing runs from `master` (`.github/workflows/release.yml`) as `changeset publish` — which is
+what creates the git tag `sphere-plugin@<version>` and lets the action write the GitHub release from
+the changelog — with provenance on, authenticated by **trusted publishing** (OIDC, no long-lived
+token):
 
 1. On npmjs.com, configure a trusted publisher for `sphere-plugin`: provider GitHub Actions,
    organization/user `rodgco`, repository `sphere`, workflow `release.yml`. A configuration for a
@@ -139,7 +141,16 @@ Publishing runs from `master` (`.github/workflows/release.yml`) with `changesets
 3. `gh workflow run release.yml` (the job also runs on every push to `master`).
 
 `NPM_TOKEN` is only a fallback for the first release if trusted publishing is still being set up;
-with OIDC in place no token is needed and none should be stored.
+with OIDC in place no token is needed and none should be stored. In the trusted publisher settings,
+authorise **npm publish** only: `npm dist-tag` is not used (a publish sets `latest` itself), and
+`npm stage publish` is for the staged workflow we do not use.
+
+### Troubleshooting the config
+
+A `vite.config.js` in a project without `"type": "module"` is bundled as CommonJS, and a CJS config
+cannot `require` an ESM-only package (`This package is ESM only but it was tried to load by
+require`). Name the file `vite.config.mjs` or add `"type": "module"` — every Svelte and SvelteKit
+template already does.
 
 ## Read this first
 
