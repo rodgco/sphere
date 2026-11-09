@@ -1,10 +1,13 @@
 name: Release
 
 on:
-  push:
+  # Run only after CI has passed for a push to master. A failing CI must not publish.
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [master]
   # Lets you publish the version already committed (the first release, or a retry after a failed
-  # run) without an empty commit.
+  # run) without an empty commit. The release job still runs its own build, tests and e2e.
   workflow_dispatch:
 
 concurrency:
@@ -13,6 +16,12 @@ concurrency:
 
 jobs:
   release:
+    # `workflow_run` fires for failed CI too; only publish a successful push, or an explicit
+    # manual dispatch.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -20,6 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # `workflow_run` checks out the SHA CI gated, not whatever master points at now.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -37,7 +48,8 @@ jobs:
       # The Kit fixture consumes the built package through a `file:` link.
       - run: npm --prefix fixtures/kit ci
 
-      # One dev server per test, real browsers, and the built artifact — the same gate as CI.
+      # CI has already gated this SHA, but a manual dispatch has not: run the same build/test/e2e
+      # gate here too, so neither path can publish an untested tree.
       - run: npm run build
       - run: npm test
       - run: npx playwright install --with-deps chromium
