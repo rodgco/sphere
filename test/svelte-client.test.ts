@@ -113,6 +113,22 @@ describe('installInstrumentation', () => {
     }
   })
 
+  it('falls back to upstream bindings when the surface is incomplete', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const upstream = Object.fromEntries(
+      REQUIRED_EXPORTS.map((name) => [name, client[name]]),
+    ) as Record<string, unknown>
+    delete upstream.add_locations
+
+    const overrides = installInstrumentation(upstream)
+
+    // The generated wrapper exports these names locally; they must not be `undefined`.
+    for (const name of REQUIRED_EXPORTS) expect(overrides[name]).toBe(upstream[name])
+    expect(overrides.add_locations).toBeUndefined()
+    expect(isInstrumentationInstalled()).toBe(true)
+    warn.mockRestore()
+  })
+
   it('degrades instead of throwing when the module is nothing like Svelte', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(() => installInstrumentation({})).not.toThrow()

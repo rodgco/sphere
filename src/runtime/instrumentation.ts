@@ -177,8 +177,13 @@ export function installInstrumentation(upstream: UpstreamClient): Record<string,
           'Instrumentation is off; the prompt will lack component context.',
       )
     }
-    // Nothing to override: shipping identity wrappers would only add indirection.
-    return {}
+    // Nothing to override, but the generated wrapper still exports these names locally and
+    // they shadow the star export. Re-export upstream's own functions so a component that
+    // imports `push`, `each`, … keeps working; only the instrumentation is lost.
+    const passthrough: Record<string, unknown> = {}
+    for (const name of REQUIRED_EXPORTS) passthrough[name] = upstream[name]
+    overridesByUpstream.set(upstream, passthrough)
+    return passthrough
   }
 
   // One Svelte client per page: the first upstream to install wins the symbols.
