@@ -162,6 +162,22 @@ describe('the control', () => {
     }
   })
 
+  it('drops a drag that the browser cancels', () => {
+    const view = mountOverlay()
+    try {
+      pointer(view.control, 'pointerdown', 10, 10)
+      pointer(window, 'pointermove', 80, 40)
+      pointer(window, 'pointercancel', 80, 40)
+      pointer(window, 'pointermove', 200, 200)
+      pointer(window, 'pointerup', 200, 200)
+
+      expect(localStorage.getItem(CONTROL_KEY)).toBeNull()
+      expect(pressed(view.control)).toBe('false')
+    } finally {
+      view.destroy()
+    }
+  })
+
   it('returns to the default corner on double click', () => {
     const view = mountOverlay()
     writeControl({ x: 200, y: 120 })
