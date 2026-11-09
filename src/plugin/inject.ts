@@ -33,22 +33,6 @@ export const KIT_TEMPLATE_FILE =
  * hook is only added, for plain Vite apps, from this same plugin's `config` hook.
  */
 export function usesSvelteKit(plugins: readonly unknown[] | undefined): boolean {
-  import('node:fs').then(({ writeFileSync }) => {
-    writeFileSync(
-      '/tmp/config-plugins.json',
-      JSON.stringify(
-        {
-          isArray: Array.isArray(plugins),
-          length: (plugins as unknown[])?.length,
-          names: (plugins as any[])?.map?.((p) =>
-            Array.isArray(p) ? p.map((q) => q?.name) : p?.name,
-          ),
-        },
-        null,
-        1,
-      ),
-    )
-  })
   // `sveltekit()` returns a plugin **array**, so a config's `plugins` holds arrays inside it.
   return flatten(plugins).some((plugin) => {
     const name = (plugin as { name?: unknown }).name

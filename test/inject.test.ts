@@ -1,3 +1,4 @@
+import { existsSync, rmSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   escapeForStringLiteral,
@@ -113,6 +114,19 @@ describe('usesSvelteKit', () => {
     expect(
       usesSvelteKit([[{ name: 'vite-plugin-svelte' }], [{ name: 'vite-plugin-sveltekit-setup' }]]),
     ).toBe(true)
+  })
+
+  it('writes nothing to disk', async () => {
+    // The plugin factory and its hooks must do no I/O when the option is off
+    // (docs/07-delivery.md §6). A source-level review cannot catch a reintroduced write.
+    if (process.platform === 'win32') return
+
+    const probe = '/tmp/config-plugins.json'
+    rmSync(probe, { force: true })
+    usesSvelteKit([{ name: 'vite-plugin-sveltekit-setup' }])
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(existsSync(probe)).toBe(false)
   })
 })
 
