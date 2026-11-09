@@ -406,11 +406,11 @@ function propsLine(json: string): string {
   )
   if (entries.length === 0) return '{}'
 
-  const inlineLine = entries.map(([key, item]) => `${key}=${inline(item)}`).join(', ')
+  const inlineLine = entries.map(([key, item]) => `${keyPart(key)}=${inline(item)}`).join(', ')
   if (inlineLine.length <= PROPS_LIMIT) return inlineLine
 
   // §3: past the budget a value shows structure only, so the line stays about identity.
-  const structured = entries.map(([key, item]) => `${key}=${structureOf(item)}`).join(', ')
+  const structured = entries.map(([key, item]) => `${keyPart(key)}=${structureOf(item)}`).join(', ')
   return structured.length <= PROPS_LIMIT ? structured : `${structured.slice(0, PROPS_LIMIT - 1)}…`
 }
 
@@ -502,7 +502,7 @@ function structure(value: Record<string, unknown>): string {
   const rest = keys.length - shown.length
 
   if (shown.length === 0) return '{}'
-  return `{${shown.join(', ')}${rest > 0 ? `, …${rest} more` : ''}}`
+  return `{${shown.map((key) => keyPart(key)).join(', ')}${rest > 0 ? `, …${rest} more` : ''}}`
 }
 
 function keyPart(key: string): string {

@@ -58,6 +58,15 @@ describe('formatValue', () => {
     expect(formatValue('["a", "b"]')).toBe('["a", "b"]')
   })
 
+  it('escapes keys that would otherwise start a new line', () => {
+    expect(formatValue(JSON.stringify({ 'a\nb': 1 }))).toBe('{"a\\nb": 1}')
+    expect(
+      formatValue(
+        JSON.stringify(Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`k\n${i}`, i]))),
+      ),
+    ).toContain('"k\\n0"')
+  })
+
   it('redacts sensitive keys in values', () => {
     expect(formatValue('{"email":"a@b.test","ok":1}')).toBe('{email: "<redacted>", ok: 1}')
   })
