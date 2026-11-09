@@ -432,6 +432,7 @@ Done, in commit order:
 10. `7dbe0b7` — control clamp, storage probe, drag cancel, copy focus, `CSS.escape`, `readSignal`.
 11. `181080b` — `instrumentation: false`.
 12. Documentation reconciliation and this corrected audit.
+13. `88b8f6e` — filesystem-root relative paths and guarded focus restoration.
 
 Still open, deliberately: CI action pinning, the NPM_TOKEN fallback, a real Windows CI job, a
 `perf/` benchmark, coverage thresholds, the capture-order limitation in §5.12, and two Svelte
