@@ -58,13 +58,21 @@ jobs:
       # Publishing is opt-in through a repository *variable* (`gh variable set NPM_PUBLISH --body
       # true`), so a clone without trusted publishing configured stays green instead of failing on
       # every push. Authentication is OIDC trusted publishing; no npm token is read or stored.
-      # `changeset publish` (not bare `npm publish`) is what creates the git tag and lets the
-      # action create the GitHub release from the changelog; npm publish alone leaves both behind.
-      # Provenance comes from the env var, because changeset shells out to npm itself.
-      - uses: changesets/action@v1
+      # `changeset publish` (not bare `npm publish`) is what publishes and creates the local git
+      # tag; the next step pushes it and creates the GitHub release from the changelog. Provenance
+      # comes from the env var, because changeset shells out to npm itself.
+      #
+      # This used to be `changesets/action@v1`. That action parses `New tag: <pkg>@<version>` from
+      # the publish output, and `@changesets/cli` v3 stopped printing it: 0.3.0 reached npm without
+      # a tag or a GitHub release. `scripts/release.mjs` does the two missing steps explicitly.
+      - name: Publish to npm
         if: vars.NPM_PUBLISH == 'true'
-        with:
-          publish: npx changeset publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
+        run: npx changeset publish
+
+      - name: Push tags and create the GitHub release
+        if: vars.NPM_PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release.mjs
