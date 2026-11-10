@@ -33,6 +33,14 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
+      # Annotated tags need an identity and a fresh runner has none. `changeset publish` tags with
+      # `git tag -m` and does not check the exit code (`@changesets/git` `tag()`), so without this
+      # the release silently lands on npm with no tag — 0.3.1 did exactly that.
+      - name: Give the runner a git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -64,7 +72,9 @@ jobs:
       #
       # This used to be `changesets/action@v1`. That action parses `New tag: <pkg>@<version>` from
       # the publish output, and `@changesets/cli` v3 stopped printing it: 0.3.0 reached npm without
-      # a tag or a GitHub release. `scripts/release.mjs` does the two missing steps explicitly.
+      # a tag or a GitHub release. `scripts/release.mjs` does the missing steps explicitly, and
+      # creates the tag itself when the CLI failed to (`@changesets/git` ignores `git tag`'s exit
+      # code, which is how 0.3.1 shipped untagged).
       - name: Publish to npm
         if: vars.NPM_PUBLISH == 'true'
         env:

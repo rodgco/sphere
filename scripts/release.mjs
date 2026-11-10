@@ -41,14 +41,27 @@ function main() {
   const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
   const tag = releaseTag(pkg)
 
-  // Local tags are created by `changeset publish`; the CLI does not push them. A run with no new
-  // tag is a no-op here.
-  run('git', ['push', '--tags'])
-
+  // `changeset publish` creates the tag when it publishes, but it does not check `git tag`'s exit
+  // code, and an annotated tag needs a git identity that a fresh CI runner does not have: 0.3.1
+  // reached npm with no tag because of exactly that. Create it here too (idempotently, with its own
+  // identity), so the release never depends on the CLI's silent failure — and never move a tag
+  // that already exists, because that would rewrite a published release.
   if (output('git', ['tag', '--list', tag]).trim() === '') {
-    console.log(`release: no tag ${tag}; nothing to announce`)
-    return
+    run('git', [
+      '-c',
+      'user.name=sphere release',
+      '-c',
+      'user.email=release@sphere.invalid',
+      'tag',
+      '-a',
+      tag,
+      '-m',
+      tag,
+    ])
   }
+
+  // Pushes every tag that is not on the remote yet, so a second run is a no-op.
+  run('git', ['push', '--tags'])
 
   if (releaseExists(tag)) {
     console.log(`release: ${tag} already has a GitHub release`)
