@@ -158,10 +158,29 @@ async function main() {
 
       const where = panel(page).locator('.pick .where').first()
       await where.waitFor()
+
+      // The chip opens with the compiler's raw value and is replaced once the file has been read
+      // and the line verified; waiting for *that* is the point of the case, so poll instead of
+      // racing the fetch (`docs/08-testing.md` §8: wait for the state, never for a timer).
+      await page
+        .waitForFunction(
+          () => {
+            const host = document.getElementById('sphere-host')
+            const chip = host?.shadowRoot?.querySelector('.pick .where')
+            return chip != null && !(chip.textContent ?? '').startsWith('~')
+          },
+          null,
+          { timeout: 5000 },
+        )
+        .catch(() => {})
+
       const text = (await where.textContent()) ?? ''
 
       // Project-relative and verified: a `~` would mean the file was never read.
-      assert(/^src\/App\.svelte:\d+/.test(text), `chip is not project-relative: ${text}`)
+      assert(
+        /^src\/App\.svelte:\d+/.test(text),
+        `chip is not project-relative or unverified: ${text}`,
+      )
       assert(!text.includes('fixtures/'), `chip repeated the working directory: ${text}`)
     })
   } finally {
