@@ -1,5 +1,29 @@
 # sphere-plugin
 
+## 0.3.1
+
+### Patch Changes
+
+- 359b0e7: Keep the prompt panel attached to the control. It used to be placed once, when it opened, from an
+  estimated height: the panel then floated away from the pill (a visible hole where the estimate was
+  too large) and stayed behind when the pill was dragged. The panel is now pinned by the edge facing
+  the control (`bottom` when above, `top` when below), so a short panel keeps exactly the 10 px gap,
+  and its placement is derived from the control's live box, so it travels with a drag and re-chooses
+  its side as the pill approaches an edge. The panel width, height cap and 18 px viewport margin now
+  come from the same constants as the overlay's CSS (`docs/06-toolbar-ux.md` §4).
+- e9a11aa: Stop painting a focus ring around the prompt panel. Chromium reports `:focus-visible` for the
+  programmatic `focus()` that follows a pick, so the whole dialog wore a 2 px accent outline on every
+  pick. The dialog takes focus only to be announced, so it paints none now, while its buttons and
+  fields keep theirs for keyboard use.
+- 06398a9: Resolve Svelte's reported file names from the dev server's working directory. Svelte reports
+  `__svelte_meta.loc.file` relative to where the server was started — not to Vite's `root` — so any
+  setup where the two differ (a monorepo, `vite --config apps/web/vite.config.ts`, or the repo's own
+  `npm run dev` / `npm run lab`) asked `/@fs` for a doubled path and answered a 500 on the first
+  pick, which meant no source window and an unverified location. `virtual:sphere/config` now carries
+  `cwd` next to `root`: a relative name is resolved against `cwd` for the read, and the absolute
+  result is relativised against `root` for the panel chip and the prompt, so the path stays
+  `src/App.svelte` instead of growing a working-directory prefix.
+
 ## 0.3.0
 
 ### Minor Changes
