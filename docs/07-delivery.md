@@ -89,9 +89,9 @@ SvelteKit-injected script: Vite does not rewrite the bare specifier there.
 
 ## 4. Configuration transport
 
-Root, base, version and the resolved theme travel in `virtual:sphere/config` — implemented: the
-plugin's `load` returns `export default { root, base, version, theme }`, and the overlay reads it
-once at import. Never in the injected URL and never in the app's HTML. Two reasons: the absolute project path would be visible in every page's markup,
+Root, base, the working directory, version and the resolved theme travel in
+`virtual:sphere/config` — implemented: the plugin's `load` returns
+`export default { root, base, cwd, version, theme }`, and the overlay reads it once at import. Never in the injected URL and never in the app's HTML. Two reasons: the absolute project path would be visible in every page's markup,
 and a query string is a cache-busting hack we do not need (`Cache-Control` is Vite's business).
 The overlay reads the config module once at import. `theme` is `{ mode, tokens }` as validated in
 `resolveOptions` (`docs/13-theming.md` §4); with no option it is `{ mode: 'auto', tokens: {} }`, so
@@ -106,9 +106,12 @@ The browser reads a file with:
 ```
 
 - `?raw` returns `export default "<json string>"`; strip the wrapper and `JSON.parse` the literal.
-- The absolute path is built from `config.root` + the Svelte-reported path when the latter is
-  relative (Svelte reports both kinds). Windows drive paths (`C:/…`) are already absolute; the
-  `/@fs` URL gains the leading slash the drive form lacks.
+- The absolute path is built from `config.cwd` + the Svelte-reported path when the latter is
+  relative. Svelte reports either an absolute path or one relative to the **working directory the
+  dev server was started from**, which is not necessarily Vite's `root`
+  (`docs/learning/svelte-internals.md` §11) — building it from `root` doubles the path for
+  `vite --config apps/web/vite.config.ts` and answers a 500. Windows drive paths (`C:/…`) are
+  already absolute; the `/@fs` URL gains the leading slash the drive form lacks.
 - **The base prefix is mandatory** (`base: '/app/'` → a bare `/@fs/…` is a 404).
 - Vite's `server.fs.allow` must include the project root (default) — the same root Sphere uses, so
   no extra configuration is expected. A denied read degrades silently: no source window.

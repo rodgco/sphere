@@ -52,6 +52,11 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
   let svelteKit: boolean | null = null
   let root = process.cwd()
   let base = '/'
+  /**
+   * Captured once: Svelte's filenames are relative to the directory the dev server was started
+   * from, which is not necessarily Vite's `root` (`docs/07-delivery.md` §5).
+   */
+  const cwd = process.cwd()
 
   const client: Plugin = {
     name: 'sphere',
@@ -117,7 +122,7 @@ export function sphere(options: SphereOptions = {}): Plugin[] {
       if (id === `\0${CONFIG_ID}`) {
         // Never in the page's HTML and never in a URL: the absolute project path stays here
         // (docs/07 §4), and the overlay reads it once at import.
-        return `export default ${JSON.stringify({ root, base, version: VERSION, theme: resolved.theme })}\n`
+        return `export default ${JSON.stringify({ root, base, cwd, version: VERSION, theme: resolved.theme })}\n`
       }
 
       if (id !== WRAPPER_ID || upstreamId === null) return null

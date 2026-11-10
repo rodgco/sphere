@@ -59,6 +59,8 @@ async function main() {
   mkdirSync(out, { recursive: true })
 
   const server = await startDevServer({ root })
+  /** Set when a second server (a different working directory) has to be stopped too. */
+  let current = null
   const browser = await chromium.launch()
   const problems = []
 
@@ -124,14 +126,32 @@ async function main() {
       await panel(page).waitFor()
       await shot(page, '05-narrow-viewport')
     })
+
+    // 6. The way `npm run lab` starts it: from the repository root, so Svelte reports
+    //    `fixtures/lab/src/App.svelte` while Vite's root is `fixtures/lab`. The chip must stay
+    //    project-relative and verified (`docs/learning/svelte-internals.md` §11).
+    const fromRoot = await startDevServer({
+      root,
+      cwd: resolve(root, '../..'),
+      args: ['--config', resolve(root, 'vite.config.ts')],
+    })
+    current = fromRoot
+
+    await capture(WIDE, async (page) => {
+      await startPicking(page)
+      await pick(page, 0)
+      await panel(page).waitFor()
+      await shot(page, '06-working-directory')
+    })
   } finally {
     await browser.close()
     server.stop()
+    current?.stop()
   }
 
   if (problems.length > 0) throw new Error(`page errors:\n${problems.join('\n')}`)
 
-  console.log(`\nlab: 5 states captured in .temp/lab/ — open npm run lab to drive it by hand`)
+  console.log(`\nlab: 6 states captured in .temp/lab/ — open npm run lab to drive it by hand`)
 }
 
 await main()

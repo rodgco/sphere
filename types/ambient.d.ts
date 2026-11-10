@@ -24,6 +24,7 @@ declare module 'virtual:sphere/config' {
   const config: {
     root: string
     base: string
+    cwd: string
     version: string
     theme: {
       mode: 'auto' | 'light' | 'dark'

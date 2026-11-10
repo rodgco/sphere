@@ -333,6 +333,42 @@ describe('formatPrompt', () => {
     expect(text).not.toContain('/home/me/app')
   })
 
+  it("resolves Svelte's relative file names from the dev server's working directory", () => {
+    // `vite --config apps/web/vite.config.ts` from the repo root: Svelte reports
+    // `apps/web/src/App.svelte`, the project root is `apps/web`, and the prompt must print
+    // `src/App.svelte` — not the working-directory prefix, and not a machine path.
+    const { text } = formatPrompt({
+      page,
+      instructions: '',
+      options,
+      root: '/repo/apps/web',
+      files: '/repo',
+      selections: [
+        {
+          inspected: inspected({
+            source: { file: 'apps/web/src/App.svelte', line: 12, column: 2, enclosing: false },
+            components: [
+              {
+                id: 4,
+                name: 'App',
+                file: 'apps/web/src/App.svelte',
+                usage: null,
+                props: '{}',
+                state: [],
+                renders: 1,
+              },
+            ],
+          }),
+        },
+      ],
+    })
+
+    expect(text).toContain('- markup: `src/App.svelte:12:2`')
+    expect(text).toContain('1. App — `src/App.svelte`')
+    expect(text).not.toContain('apps/web/src/App.svelte')
+    expect(text).not.toContain('/repo')
+  })
+
   it('names and relativises Windows paths without leaking the machine path', () => {
     const { text } = formatPrompt({
       page,

@@ -1,4 +1,4 @@
-import { relativeTo, type RelativePath } from '../shared/paths.js'
+import { absolutePath, relativeTo, type RelativePath } from '../shared/paths.js'
 import {
   REDACTED,
   isFormValueAttribute,
@@ -72,6 +72,11 @@ export interface PromptInput {
   version?: string
   /** Absolute project root; absolute file paths are printed relative to it (docs/05 §6). */
   root?: string
+  /**
+   * Directory Svelte's relative filenames are resolved against — the dev server's working
+   * directory, which is not necessarily the project root (`docs/07-delivery.md` §5).
+   */
+  files?: string
 }
 
 type Path = RelativePath
@@ -87,7 +92,7 @@ const PLACEHOLDER = '(no instructions added — describe the change here)'
 
 export function formatPrompt(input: PromptInput): FormattedPrompt {
   const parts: string[] = [header(input), instructions(input.instructions)]
-  const path = makePath(input.root)
+  const path = makePath(input.root, input.files)
 
   if (input.selections.length > 0) {
     parts.push('## Selection')
@@ -212,7 +217,7 @@ function instructions(text: string): string {
 export function formatSelection(
   selection: PromptSelection,
   options: PromptOptions,
-  path: Path = makePath(undefined),
+  path: Path = makePath(undefined, undefined),
 ): string {
   const { inspected, source } = selection
   const element = inspected.element
@@ -432,8 +437,14 @@ function stateLine(node: StateNode): string {
 // Values (§3)
 // ---------------------------------------------------------------------------------------
 
-/** Absolute paths are printed relative to the project root (`docs/05` §6). */
-const makePath = relativeTo
+/**
+ * Absolute paths are printed relative to the project root (`docs/05` §6); a path Svelte reported
+ * relative is first resolved against the directory it is relative to.
+ */
+const makePath = (root: string | undefined, files: string | undefined): Path => {
+  const relative = relativeTo(root)
+  return (path) => relative(path === null ? null : absolutePath(files, path))
+}
 
 export function formatValue(json: string): string {
   return inline(redactValue(parseJson(json)))

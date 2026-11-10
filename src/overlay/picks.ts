@@ -5,7 +5,7 @@
  */
 
 import { locateElement } from '../runtime/inspect.js'
-import { relativeTo } from '../shared/paths.js'
+import { absolutePath, relativeTo } from '../shared/paths.js'
 
 export const PICK_CAP = 10
 
@@ -55,13 +55,14 @@ export function pickLabel(element: Element): string {
 
 /**
  * `file:line`, prefixed with `~` when the location is only the enclosing element, and always
- * project-relative: a machine path must not reach the panel either.
+ * project-relative: a machine path must not reach the panel either. `files` is the directory
+ * Svelte's relative filenames are resolved against (the dev server's working directory).
  */
-export function pickWhere(element: Element, root = ''): string {
+export function pickWhere(element: Element, root = '', files = ''): string {
   const source = locateElement(element).source
-  if (!source?.line) return ''
+  if (!source?.line || source.file === null) return ''
 
-  const file = relativeTo(root)(source.file) ?? ''
+  const file = relativeTo(root)(absolutePath(files, source.file)) ?? ''
   const where = `${file}:${source.line}`.replace(/^:/, '')
   return source.enclosing ? `~${where}` : where
 }

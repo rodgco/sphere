@@ -3,7 +3,7 @@
   import { formatPrompt, type PromptSelection } from '../runtime/format.js'
   import { inspectElement, pageInfo } from '../runtime/inspect.js'
   import { resolveElementSource } from '../runtime/location.js'
-  import { relativeTo } from '../shared/paths.js'
+  import { absolutePath, relativeTo } from '../shared/paths.js'
   import { createSourceLoader } from '../runtime/source.js'
   import type { Inspected } from '../shared/payload.js'
   import Help from './Help.svelte'
@@ -73,7 +73,7 @@
   let helpOpen = $state(false)
   let focusPanel = $state(false)
 
-  const loadSource = createSourceLoader({ root: sphereConfig.root, base: sphereConfig.base })
+  const loadSource = createSourceLoader({ cwd: sphereConfig.cwd, base: sphereConfig.base })
 
   let root: HTMLDivElement | undefined = $state()
   let shell: HTMLDivElement | undefined = $state()
@@ -320,7 +320,7 @@
       left: mark.left,
       width: mark.width,
       height: mark.height,
-      label: `${element.localName}  ${pickWhere(element, sphereConfig.root)}`.trim(),
+      label: `${element.localName}  ${pickWhere(element, sphereConfig.root, sphereConfig.cwd)}`.trim(),
       x: mark.left,
       y: mark.top + mark.height + 6,
     }
@@ -355,7 +355,7 @@
       left: mark.left,
       width: mark.width,
       height: mark.height,
-      label: `${target.localName}  ${pickWhere(target, sphereConfig.root)}`.trim(),
+      label: `${target.localName}  ${pickWhere(target, sphereConfig.root, sphereConfig.cwd)}`.trim(),
       x: clientX,
       y: clientY,
     }
@@ -377,7 +377,7 @@
     const entry: PickEntry = {
       element: target,
       label: pickLabel(target),
-      where: pickWhere(target, sphereConfig.root),
+      where: pickWhere(target, sphereConfig.root, sphereConfig.cwd),
     }
     const result = togglePick(picks, entry, PICK_CAP)
 
@@ -417,7 +417,8 @@
 
     if (source?.line == null) return
 
-    const relative = relativeTo(sphereConfig.root)(source.file) ?? ''
+    const absolute = source.file === null ? null : absolutePath(sphereConfig.cwd, source.file)
+    const relative = relativeTo(sphereConfig.root)(absolute) ?? ''
     const place = `${relative}:${source.line}`.replace(/^:/, '')
     const where = source.matched !== null || source.enclosing === true ? `~${place}` : place
     // Compare by element: `$state` deep-proxies the array, so the stored object is not the one
@@ -438,6 +439,7 @@
       options,
       selections,
       root: sphereConfig.root,
+      files: sphereConfig.cwd,
       version: sphereConfig.version,
     })
 

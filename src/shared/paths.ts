@@ -1,10 +1,11 @@
 /**
  * Paths that reach the screen or the clipboard are project-relative.
  *
- * Svelte reports whatever filename the compiler was given — absolute for a plain Vite app,
- * root-relative when the host passes a relative one — and Windows uses `\` while Vite ids usually
- * use `/`. The prompt must never contain a machine path (`docs/05-prompt-format.md` §6), and
- * neither must the panel: the same rule, one set of browser-safe helpers.
+ * Svelte reports whatever filename the compiler was given: absolute for a plain Vite app, and
+ * relative otherwise — to the dev server's working directory, not to Vite's `root`, when the two
+ * differ (`docs/learning/svelte-internals.md` §4). Windows uses `\` while Vite ids usually use
+ * `/`. The prompt must never contain a machine path (`docs/05-prompt-format.md` §6), and neither
+ * must the panel: the same rule, one set of browser-safe helpers.
  */
 export type RelativePath = (path: string | null) => string | null
 
@@ -19,6 +20,19 @@ export function isAbsolutePath(path: string): boolean {
   return (
     normalized.startsWith('/') || /^[A-Za-z]:\//.test(normalized) || normalized.startsWith('//')
   )
+}
+
+/**
+ * The absolute form of a path Svelte reported relative to the dev server's working directory.
+ * The plugin sends that directory as `config.cwd`; a path that is already absolute, or a base that
+ * is empty (tests, and callers that only hold absolute paths), is returned as given.
+ */
+export function absolutePath(base: string | undefined, path: string): string {
+  const normalized = normalizePath(path)
+  if (base === undefined || base === '' || isAbsolutePath(normalized)) return normalized
+
+  const trimmed = normalizePath(base).replace(/\/+$/, '')
+  return `${trimmed}/${normalized.replace(/^\.\//, '')}`
 }
 
 /** The last segment, with a query/fragment removed and both separators accepted. */

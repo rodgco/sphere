@@ -9,7 +9,7 @@ import { resolve } from 'node:path'
  * docs/08 §8: two dev servers over the same app directory fight over generated state, and a leaked
  * server breaks the next run — so the group is killed in `finally`, never with a timer.
  */
-export async function startDevServer({ root, args = [] }) {
+export async function startDevServer({ root, args = [], cwd = root }) {
   const port = await freePort()
   const child = spawn(
     process.execPath,
@@ -23,7 +23,7 @@ export async function startDevServer({ root, args = [] }) {
       '127.0.0.1',
       ...args,
     ],
-    { cwd: root, detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
+    { cwd, detached: true, stdio: ['ignore', 'pipe', 'pipe'] },
   )
 
   let output = ''

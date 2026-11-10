@@ -142,3 +142,30 @@ push, pop, add_svelte_meta, add_locations, tag, tag_proxy, component, each, if, 
 None of the above is public API. Before each supported Svelte minor: run the runtime harness, the
 browser e2e and the `overrides exactly` test; on failure, either adapt or drop the supported-range
 ceiling — never ship silently wrong attribution.
+
+## 11. Reported filenames are relative to the dev server's working directory
+
+The `filename` Svelte compiles with — the value in `App[$.FILENAME]` and in `__svelte_meta.loc.file`
+— comes from vite-plugin-svelte's id parser: `normalize(filename, root)` strips the root prefix
+(`@sveltejs/vite-plugin-svelte@7.3.1`, `src/utils/id.js`, `normalize` / `stripRoot`). The root it
+strips is the one resolved in its `config` phase by `resolveViteRoot(viteUserConfig)`
+(`src/utils/options.js`), whose fallback is `process.cwd()`.
+
+Measured with `vite --config fixtures/lab/vite.config.ts`, where the config sets
+`root: import.meta.dirname`:
+
+| Working directory | Vite `config.root` | `App[$.FILENAME]` |
+|---|---|---|
+| repository root | `…/fixtures/lab` | `fixtures/lab/src/App.svelte` |
+| `fixtures/lab` | `…/fixtures/lab` | `src/App.svelte` |
+
+So a reported file is **absolute or working-directory-relative**, and the working directory is not
+necessarily Vite's `root`. That is why `virtual:sphere/config` carries `cwd` next to `root`: the
+overlay resolves a relative name against `cwd` for the `/@fs` read, and only then relativises it
+against `root` for display (`docs/07-delivery.md` §5).
+
+Rules we derived:
+
+1. Never build an `/@fs` URL from `config.root` + a reported name; a server started one directory
+   up turns it into a doubled path and a 500 (`ENOENT`).
+2. Print `relativeTo(root)(absolutePath(cwd, file))`, never the raw reported string.

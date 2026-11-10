@@ -125,7 +125,7 @@ describe('resolveOptions: theme', () => {
 })
 
 describe('the resolved theme in virtual:sphere/config', () => {
-  it('travels next to root, base and version', () => {
+  it('travels next to root, base, working directory and version', () => {
     const plugin = sphere({
       theme: { mode: 'light', tokens: { accent: 'var(--color-brand)' } },
     })[0] as Plugin
@@ -147,6 +147,7 @@ describe('the resolved theme in virtual:sphere/config', () => {
     expect(config).toEqual({
       root: '/app',
       base: '/',
+      cwd: process.cwd(),
       version: VERSION,
       theme: { mode: 'light', tokens: { accent: 'var(--color-brand)' } },
     })

@@ -12,6 +12,12 @@ import type { ResolvedTheme } from '../shared/theme.js'
 export interface SphereConfig {
   root: string
   base: string
+  /**
+   * The dev server's working directory. Svelte's reported filenames are relative to it, which is
+   * not necessarily `root` when the server is started from a parent directory; both the `/@fs`
+   * read and the printed path need it (`docs/07-delivery.md` §5, `docs/learning/svelte-internals.md` §4).
+   */
+  cwd: string
   version: string
   theme: ResolvedTheme
 }

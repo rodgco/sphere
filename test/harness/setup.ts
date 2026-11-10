@@ -33,6 +33,7 @@ export default function setup(): void {
     `export default ${JSON.stringify({
       root: resolve(generatedDir, '../../..'),
       base: '/',
+      cwd: process.cwd(),
       version: VERSION,
       theme: { mode: 'auto', tokens: {} },
     })}\n`,

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { baseName, isAbsolutePath, normalizePath, relativeTo } from '../src/shared/paths.js'
+import {
+  absolutePath,
+  baseName,
+  isAbsolutePath,
+  normalizePath,
+  relativeTo,
+} from '../src/shared/paths.js'
 
 describe('path helpers', () => {
   it('normalises both separators and recognises absolute forms', () => {
@@ -14,6 +20,20 @@ describe('path helpers', () => {
     expect(baseName('C:\\app\\src\\Chip.svelte')).toBe('Chip.svelte')
     expect(baseName('/app/src/Chip.svelte?t=1')).toBe('Chip.svelte')
     expect(baseName('Chip.svelte')).toBe('Chip.svelte')
+  })
+})
+
+describe('absolutePath', () => {
+  it('resolves a name Svelte reported relative to the working directory', () => {
+    expect(absolutePath('/repo', 'apps/web/src/App.svelte')).toBe('/repo/apps/web/src/App.svelte')
+    expect(absolutePath('/repo/', './src/App.svelte')).toBe('/repo/src/App.svelte')
+    expect(absolutePath('C:\\repo', 'src\\App.svelte')).toBe('C:/repo/src/App.svelte')
+  })
+
+  it('leaves absolute paths and an empty base alone', () => {
+    expect(absolutePath('/repo', '/repo/src/App.svelte')).toBe('/repo/src/App.svelte')
+    expect(absolutePath(undefined, 'src/App.svelte')).toBe('src/App.svelte')
+    expect(absolutePath('', 'src/App.svelte')).toBe('src/App.svelte')
   })
 })
 

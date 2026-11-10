@@ -10,7 +10,7 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
 | Source files | disk, read by the browser through Vite `/@fs` | the developer, in the prompt |
 | Component state | the running page | the developer, in the prompt |
 | Rendered page content | the app's DOM | **nobody** — not extracted (see §3) |
-| Project root path | the plugin | the developer; never written into the page or the prompt |
+| Project root and working-directory paths | the plugin | the developer; never written into the page or the prompt |
 
 ## 2. Boundaries
 
@@ -44,10 +44,11 @@ narrow but real: a dev server is reachable from the network, and a clipboard is 
 
 ## 4. Paths
 
-- Absolute paths appear in the payload (`file`) because Svelte reports them; the **formatter**
-  relativises them against the project root before the text reaches the clipboard.
-- The project root is never injected into the HTML, the URL or an attribute — it travels in a
-  virtual module (`docs/07-delivery.md` §4).
+- Svelte reports a `file` either absolute or relative to the dev server's working directory; the
+  **formatter** resolves it and then relativises it against the project root, so no machine path
+  reaches the clipboard (`docs/07-delivery.md` §5).
+- The project root and the working directory are never injected into the HTML, the URL or an
+  attribute — they travel in a virtual module (`docs/07-delivery.md` §4).
 - Unit and e2e tests assert the clipboard output contains no match for `/home/`, `/Users/`,
   `[A-Z]:\\Users\\`, a URL query/fragment, or the project root.
 

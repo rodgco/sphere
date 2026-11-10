@@ -7,22 +7,22 @@
  * "no source window", never to an error (`docs/07-delivery.md` §5).
  */
 
-import { isAbsolutePath, normalizePath } from '../shared/paths.js'
+import { absolutePath } from '../shared/paths.js'
 
 export interface SourceConfig {
-  /** Absolute project root, used to resolve Svelte's root-relative file names. */
-  root: string
+  /**
+   * Absolute directory the dev server was started from. Svelte's reported filenames are relative
+   * to it, which is not necessarily Vite's `root` (`docs/07-delivery.md` §5).
+   */
+  cwd: string
   base: string
   fetcher?: (url: string) => Promise<{ ok: boolean; text(): Promise<string> }>
 }
 
 /** `<base>@fs<absolute path>?raw`, with a single slash between the pieces. */
-export function sourceUrl(file: string, config: Pick<SourceConfig, 'root' | 'base'>): string {
+export function sourceUrl(file: string, config: Pick<SourceConfig, 'cwd' | 'base'>): string {
   const base = config.base.endsWith('/') ? config.base : `${config.base}/`
-  const normalized = normalizePath(file)
-  const absolute = isAbsolutePath(normalized)
-    ? normalized
-    : `${normalizePath(config.root).replace(/\/+$/, '')}/${normalized}`
+  const absolute = absolutePath(config.cwd, file)
   // Vite's `/@fs` path must start with a slash; a Windows drive (`C:/…`) does not.
   const urlPath = absolute.startsWith('/') ? absolute : `/${absolute}`
 

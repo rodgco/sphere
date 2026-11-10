@@ -137,6 +137,37 @@ async function main() {
     await server.stop()
   }
 
+  // A dev server started from a parent directory. Vite's root is the fixture, but Svelte reports
+  // `fixtures/plain/src/App.svelte` — relative to the working directory (`startDevServer` defaults
+  // to the fixture, so the whole suite above never sees the difference). Reading that name from
+  // `root` doubles the path and every pick answers a 500 (`docs/learning/svelte-internals.md` §11).
+  const parent = await startDevServer({
+    root,
+    cwd: resolve(root, '../..'),
+    args: ['--config', resolve(root, 'vite.config.ts')],
+  })
+
+  try {
+    await withPage(async (page) => {
+      await page.goto(parent.origin)
+      await page.locator('[data-testid="title"]').waitFor()
+
+      await startPicking(page)
+      await page.locator('#app-button').click()
+      await panel(page).waitFor()
+
+      const where = panel(page).locator('.pick .where').first()
+      await where.waitFor()
+      const text = (await where.textContent()) ?? ''
+
+      // Project-relative and verified: a `~` would mean the file was never read.
+      assert(/^src\/App\.svelte:\d+/.test(text), `chip is not project-relative: ${text}`)
+      assert(!text.includes('fixtures/'), `chip repeated the working directory: ${text}`)
+    })
+  } finally {
+    await parent.stop()
+  }
+
   console.log('location: ok')
 }
 

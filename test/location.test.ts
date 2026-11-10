@@ -259,21 +259,29 @@ describe('opensElement', () => {
 })
 
 describe('source loader', () => {
-  const config = { root: '/app', base: '/' }
+  const config = { cwd: '/app', base: '/' }
 
   it('builds an @fs URL, with the base when there is one', () => {
     expect(sourceUrl('src/App.svelte', config)).toBe('/@fs/app/src/App.svelte?raw')
     expect(sourceUrl('/app/src/App.svelte', config)).toBe('/@fs/app/src/App.svelte?raw')
-    expect(sourceUrl('src/App.svelte', { root: '/app/', base: '/base/' })).toBe(
+    expect(sourceUrl('src/App.svelte', { cwd: '/app/', base: '/base/' })).toBe(
       '/base/@fs/app/src/App.svelte?raw',
     )
   })
 
+  it('resolves a relative name from where the server was started, not from the project root', () => {
+    // Svelte reports the file relative to the working directory; the two differ when Vite is
+    // started from a parent (`vite --config apps/web/vite.config.ts`).
+    expect(sourceUrl('apps/web/src/App.svelte', { cwd: '/repo', base: '/' })).toBe(
+      '/@fs/repo/apps/web/src/App.svelte?raw',
+    )
+  })
+
   it('keeps Windows drive paths absolute and leading-slash free', () => {
-    expect(sourceUrl('C:\\app\\src\\App.svelte', { root: 'C:\\app', base: '/' })).toBe(
+    expect(sourceUrl('C:\\app\\src\\App.svelte', { cwd: 'C:\\app', base: '/' })).toBe(
       '/@fs/C:/app/src/App.svelte?raw',
     )
-    expect(sourceUrl('src\\App.svelte', { root: 'C:\\app', base: '/' })).toBe(
+    expect(sourceUrl('src\\App.svelte', { cwd: 'C:\\app', base: '/' })).toBe(
       '/@fs/C:/app/src/App.svelte?raw',
     )
   })
