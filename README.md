@@ -104,7 +104,7 @@ npm --prefix fixtures/kit install    # SvelteKit fixture (optional locally, inst
 
 npm run dev       # fixtures/plain on http://localhost:5201
 npm run check     # lint, format, typecheck (tsc + svelte-check), unit + harness, build
-npm run e2e       # picking, clipboard, location, base path, a11y — needs Chromium once:
+npm run e2e       # picking, clipboard, location, base path, a11y, panel, theme — needs Chromium once:
                   #   npx playwright install chromium
 ```
 

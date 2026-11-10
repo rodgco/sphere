@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { clampControl, clipRect, panelPlacement } from '../src/overlay/position.js'
+import {
+  EDGE,
+  PANEL_GAP,
+  PANEL_MAX_HEIGHT,
+  clampControl,
+  clipRect,
+  panelPlacement,
+  panelStyle,
+} from '../src/overlay/position.js'
 
 const viewport = { width: 1000, height: 800 }
 const control = { x: 900, y: 700, width: 120, height: 36 }
@@ -31,36 +39,87 @@ describe('clampControl', () => {
 })
 
 describe('panelPlacement', () => {
-  const panel = { width: 420, height: 320 }
-
   it('opens above when the control is in the lower half', () => {
-    const placement = panelPlacement(control, panel, viewport)
+    const placement = panelPlacement(control, viewport)
     expect(placement.side).toBe('above')
-    expect(placement.top + placement.maxHeight).toBeLessThanOrEqual(control.y)
-    expect(placement.maxHeight).toBe(Math.min(320, 700 - 10 - 18))
+    // Pinned by its bottom edge, PANEL_GAP above the control, whatever the panel's height is.
+    expect(placement.offset).toBe(viewport.height - control.y + PANEL_GAP)
+    expect(placement.maxHeight).toBeLessThanOrEqual(control.y - PANEL_GAP - EDGE)
   })
 
   it('opens below when the control is in the upper half', () => {
-    const placement = panelPlacement({ x: 40, y: 40, width: 120, height: 36 }, panel, viewport)
+    const placement = panelPlacement({ x: 40, y: 40, width: 120, height: 36 }, viewport)
     expect(placement.side).toBe('below')
-    expect(placement.top).toBe(40 + 36 + 10)
+    expect(placement.offset).toBe(40 + 36 + PANEL_GAP)
     expect(placement.align).toBe('left')
     // Aligned to the control's own side, only pulled in by the viewport margin.
     expect(placement.left).toBe(40)
   })
 
+  it('flips sides when the control is dragged across the middle', () => {
+    expect(panelPlacement(control, viewport).side).toBe('above')
+    expect(panelPlacement({ ...control, y: 40 }, viewport).side).toBe('below')
+  })
+
   it('aligns to the control side and never leaves the viewport', () => {
-    const right = panelPlacement(control, panel, viewport)
+    const right = panelPlacement(control, viewport)
     expect(right.align).toBe('right')
+    expect(right.width).toBe(420)
     expect(right.left).toBe(1000 - 420 - 18)
   })
 
+  it('narrows the panel to the viewport and keeps the margin', () => {
+    const narrow = panelPlacement(
+      { x: 0, y: 40, width: 10, height: 10 },
+      {
+        width: 300,
+        height: 800,
+      },
+    )
+    expect(narrow.width).toBe(300 - 2 * EDGE)
+    expect(narrow.left).toBe(EDGE)
+  })
+
   it('clamps the height to the room available, never to a negative number', () => {
-    const tiny = panelPlacement({ x: 0, y: 0, width: 10, height: 10 }, panel, {
-      width: 100,
-      height: 20,
-    })
-    expect(tiny.maxHeight).toBeGreaterThanOrEqual(0)
+    const tiny = panelPlacement(
+      { x: 0, y: 0, width: 10, height: 10 },
+      {
+        width: 100,
+        height: 20,
+      },
+    )
+    expect(tiny.side).toBe('below')
+    expect(tiny.maxHeight).toBe(0)
+  })
+
+  it('never exceeds the panel cap, however much room there is', () => {
+    const tall = panelPlacement(
+      { x: 500, y: 3800, width: 120, height: 36 },
+      {
+        width: 1000,
+        height: 4000,
+      },
+    )
+    expect(tall.side).toBe('above')
+    expect(tall.maxHeight).toBe(PANEL_MAX_HEIGHT)
+  })
+})
+
+describe('panelStyle', () => {
+  it('pins the edge facing the control and clears the other one', () => {
+    const above = panelPlacement(control, viewport)
+    expect(panelStyle(above)).toContain(`bottom: ${above.offset}px; top: auto;`)
+
+    const below = panelPlacement({ ...control, y: 40 }, viewport)
+    expect(panelStyle(below)).toContain(`top: ${below.offset}px; bottom: auto;`)
+  })
+
+  it('carries the width, the left clamp and the height cap', () => {
+    const placement = panelPlacement(control, viewport)
+    const css = panelStyle(placement)
+    expect(css).toContain(`left: ${placement.left}px`)
+    expect(css).toContain(`width: ${placement.width}px`)
+    expect(css).toContain(`max-height: ${placement.maxHeight}px`)
   })
 })
 

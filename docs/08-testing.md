@@ -83,6 +83,7 @@ through a `file:` link. The fixture's dependencies are installed separately
 | `e2e/keyboard.mjs` | keys work before the first pick; a click confirms the outlined element rather than the one under the pointer; `w` reaches a container the pointer cannot click; `s`/`d` walk children and siblings; `?` opens the sheet and Escape closes it without leaving picking; `p` pins the outline for a click that arrives later; `Shift+Enter` picks and leaves; a handled key does not scroll; typing in the panel is typing |
 | `e2e/a11y.mjs` | Enter/Space toggles, Escape leaves, focus returns, the dialog takes focus and one Tab reaches the instructions, aria attributes present |
 | `e2e/clipboard.mjs` | full flow with clipboard permissions; the pasted document has the header, both picks with the rule between them and the instructions; it contains no rendered text, no absolute path and no `node_modules`; the status line reports its size; Copy is disabled with nothing picked |
+| `e2e/panel.mjs` | the panel is pinned to the pill: exactly the 10 px gap above it in the default corner (a short panel must not float), it flips below and keeps the gap when the pill is dragged to the top, it aligns to the other side near the right edge, and it stays inside the 18 px viewport margin |
 
 Shared plumbing (free port, process-group kill, browser context with clipboard permissions) lives
 in `e2e/lib/`; the scripts stay readable and print one line on success. `fixtures/plain` exposes

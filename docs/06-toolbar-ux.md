@@ -9,7 +9,8 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   chip (`2 picked`). Height 36 px; bottom-right by default, 18 px from the edges.
 - **Drag** anywhere on the pill moves it; the position is stored in `localStorage` and clamped
   into the viewport on mount and resize
-  (`sphere:control`) and restored on load. Double-click returns it to the default corner.
+  (`sphere:control`) and restored on load. Double-click returns it to the default corner. An open
+  panel travels with it (§4).
 - Dragging must not toggle picking: the gesture is decided by movement (> 4 px), and the `click`
   that follows a drag is suppressed.
 - The control is a real `<button>`: Enter/Space toggle picking, and `aria-pressed` reflects the
@@ -81,9 +82,15 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
 
 - 420 px wide (never wider than `100vw - 36px`), max height `min(70vh, 620px)`, scrolls
   vertically only.
-- Opens on whichever side of the control has room: above when the control is in the lower half,
-  below otherwise; left/right aligned to the control's side. Its height is clamped so it never
-  leaves the viewport.
+- Anchored to the control, never floating on its own: it sits `10 px` from the pill on the side
+  facing it, moves with the pill during a drag, and re-chooses the side as the pill moves — above
+  when the control is in the lower half, below otherwise — because that is the side with room.
+  The edge facing the control is the pinned one (`bottom` when above, `top` when below), so a
+  panel shorter than the room available keeps exactly that 10 px gap instead of leaving a hole.
+  It is left/right aligned to the control's side, clamped by the 18 px viewport margin, and its
+  height is clamped to the room on the chosen side (also `min(70vh, 620px)`), so it never leaves
+  the viewport. Placement is pure state (`src/overlay/position.ts`), not a measurement taken when
+  the panel opens, so the panel moves in the same frame as the pill.
 - Sections, top to bottom: header (title, hint, close), picks list, instruction box, options,
   actions (Copy prompt, Clear, status).
 - Picks list entries: `1. tag#id.classes`, the resolved location (with `~` when approximate),

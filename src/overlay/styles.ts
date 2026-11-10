@@ -7,6 +7,8 @@
  *
  * Tokens are the source of truth in `docs/06-toolbar-ux.md` §9.
  */
+import { EDGE, PANEL_MAX_HEIGHT, PANEL_MAX_VIEWPORT_RATIO, PANEL_WIDTH } from './position.js'
+
 export const OVERLAY_CSS = `
 :host {
   all: initial;
@@ -111,8 +113,8 @@ button {
 
 .control {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  right: ${EDGE}px;
+  bottom: ${EDGE}px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -163,9 +165,9 @@ button {
 
 .panel {
   position: fixed;
-  width: 420px;
-  max-width: calc(100vw - 36px);
-  max-height: min(70vh, 620px);
+  width: ${PANEL_WIDTH}px;
+  max-width: calc(100vw - ${2 * EDGE}px);
+  max-height: min(${PANEL_MAX_VIEWPORT_RATIO * 100}vh, ${PANEL_MAX_HEIGHT}px);
   display: flex;
   flex-direction: column;
   border-radius: var(--sphere-radius);

@@ -2,6 +2,7 @@ import { flushSync, mount, unmount } from 'svelte'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Overlay from '../../src/overlay/Overlay.svelte'
 import Single from '../../fixtures/harness/Single.svelte'
+import { EDGE, PANEL_GAP } from '../../src/overlay/position.js'
 import { OPTIONS_KEY } from '../../src/overlay/storage.js'
 
 function giveRect(
@@ -264,6 +265,30 @@ describe('the panel', () => {
       expect(view.control.getAttribute('aria-pressed')).toBe('false')
 
       document.removeEventListener('keydown', watcher)
+    } finally {
+      view.destroy()
+    }
+  })
+
+  it('stays attached to the control and flips side when the control moves', () => {
+    view = mountOverlay()
+    try {
+      view.startPicking()
+      view.pick(0)
+
+      const panel = view.panel()!
+      // The default corner is the bottom-right, so the panel sits above the pill, pinned by the
+      // edge facing it: no fixed `top` to drift away from a panel whose content is short.
+      expect(panel.style.bottom).toBe(`${EDGE + PANEL_GAP}px`)
+      expect(panel.style.top).toBe('auto')
+
+      // Dragging the pill to the top edge carries the panel with it and flips it below.
+      event(view.control, 'pointerdown', { button: 0, clientX: 10, clientY: 500 })
+      event(window, 'pointermove', { clientX: 10, clientY: 100 })
+      event(window, 'pointerup', { clientX: 10, clientY: 100 })
+
+      expect(panel.style.top).toBe(`${PANEL_GAP}px`)
+      expect(panel.style.bottom).toBe('auto')
     } finally {
       view.destroy()
     }

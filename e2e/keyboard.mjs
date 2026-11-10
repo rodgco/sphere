@@ -97,8 +97,8 @@ async function main() {
       await page.keyboard.press('Shift+Enter')
       await expectAttribute(page, control(page), 'aria-pressed', 'false')
 
-      // Clean slate for the walk below: clear the picks, close the panel (which covers the pill),
-      // and let the next step start picking.
+      // Clean slate for the walk below: clear the picks, close the panel, and let the next step
+      // start picking.
       await panel(page).getByRole('button', { name: 'Clear' }).click()
       await page.keyboard.press('Escape')
       await expectAttribute(page, control(page), 'aria-pressed', 'false')

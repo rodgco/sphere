@@ -25,7 +25,7 @@
     type OverlayOptions,
   } from './storage.js'
   import { PICK_CAP, pickLabel, pickWhere, togglePick, type PickEntry } from './picks.js'
-  import { clampControl, panelPlacement } from './position.js'
+  import { EDGE, clampControl, panelPlacement, panelStyle } from './position.js'
 
   interface Hover {
     top: number
@@ -46,6 +46,13 @@
 
   let picking = $state(false)
   let position = $state<ControlPosition | null>(null)
+  /**
+   * The viewport and the control's own size, so the panel's placement is a pure function of state
+   * instead of a measurement taken once when it opens: the panel follows the pill while it is
+   * dragged and flips sides as it approaches an edge (`docs/06-toolbar-ux.md` §4).
+   */
+  let viewport = $state({ width: 0, height: 0 })
+  let controlSize = $state({ width: 0, height: 0 })
   let picks = $state<PickEntry[]>([])
   let marks = $state<Mark[]>([])
   let hover = $state<Hover | null>(null)
@@ -64,7 +71,6 @@
   let instructions = $state('')
   let panelOpen = $state(false)
   let helpOpen = $state(false)
-  let panelStyle = $state('')
   let focusPanel = $state(false)
 
   const loadSource = createSourceLoader({ root: sphereConfig.root, base: sphereConfig.base })
@@ -123,6 +129,15 @@
   $effect(() => {
     if (shell === undefined) return
     return listen<PointerEvent>(shell, 'pointerdown', startDrag)
+  })
+
+  // The panel is placed from the control's box, not from a measurement taken when it opens. The
+  // width changes when the count chip appears with the first pick, so `picks.length` is read here
+  // to re-measure after that render; effects run after the DOM has been updated.
+  $effect(() => {
+    if (shell === undefined) return
+    void picks.length
+    controlSize = { width: shell.offsetWidth, height: shell.offsetHeight }
   })
 
   $effect(() => {
@@ -482,22 +497,6 @@
   }
 
   function openPanel(fromPick: boolean) {
-    if (shell === undefined) return
-
-    const rect = shell.getBoundingClientRect()
-    const viewport = { width: window.innerWidth, height: window.innerHeight }
-    const panel = {
-      width: Math.min(PANEL_WIDTH, viewport.width - 36),
-      height: Math.min(viewport.height * 0.7, 620),
-    }
-
-    const placement = panelPlacement(
-      { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
-      panel,
-      viewport,
-    )
-
-    panelStyle = `left: ${placement.left}px; top: ${placement.top}px; max-height: ${placement.maxHeight}px;`
     panelOpen = true
     focusPanel = fromPick
   }
@@ -616,9 +615,17 @@
     )
   }
 
+  function onViewportResize() {
+    viewport = { width: window.innerWidth, height: window.innerHeight }
+    onResize()
+  }
+
   onMount(() => {
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    // Also sets the state the panel's placement is derived from; `onResize` then clamps a stored
+    // position into the new viewport.
+    onViewportResize()
+    window.addEventListener('resize', onViewportResize)
+    return () => window.removeEventListener('resize', onViewportResize)
   })
 
   const controlStyle = $derived(
@@ -626,6 +633,28 @@
       ? ''
       : `left: ${position.x}px; top: ${position.y}px; right: auto; bottom: auto;`,
   )
+
+  /**
+   * The control's box as the panel sees it: the stored position when there is one, otherwise the
+   * bottom-right corner the stylesheet puts it in. No DOM read, so the panel moves in the same
+   * flush as the pill and follows it during a drag.
+   */
+  function controlBox() {
+    if (viewport.width === 0) return null
+
+    return {
+      x: position?.x ?? viewport.width - EDGE - controlSize.width,
+      y: position?.y ?? viewport.height - EDGE - controlSize.height,
+      width: controlSize.width,
+      height: controlSize.height,
+    }
+  }
+
+  const panelCss = $derived.by(() => {
+    if (!panelOpen) return ''
+    const box = controlBox()
+    return box === null ? '' : panelStyle(panelPlacement(box, viewport))
+  })
 
   const hoverStyle = $derived(
     hover === null
@@ -658,7 +687,7 @@
   {/each}
 
   {#if helpOpen}
-    <Help style="left: 18px; top: 18px;" onClose={toggleHelp} />
+    <Help style="left: {EDGE}px; top: {EDGE}px;" onClose={toggleHelp} />
   {/if}
 
   {#if panelOpen}
@@ -668,7 +697,7 @@
       {instructions}
       {status}
       {focusPanel}
-      style={panelStyle}
+      style={panelCss}
       onCopy={copyPrompt}
       onHelp={toggleHelp}
       onRemove={removePick}
