@@ -64,6 +64,17 @@ async function main() {
       near(corner.y + corner.height, VIEWPORT.height - EDGE, 'the control is not in the corner')
       near(first.x + first.width, VIEWPORT.width - EDGE, 'the panel is not aligned to the right')
 
+      // The dialog takes programmatic focus on a pick; a container must not paint the keyboard
+      // ring for it, while its own controls keep theirs (`docs/06-toolbar-ux.md` §8).
+      const dialogOutline = await panel(page).evaluate((el) => getComputedStyle(el).outlineStyle)
+      assert.equal(dialogOutline, 'none', 'the dialog painted a focus ring on a pointer pick')
+
+      await page.keyboard.press('Tab')
+      const innerOutline = await panel(page)
+        .locator('.panel-help')
+        .evaluate((el) => getComputedStyle(el).outlineStyle)
+      assert.equal(innerOutline, 'solid', 'a control inside the dialog lost its keyboard ring')
+
       // 2. Dragging the pill carries the panel: it flips below the control when the pill goes to
       //    the top, and keeps the same GAP on the other side.
       await drag(page, { x: corner.x + 20, y: corner.y + 18 }, { x: 200, y: 60 })

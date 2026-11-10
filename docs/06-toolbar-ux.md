@@ -147,7 +147,11 @@ predictable, keyboard-reachable, and never in the way of the page it is inspecti
   Escape/close. The shortcut list is `role="dialog"` with `aria-label="Keyboard shortcuts"` and
   closes on Escape before anything else does. It deliberately does **not** jump into the instruction box: single-key picking (
   `w`, `a`, `s`, `d`) must keep working until the user chooses to type, and one Tab reaches the box.
-- Focus ring: 2 px outline in both themes, never removed without a replacement.
+- Focus ring: 2 px outline in both themes, never removed without a replacement. Two elements are
+excepted, and both are the same engine behaviour: Chromium reports `:focus-visible` after a
+programmatic `focus()` that followed a pointer. The pill draws its own ring from tracked keyboard
+modality (§1); the dialog takes focus only to be announced, so it paints none and its controls keep
+theirs.
 - Everything reachable by keyboard: control (Enter/Space), panel (Tab), picks (remove buttons),
   options (checkboxes), actions (buttons), Escape to leave picking/close.
 - Contrast: text ≥ 4.5:1 in both themes; marks/badges ≥ 3:1.

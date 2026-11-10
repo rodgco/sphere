@@ -111,6 +111,15 @@ button {
   outline-offset: 3px;
 }
 
+/* The dialog takes focus when it opens from a pick, so it is announced (docs/06-toolbar-ux.md §8).
+   That focus is programmatic and follows a pointer, yet Chromium reports :focus-visible for it —
+   the same reason the pill tracks modality by hand. A dialog is a container, not a control: it
+   paints no ring, and its buttons and fields keep theirs. */
+.panel:focus,
+.panel:focus-visible {
+  outline: none;
+}
+
 .control {
   position: fixed;
   right: ${EDGE}px;
