@@ -11,6 +11,7 @@ import { sphere } from '../../src/plugin/index.ts'
  * from the room available, and the panel inside the margin on every edge.
  */
 export default defineConfig({
+  root: import.meta.dirname,
   plugins: [sphere(), svelte()],
   server: { port: 5202, strictPort: true },
 })

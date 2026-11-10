@@ -11,6 +11,7 @@ import { sphere } from '../../src/plugin/index.ts'
  * against a dark OS.
  */
 export default defineConfig({
+  root: import.meta.dirname,
   plugins: [
     sphere({
       theme: {
