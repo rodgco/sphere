@@ -103,6 +103,11 @@ event never reached the app and that a passed-through one did.
   every push: privacy failures fail the build, and the regenerated images are the artifact under
   review. Pixel diffing is deliberately **not** a CI gate — font rendering differs between the
   runner and a developer machine, so a pixel gate would fail for reasons unrelated to Sphere.
+- `npm run lab` is the manual counterpart: `fixtures/lab` fills the viewport with pickable tiles
+  and draws the 18 px margin on the page, so the panel's gap, side, alignment and clamping can be
+  checked by hand with a real drag. `npm run lab:shots` captures those states into `.temp/lab/`
+  (gitignored on purpose — the lab is a review aid, not a published image); `e2e/panel.mjs` is the
+  automated gate for the same geometry.
 
 ## 6. Version matrix (CI)
 

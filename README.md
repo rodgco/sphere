@@ -103,6 +103,7 @@ npm install
 npm --prefix fixtures/kit install    # SvelteKit fixture (optional locally, installed in CI)
 
 npm run dev       # fixtures/plain on http://localhost:5201
+npm run lab       # panel geometry lab on http://localhost:5202
 npm run check     # lint, format, typecheck (tsc + svelte-check), unit + harness, build
 npm run e2e       # picking, clipboard, location, base path, a11y, panel, theme — needs Chromium once:
                   #   npx playwright install chromium
@@ -112,9 +113,11 @@ npm run e2e       # picking, clipboard, location, base path, a11y, panel, theme 
 |---|---|
 | Golden prompt / doc examples | `npm run golden`, `npm run docs:example`; CI fails on a diff (`npm run check:generated`) |
 | README screenshots | `node scripts/screenshots/sphere.mjs` (privacy scan included) |
+| Panel geometry, by hand | `npm run lab`, or `npm run lab:shots` to capture its states into `.temp/lab/` |
 | Package shape | `npm run pkg:check` (`publint` + `attw` on the packed tarball) |
 
-`fixtures/plain` is a plain Vite + Svelte app; `fixtures/kit` is a SvelteKit app that consumes the
+`fixtures/plain` is a plain Vite + Svelte app; `fixtures/lab` is the panel geometry lab (a
+viewport of tiles with the 18 px margin drawn); `fixtures/kit` is a SvelteKit app that consumes the
 built package through a `file:` link, so the injection test runs against the artifact a user
 installs.
 
